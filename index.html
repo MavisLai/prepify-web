@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex Prep Tutoring | Personalized Academic & Test Prep</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">Apex<span>Prep</span></a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#about">About Us</a>
+        <a href="#achievements">Achievements</a>
+        <a href="#programs">Programs</a>
+        <a href="#contact">Contact</a>
+        <a href="login.html" class="btn btn-primary nav-btn">Portal Login / Join Class</a>
+      </nav>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <span class="badge">1-on-1 & Small Group Tutoring</span>
+        <h1>Unlock Your Academic Potential With Proven Mentorship</h1>
+        <p>
+          We combine personalized instruction, custom diagnostic practice tests, and real-time progress tracking to help students master challenging coursework and standardized exams.
+        </p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn btn-primary">Book a Free Consultation</a>
+          <a href="login.html" class="btn btn-outline">Join a Class with Code</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h3>Student & Teacher Portal</h3>
+        <p>Already enrolled? Access your custom assignments, practice exams, and feedback.</p>
+        <ul class="portal-perks">
+          <li>✓ Instant student passcode access (no email required)</li>
+          <li>✓ Custom teacher-built diagnostics & quizzes</li>
+          <li>✓ Automated scoring & progress tracking</li>
+        </ul>
+        <a href="login.html" class="btn btn-primary full-width">Launch Learning Portal →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievements Section -->
+  <section id="achievements" class="achievements">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h2>+140</h2>
+          <p>Average SAT Score Increase</p>
+        </div>
+        <div class="stat-item">
+          <h2>96%</h2>
+          <p>Students Scoring 4 or 5 on AP Exams</p>
+        </div>
+        <div class="stat-item">
+          <h2>150+</h2>
+          <p>Students Mentored & Supported</p>
+        </div>
+        <div class="stat-item">
+          <h2>100%</h2>
+          <p>Customized Study Plans</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Us Section -->
+  <section id="about" class="section">
+    <div class="container about-grid">
+      <div class="about-content">
+        <span class="section-tag">About Us</span>
+        <h2>Built by Educators Who Care About Real Understanding</h2>
+        <p>
+          Founded to bridge the gap between passive tutoring and active mastery, Apex Prep focuses on teaching students <em>how</em> to think through complex problems—not just memorize formulas.
+        </p>
+        <p>
+          Every student receives tailored lessons paired with custom practice sets built directly by their instructor in our online portal, ensuring homework targets their exact areas for growth.
+        </p>
+        <div class="credentials-box">
+          <div>
+            <strong>Lead Instructors</strong>
+            <p>Top 1% Standardized Test Scorers & Subject Specialists</p>
+          </div>
+          <div>
+            <strong>Flexible Formats</strong>
+            <p>Live Online Sessions & Local In-Person Availability</p>
+          </div>
+        </div>
+      </div>
+      <div class="testimonials-stack">
+        <div class="card testimonial">
+          <p>"My daughter's confidence in AP Calculus completely transformed. Having custom practice quizzes assigned right on the website made studying structured and stress-free."</p>
+          <span>— Sarah M., Parent of 11th Grader</span>
+        </div>
+        <div class="card testimonial">
+          <p>"My math score jumped 150 points in two months. My tutor broke down every question type I missed and made targeted drills just for me."</p>
+          <span>— Daniel K., High School Senior</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Programs Section -->
+  <section id="programs" class="section bg-light">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Our Programs</span>
+        <h2>Targeted Academic & Test Preparation</h2>
+      </div>
+      <div class="programs-grid">
+        <div class="card program-card">
+          <h3>SAT & ACT Prep</h3>
+          <p>Full-length digital diagnostics, pacing strategies, and targeted question banks for Math and Reading/Writing.</p>
+          <span class="tag">Grades 10–12</span>
+        </div>
+        <div class="card program-card">
+          <h3>AP & Honors STEM</h3>
+          <p>Concept mastery and exam prep for AP Calculus AB/BC, AP Statistics, AP Computer Science, Chemistry, and Physics.</p>
+          <span class="tag">High School</span>
+        </div>
+        <div class="card program-card">
+          <h3>Foundational Math & Writing</h3>
+          <p>Building strong study habits, algebraic fluency, and structured essay writing skills for middle and early high schoolers.</p>
+          <span class="tag">Grades 6–9</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="section">
+    <div class="container contact-wrapper">
+      <div class="contact-info">
+        <span class="section-tag">Get Started</span>
+        <h2>Schedule a Free 20-Minute Consultation</h2>
+        <p>Tell us about your student's goals, current courses, and upcoming test dates. We will recommend a tailored learning plan.</p>
+        <p class="email-note">Prefer email? Reach us at <strong>hello@yourdomain.com</strong></p>
+      </div>
+      <!-- Replace action URL with your Formspree or Web3Forms endpoint later -->
+      <form class="card contact-form" action="#" method="POST">
+        <div class="form-group">
+          <label for="parentName">Parent or Student Name</label>
+          <input type="text" id="parentName" name="name" placeholder="Jordan Taylor" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="jordan@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject / Exam of Interest</label>
+          <select id="subject" name="subject">
+            <option value="SAT/ACT Prep">SAT / ACT Prep</option>
+            <option value="AP / Honors Math & Science">AP / Honors Math & Science</option>
+            <option value="Foundational Tutoring">Foundational Tutoring</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Goals & Availability</label>
+          <textarea id="message" name="message" rows="3" placeholder="Tell us a bit about what you're looking for..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary full-width">Request Consultation</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>© 2026 Apex Prep Tutoring. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#about">About</a>
+        <a href="#programs">Programs</a>
+        <a href="login.html">Student & Teacher Login</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Minimal JS for Mobile Menu Toggle -->
+  <script>
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('navLinks');
+
+    mobileMenuBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+</body>
+</html>
