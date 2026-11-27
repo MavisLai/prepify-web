@@ -1107,3 +1107,148 @@ body.app-shell[data-theme] .btn-gold {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   QUESTION BANK HEALTH (2x2 QUADRANT GRID & PROGRESS BARS)
+========================================================= */
+.bh-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.bh-card {
+  padding: 1.5rem 1.75rem;
+}
+
+.bh-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.bh-card-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #16213e;
+  margin: 0;
+}
+
+.bh-status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bh-insufficient {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.bh-progress {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.bh-ready {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.bh-summary-line {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 0.85rem;
+}
+
+.bh-summary-line strong {
+  color: var(--dark);
+  font-weight: 700;
+}
+
+.bh-dot {
+  margin: 0 0.35rem;
+  color: var(--muted);
+}
+
+.bh-progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 1.15rem;
+}
+
+.bh-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.bh-fill-insufficient {
+  background-color: #b91c1c;
+}
+
+.bh-fill-progress {
+  background-color: #d97706;
+}
+
+.bh-fill-ready {
+  background-color: #15803d;
+}
+
+.bh-topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.bh-topic-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  padding: 0.15rem 0;
+}
+
+.bh-topic-name {
+  color: #334155;
+}
+
+.bh-topic-count {
+  font-weight: 600;
+  color: var(--dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.bh-topic-count.is-zero {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Custom Theme Overrides (Dracula, Iceberg Light, GitHub) */
+body.app-shell[data-theme] .bh-card-header h3,
+body.app-shell[data-theme] .bh-summary-line strong,
+body.app-shell[data-theme] .bh-topic-count {
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .bh-topic-name {
+  color: var(--t-text);
+  opacity: 0.9;
+}
+
+body.app-shell[data-theme] .bh-progress-track {
+  background-color: var(--t-sub-alt);
+}
+
+@media (max-width: 950px) {
+  .bh-grid {
+    grid-template-columns: 1fr;
+  }
+}

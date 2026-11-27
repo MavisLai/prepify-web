@@ -43,6 +43,9 @@
       <button type="button" class="studio-tab" data-target="createQuestionPanel">
         <span class="nav-dot"></span> Create Question
       </button>
+      <button type="button" class="studio-tab" data-target="bankHealthPanel">
+        <span class="nav-dot"></span> Bank Health
+      </button>
 
       <span class="sidebar-group-label">PREFERENCES</span>
       <button type="button" class="studio-tab" data-target="settingsPanel">
@@ -342,7 +345,16 @@
       </section>
 
       <!-- =========================================================
-           PANEL 5: SETTINGS
+           PANEL 5: QUESTION BANK HEALTH
+      ========================================================= -->
+      <section id="bankHealthPanel" class="studio-panel hidden">
+        <div id="bankHealthGrid" class="bh-grid">
+          <!-- Populated dynamically by renderBankHealth() -->
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 6: SETTINGS
       ========================================================= -->
       <section id="settingsPanel" class="studio-panel hidden">
         <div class="studio-grid">
@@ -447,6 +459,10 @@
         title: 'Question Builder',
         subtitle: 'Create a new item in any supported technology-enhanced format.'
       },
+      bankHealthPanel: {
+        title: 'Question Bank Health',
+        subtitle: 'Whether the bank has enough eligible content for a full adaptive test.'
+      },
       settingsPanel: {
         title: 'Settings',
         subtitle: 'Manage your instructor display name and workspace appearance.'
@@ -455,22 +471,22 @@
 
     const SUBJECT_TOPICS = {
       'Math': [
-        'Equations & Expressions',
         'Ratios & Proportions',
+        'Equations & Expressions',
         'Linear Functions',
-        'Number Systems',
-        'Systems of Equations',
         'Geometry',
-        'Statistics & Probability'
+        'Statistics & Probability',
+        'Number Systems',
+        'Inequalities',
+        'Systems of Equations'
       ],
       'ELA': [
-        "Author's Purpose",
-        'Textual Evidence',
-        'Revising/Editing',
         'Reading Comprehension',
-        'Central Ideas & Details',
-        'Words in Context',
-        'Grammar & Punctuation'
+        'Revising/Editing',
+        'Argument & Claim',
+        'Vocabulary in Context',
+        "Author's Purpose",
+        'Textual Evidence'
       ]
     };
 
@@ -1317,6 +1333,77 @@
         `;
       }).join('');
 
+      const BANK_HEALTH_SECTIONS = [
+      { title: 'Grade 8 Math', grade: 'Grade 8', subject: 'Math', required: 50 },
+      { title: 'Grade 8 ELA',  grade: 'Grade 8', subject: 'ELA',  required: 50 },
+      { title: 'Grade 9 Math', grade: 'Grade 9', subject: 'Math', required: 50 },
+      { title: 'Grade 9 ELA',  grade: 'Grade 9', subject: 'ELA',  required: 50 }
+    ];
+
+    function renderBankHealth() {
+      const container = document.getElementById('bankHealthGrid');
+      if (!container) return;
+
+      container.innerHTML = BANK_HEALTH_SECTIONS.map(sec => {
+        // Questions matching this grade & subject (includes items tagged "Both")
+        const matchingAll = state.questionBank.filter(
+          q => q.subject === sec.subject && q.grades.includes(sec.grade)
+        );
+        const publishedOnly = matchingAll.filter(q => q.status === 'Published');
+
+        const availableCount = matchingAll.length;
+        const eligibleCount = publishedOnly.length;
+        const pct = Math.min(100, Math.round((eligibleCount / sec.required) * 100));
+
+        // Status badge & bar color based on progress toward full adaptive sim
+        let badgeText = 'Insufficient';
+        let statusTier = 'insufficient';
+        if (eligibleCount >= sec.required) {
+          badgeText = 'Ready';
+          statusTier = 'ready';
+        } else if (eligibleCount >= Math.ceil(sec.required * 0.5)) {
+          badgeText = 'In Progress';
+          statusTier = 'progress';
+        }
+
+        const topicsList = SUBJECT_TOPICS[sec.subject] || [];
+        const topicRowsHTML = topicsList.map(topicName => {
+          const topicCount = publishedOnly.filter(q => q.topic === topicName).length;
+          return `
+            <div class="bh-topic-row">
+              <span class="bh-topic-name">${topicName}</span>
+              <span class="bh-topic-count ${topicCount === 0 ? 'is-zero' : ''}">${topicCount}</span>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="card bh-card">
+            <div class="bh-card-header">
+              <h3>${sec.title}</h3>
+              <span class="bh-status-badge bh-${statusTier}">${badgeText}</span>
+            </div>
+
+            <p class="bh-summary-line">
+              Required for full sim: <strong>${sec.required}</strong>
+              <span class="bh-dot">·</span>
+              Available: <strong>${availableCount}</strong>
+              <span class="bh-dot">·</span>
+              Eligible (published): <strong>${eligibleCount}</strong>
+            </p>
+
+            <div class="bh-progress-track" role="progressbar" aria-valuenow="${eligibleCount}" aria-valuemin="0" aria-valuemax="${sec.required}">
+              <div class="bh-progress-fill bh-fill-${statusTier}" style="width: ${pct}%;"></div>
+            </div>
+
+            <div class="bh-topic-list">
+              ${topicRowsHTML}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+      renderBankHealth();
       renderQuestionBankTable();
     }
 
