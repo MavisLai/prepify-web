@@ -584,7 +584,7 @@ body.app-shell {
 
 /* 1. DRACULA */
 body.app-shell[data-theme="dracula"] {
-  --t-bg: #282a36;
+  --t-bg: #282A36;
   --t-surface: #21222c;
   --t-sub-alt: #343746;
   --t-sidebar: #191a21;
@@ -594,7 +594,7 @@ body.app-shell[data-theme="dracula"] {
   --t-sub: #6272a4;
   --t-accent: #bd93f9;
   --t-accent-text: #282a36;
-  --t-dot: #50fa7b;
+  --t-dot: #BD93F9;
 }
 
 /* 2. ICEBERG LIGHT */
@@ -624,7 +624,7 @@ body.app-shell[data-theme="github"] {
   --t-sub: #656d76;
   --t-accent: #0969da;
   --t-accent-text: #ffffff;
-  --t-dot: #2da44e;
+  --t-dot: #528bd0;
 }
 
 /* =========================================================

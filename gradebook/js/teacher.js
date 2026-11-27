@@ -7,100 +7,116 @@
     return client;
   }
 
-  let currentTeacherUser = null;
-
   async function initTeacherSession() {
-    const user = await window.PrepifyAuth.requireTeacher();
-    if (!user) return null;
-    currentTeacherUser = user;
+    const session = window.PrepifyAuth.requireTeacher();
+    if (!session) return null;
 
     const sb = getClient();
-    const fallbackName =
-      user.user_metadata?.display_name ||
-      localStorage.getItem('prepify_instructor_name') ||
-      user.email?.split('@')[0] ||
-      'Instructor';
-
-    const { data: existingProfile } = await sb
-      .from('profiles')
-      .select('display_name')
-      .eq('id', user.id)
+    const { data: teacherRow } = await sb
+      .from('teachers')
+      .select('id, display_name, email')
+      .eq('id', session.id)
       .single();
 
-    if (!existingProfile) {
-      await sb.from('profiles').upsert({
-        id: user.id,
-        email: user.email,
-        display_name: fallbackName,
-        role: 'teacher'
-      });
+    if (teacherRow?.display_name) {
+      localStorage.setItem('prepify_instructor_name', teacherRow.display_name);
     }
 
-    const activeName = existingProfile?.display_name || fallbackName;
-    localStorage.setItem('prepify_instructor_name', activeName);
-    return { user, displayName: activeName };
+    return {
+      ...session,
+      displayName: teacherRow?.display_name || localStorage.getItem('prepify_instructor_name') || 'Instructor'
+    };
+  }
+
+  async function updateInstructorName(newName) {
+    const session = window.PrepifyAuth.getCurrentTeacher();
+    if (!session?.id) return;
+
+    const sb = getClient();
+    const { error } = await sb
+      .from('teachers')
+      .update({ display_name: newName })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    localStorage.setItem('prepify_instructor_name', newName);
   }
 
   async function loadTeacherWorkspace() {
-    if (!currentTeacherUser) await initTeacherSession();
-    if (!currentTeacherUser) return null;
-
     const sb = getClient();
-    const tid = currentTeacherUser.id;
 
-    const [classesRes, studentsRes, questionsRes, attemptsRes] = await Promise.all([
-      sb.from('classes').select('*').eq('teacher_id', tid).order('created_at', { ascending: true }),
-      sb.from('students').select('*').eq('teacher_id', tid).order('created_at', { ascending: true }),
-      sb.from('questions').select('*').eq('teacher_id', tid).order('created_at', { ascending: false }),
-      sb.from('student_attempts').select('*, assignments(title), questions(topic, subject, prompt)').order('created_at', { ascending: false })
+    const [
+      { data: classRows, error: classErr },
+      { data: studentRows, error: studErr },
+      { data: questionRows, error: qErr },
+      { data: attemptRows, error: attErr },
+      { data: assignmentRows, error: assignErr }
+    ] = await Promise.all([
+      sb.from('classes').select('*').order('created_at', { ascending: true }),
+      sb.from('students').select('*').order('created_at', { ascending: true }),
+      sb.from('questions').select('*').order('created_at', { ascending: false }),
+      sb.from('student_attempts').select('*, assignments(title), questions(topic, subject, prompt)').order('created_at', { ascending: false }),
+      sb.from('assignments').select('*').order('created_at', { ascending: false })
     ]);
 
-    if (classesRes.error) throw classesRes.error;
-    if (studentsRes.error) throw studentsRes.error;
-    if (questionsRes.error) throw questionsRes.error;
+    if (classErr) throw classErr;
+    if (studErr) throw studErr;
+    if (qErr) throw qErr;
+    if (attErr) throw attErr;
+    if (assignErr) throw assignErr;
 
-    const classes = (classesRes.data || []).map(c => ({
+    const attempts = attemptRows || [];
+
+    const classes = (classRows || []).map(c => ({
       id: c.id,
       name: c.name,
       schedule: c.schedule || '',
       joinCode: c.join_code
     }));
 
-    const questions = (questionsRes.data || []).map(q => {
-      const qAttempts = (attemptsRes.data || []).filter(a => a.question_id === q.id);
-      const uses = qAttempts.length;
+    const questions = (questionRows || []).map(q => {
+      const qAttempts = attempts.filter(a => a.question_id === q.id);
       const correctCount = qAttempts.filter(a => a.is_correct).length;
-      const accuracy = uses > 0 ? Math.round((correctCount / uses) * 100) : null;
-
       return {
         id: q.id,
         subject: q.subject,
-        grades: q.grades || ['Grade 8'],
+        grades: Array.isArray(q.grades) ? q.grades : ['Grade 8'],
         type: q.type,
         topic: q.topic,
         subtopic: q.subtopic || '',
-        difficulty: String(q.difficulty),
+        difficulty: String(q.difficulty || '525'),
         status: q.status || 'Published',
-        accuracy,
-        uses,
+        accuracy: qAttempts.length > 0 ? Math.round((correctCount / qAttempts.length) * 100) : null,
+        uses: qAttempts.length,
         prompt: q.prompt,
         config: q.config || {},
         explanation: q.explanation || ''
       };
     });
 
-    const students = (studentsRes.data || []).map(s => {
-      const sAttempts = (attemptsRes.data || []).filter(a => a.student_id === s.id);
-      const total = sAttempts.length;
-      const correct = sAttempts.filter(a => a.is_correct).length;
-      const avgAccuracy = total > 0 ? Math.round((correct / total) * 100) : null;
+    const students = (studentRows || []).map(s => {
+      const sAttempts = attempts.filter(a => a.student_id === s.id);
+      const correctAttempts = sAttempts.filter(a => a.is_correct);
+      const avgAccuracy = sAttempts.length > 0
+        ? Math.round((correctAttempts.length / sAttempts.length) * 100)
+        : null;
+
+      const elaAttempts = sAttempts.filter(a => a.questions?.subject === 'ELA');
+      const mathAttempts = sAttempts.filter(a => a.questions?.subject === 'Math');
+
+      const elaScore = elaAttempts.length > 0
+        ? Math.round((elaAttempts.filter(a => a.is_correct).length / elaAttempts.length) * 100) + '%'
+        : null;
+      const mathScore = mathAttempts.length > 0
+        ? Math.round((mathAttempts.filter(a => a.is_correct).length / mathAttempts.length) * 100) + '%'
+        : null;
 
       const topicMap = {};
-      sAttempts.forEach(att => {
-        const topic = att.questions?.topic || 'General';
-        if (!topicMap[topic]) topicMap[topic] = { total: 0, correct: 0 };
-        topicMap[topic].total += 1;
-        if (att.is_correct) topicMap[topic].correct += 1;
+      sAttempts.forEach(a => {
+        const t = a.questions?.topic || 'General';
+        if (!topicMap[t]) topicMap[t] = { total: 0, correct: 0 };
+        topicMap[t].total += 1;
+        if (a.is_correct) topicMap[t].correct += 1;
       });
       const topicAccuracy = Object.entries(topicMap).map(([topic, stats]) => ({
         topic,
@@ -108,31 +124,30 @@
       }));
 
       const missedQuestions = sAttempts
-        .filter(att => !att.is_correct)
+        .filter(a => !a.is_correct && a.questions)
         .slice(0, 10)
-        .map(att => ({
-          id: att.question_id,
-          topic: att.questions?.topic || 'Topic',
-          subject: att.questions?.subject || 'Math',
-          prompt: att.questions?.prompt || '',
-          date: new Date(att.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        .map(a => ({
+          topic: a.questions.topic,
+          subject: a.questions.subject,
+          prompt: a.questions.prompt,
+          date: new Date(a.created_at).toLocaleDateString()
         }));
 
-      const testMap = {};
-      sAttempts.forEach(att => {
-        const key = att.assignment_id || 'practice';
-        if (!testMap[key]) {
-          testMap[key] = {
-            title: att.assignments?.title || 'Practice Set',
+      const byAssignment = {};
+      sAttempts.forEach(a => {
+        if (!a.assignment_id) return;
+        if (!byAssignment[a.assignment_id]) {
+          byAssignment[a.assignment_id] = {
+            title: a.assignments?.title || 'Assigned Test',
             total: 0,
             correct: 0,
-            date: new Date(att.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            date: new Date(a.created_at).toLocaleDateString()
           };
         }
-        testMap[key].total += 1;
-        if (att.is_correct) testMap[key].correct += 1;
+        byAssignment[a.assignment_id].total += 1;
+        if (a.is_correct) byAssignment[a.assignment_id].correct += 1;
       });
-      const tests = Object.values(testMap).map(t => ({
+      const tests = Object.values(byAssignment).map(t => ({
         title: t.title,
         score: `${Math.round((t.correct / t.total) * 100)}% (${t.correct}/${t.total})`,
         date: t.date
@@ -142,11 +157,11 @@
         id: s.id,
         name: s.name,
         username: s.username,
-        grade: s.grade || 'Grade 8',
         classId: s.class_id,
+        grade: s.grade || 'Grade 8',
         results: {
-          elaScore: null,
-          mathScore: null,
+          elaScore,
+          mathScore,
           avgAccuracy,
           topicAccuracy,
           missedQuestions,
@@ -155,31 +170,19 @@
       };
     });
 
-    return { classes, students, questions };
-  }
-
-  async function updateInstructorName(newName) {
-    const sb = getClient();
-    if (!currentTeacherUser) return;
-    const { error } = await sb
-      .from('profiles')
-      .update({ display_name: newName })
-      .eq('id', currentTeacherUser.id);
-
-    if (error) throw error;
-    localStorage.setItem('prepify_instructor_name', newName);
+    return {
+      classes,
+      students,
+      questions,
+      assignments: assignmentRows || []
+    };
   }
 
   async function createClass(name, schedule, joinCode) {
     const sb = getClient();
     const { data, error } = await sb
       .from('classes')
-      .insert({
-        teacher_id: currentTeacherUser.id,
-        name,
-        schedule,
-        join_code: joinCode
-      })
+      .insert([{ name, schedule, join_code: joinCode }])
       .select()
       .single();
 
@@ -196,14 +199,13 @@
     const sb = getClient();
     const { data, error } = await sb
       .from('students')
-      .insert({
-        teacher_id: currentTeacherUser.id,
-        class_id: classId || null,
+      .insert([{
         name,
         username: username.toLowerCase(),
+        class_id: classId || null,
         grade: grade || 'Grade 8',
-        passcode: passcode.toUpperCase()
-      })
+        passcode
+      }])
       .select()
       .single();
 
@@ -212,8 +214,8 @@
       id: data.id,
       name: data.name,
       username: data.username,
-      grade: data.grade,
       classId: data.class_id,
+      grade: data.grade,
       results: {
         elaScore: null,
         mathScore: null,
@@ -229,18 +231,17 @@
     const sb = getClient();
     const { error } = await sb
       .from('students')
-      .update({ passcode: newPasscode.toUpperCase() })
+      .update({ passcode: newPasscode })
       .eq('id', studentId);
 
     if (error) throw error;
-    return newPasscode.toUpperCase();
+    return true;
   }
 
   async function upsertQuestion(item) {
     const sb = getClient();
     const payload = {
       id: item.id,
-      teacher_id: currentTeacherUser.id,
       subject: item.subject,
       grades: item.grades,
       type: item.type,
@@ -253,55 +254,81 @@
       explanation: item.explanation
     };
 
-    const { error } = await sb.from('questions').upsert(payload);
+    const { data, error } = await sb
+      .from('questions')
+      .upsert(payload)
+      .select()
+      .single();
+
     if (error) throw error;
-    return item;
+    return data;
   }
 
   async function deleteQuestion(questionId) {
     const sb = getClient();
     const { error } = await sb.from('questions').delete().eq('id', questionId);
     if (error) throw error;
+    return true;
+  }
+
+  async function createAssignment(title, classId, questionIdSet) {
+    const sb = getClient();
+    const { data, error } = await sb
+      .from('assignments')
+      .insert([{
+        title,
+        class_id: classId,
+        question_ids: Array.from(questionIdSet)
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 
   async function createTestAssignment({
     title,
-    testType = 'topic_test',
-    timeLimitMinutes = null,
-    targetGrade = 'Both',
-    assignTargetType = 'class',
-    classId = null,
-    studentIds = [],
-    questionIds = [],
-    adaptiveQuestionCount = 20
+    testType,
+    timeLimitMinutes,
+    targetGrade,
+    assignTargetType,
+    classId,
+    studentIds,
+    questionIds,
+    adaptiveQuestionCount
   }) {
     const sb = getClient();
+    const isAdaptive = testType === 'full_adaptive_simulation';
+    const storedQuestionIds = isAdaptive
+      ? [`ADAPTIVE:${adaptiveQuestionCount || 20}:${targetGrade || 'Both'}`]
+      : questionIds;
 
-    const storedQuestionIds = testType === 'full_adaptive_simulation'
-      ? [`ADAPTIVE:${adaptiveQuestionCount || 20}:${targetGrade}`]
-      : Array.from(questionIds);
-
-    const fullPayload = {
-      teacher_id: currentTeacherUser.id,
-      class_id: assignTargetType === 'class' ? classId : null,
+    const payload = {
       title,
-      test_type: testType,
-      time_limit_minutes: timeLimitMinutes ? parseInt(timeLimitMinutes, 10) : null,
-      target_grade: targetGrade,
+      class_id: assignTargetType === 'class' ? (classId || null) : null,
       student_ids: assignTargetType === 'students' ? studentIds : [],
-      question_ids: storedQuestionIds
+      question_ids: storedQuestionIds,
+      test_type: testType,
+      time_limit_minutes: timeLimitMinutes || null,
+      target_grade: targetGrade || 'Both'
     };
 
-    let { data, error } = await sb.from('assignments').insert(fullPayload).select().single();
+    let { data, error } = await sb
+      .from('assignments')
+      .insert([payload])
+      .select()
+      .single();
 
+    // Fallback if optional columns (test_type, time_limit_minutes, target_grade) aren't in DB yet
     if (error && error.message && error.message.includes('column')) {
       const fallbackPayload = {
-        teacher_id: currentTeacherUser.id,
-        class_id: classId,
         title,
+        class_id: assignTargetType === 'class' ? (classId || null) : null,
+        student_ids: assignTargetType === 'students' ? studentIds : [],
         question_ids: storedQuestionIds
       };
-      const retry = await sb.from('assignments').insert(fallbackPayload).select().single();
+      const retry = await sb.from('assignments').insert([fallbackPayload]).select().single();
       data = retry.data;
       error = retry.error;
     }
@@ -310,25 +337,70 @@
     return data;
   }
 
-  async function createAssignment(title, classId, questionIds) {
-    return createTestAssignment({
-      title,
-      assignTargetType: 'class',
-      classId,
-      questionIds
-    });
+  async function archiveAssignment(assignmentId) {
+    const sb = getClient();
+    const { data: row, error: fetchErr } = await sb
+      .from('assignments')
+      .select('question_ids')
+      .eq('id', assignmentId)
+      .single();
+    if (fetchErr) throw fetchErr;
+
+    const currentIds = Array.isArray(row?.question_ids) ? row.question_ids : [];
+    const nextIds = currentIds.includes('ARCHIVED') ? currentIds : ['ARCHIVED', ...currentIds];
+
+    const { error } = await sb
+      .from('assignments')
+      .update({ question_ids: nextIds })
+      .eq('id', assignmentId);
+    if (error) throw error;
+    return nextIds;
+  }
+
+  async function reassignAssignment(assignmentId) {
+    const sb = getClient();
+    const { data: row, error: fetchErr } = await sb
+      .from('assignments')
+      .select('question_ids')
+      .eq('id', assignmentId)
+      .single();
+    if (fetchErr) throw fetchErr;
+
+    const currentIds = Array.isArray(row?.question_ids) ? row.question_ids : [];
+    const nextIds = currentIds.filter(id => id !== 'ARCHIVED');
+
+    const { error } = await sb
+      .from('assignments')
+      .update({
+        question_ids: nextIds,
+        created_at: new Date().toISOString()
+      })
+      .eq('id', assignmentId);
+    if (error) throw error;
+    return nextIds;
+  }
+
+  async function permanentlyDeleteAssignment(assignmentId) {
+    const sb = getClient();
+    await sb.from('student_attempts').delete().eq('assignment_id', assignmentId);
+    const { error } = await sb.from('assignments').delete().eq('id', assignmentId);
+    if (error) throw error;
+    return true;
   }
 
   window.PrepifyTeacherDB = {
     initTeacherSession,
-    loadTeacherWorkspace,
     updateInstructorName,
+    loadTeacherWorkspace,
     createClass,
     createStudent,
     resetStudentPasscode,
     upsertQuestion,
     deleteQuestion,
     createAssignment,
-    createTestAssignment
+    createTestAssignment,
+    archiveAssignment,
+    reassignAssignment,
+    permanentlyDeleteAssignment
   };
 })();

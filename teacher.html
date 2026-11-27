@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="style-teacher.css" />
   <style>
-    /* Assign Test Tab Layout & Question Picker Cards */
     .assign-two-col {
       display: grid;
       grid-template-columns: 1fr 1.35fr;
@@ -56,6 +55,18 @@
       border-color: var(--t-accent, #16213e);
       background: var(--t-sub-alt, #f4f3ee);
     }
+    .assign-q-list.is-adaptive-locked .assign-q-card {
+      cursor: default;
+      opacity: 0.78;
+      background: var(--t-sub-alt, #faf9f6);
+    }
+    .assign-q-list.is-adaptive-locked .assign-q-card:hover {
+      border-color: var(--t-border, #e2e0d8);
+    }
+    .assign-q-list.is-adaptive-locked .assign-q-card input[type="checkbox"] {
+      pointer-events: none;
+      cursor: not-allowed;
+    }
     .assign-q-card input[type="checkbox"] {
       margin-top: 0.25rem;
       width: 17px;
@@ -74,6 +85,15 @@
       margin: 0;
       font-size: 0.93rem;
       line-height: 1.45;
+      color: var(--t-text, #1f2328);
+    }
+    .adaptive-lock-banner {
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--t-border, #d8d6ce);
+      background: var(--t-sub-alt, #f4f3ee);
+      font-size: 0.88rem;
+      margin-bottom: 0.8rem;
       color: var(--t-text, #1f2328);
     }
     .student-checklist-box {
@@ -115,6 +135,31 @@
       color: var(--t-accent-text, #ffffff);
       border-color: var(--t-accent, #16213e);
     }
+    .test-mgmt-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--t-border, #e2e0d8);
+      border-radius: 10px;
+      background: var(--t-surface, #ffffff);
+    }
+    .test-mgmt-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+    .btn-danger-outline {
+      border: 1px solid #d9534f;
+      color: #d9534f;
+      background: transparent;
+    }
+    .btn-danger-outline:hover {
+      background: #d9534f;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body class="app-shell">
@@ -147,6 +192,9 @@
       </button>
       <button type="button" class="studio-tab" data-target="assignTestPanel">
         <span class="nav-dot"></span> Assign Test
+      </button>
+      <button type="button" class="studio-tab" data-target="assignedHistoryPanel">
+        <span class="nav-dot"></span> Assigned Tests
       </button>
       <button type="button" class="studio-tab" data-target="studentResultsPanel">
         <span class="nav-dot"></span> Student Results
@@ -289,6 +337,22 @@
                 </select>
               </div>
 
+              <!-- Shown ONLY when Full Adaptive Simulation is chosen -->
+              <div class="form-group hidden" id="adaptiveTotalQuestionsGroup">
+                <label for="adaptiveQuestionCountInput">Total Number of Questions</label>
+                <input
+                  type="number"
+                  id="adaptiveQuestionCountInput"
+                  min="1"
+                  max="200"
+                  value="20"
+                  placeholder="e.g., 20"
+                />
+                <small class="field-hint">
+                  Enter how many questions students will complete during this adaptive simulation.
+                </small>
+              </div>
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="assignTimeLimit">Time Limit (Minutes)</label>
@@ -322,19 +386,17 @@
                   </button>
                 </div>
 
-                <!-- Option A: Entire Class Dropdown -->
                 <div id="assignClassTargetGroup">
                   <select id="assignTestClassSelect"></select>
                 </div>
 
-                <!-- Option B: Individual Students Checklist -->
                 <div id="assignStudentsTargetGroup" class="hidden">
                   <div id="assignStudentsChecklist" class="student-checklist-box"></div>
                 </div>
               </div>
 
               <div class="list-item-card" style="margin-bottom: 1rem;">
-                <span>Selected Questions</span>
+                <span id="assignSummaryLeftLabel">Selected Questions</span>
                 <strong id="assignSelectedCountBadge">0 question(s)</strong>
               </div>
 
@@ -347,16 +409,22 @@
             </form>
           </div>
 
-          <!-- Right Column: Question Bank Selector with Filters & Previews -->
-          <div class="card">
+          <!-- Right Column: Question Bank List -->
+          <div class="card" id="manualQuestionPickerCard">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
-              <h3>Select Questions from Bank</h3>
-              <div style="display:flex; gap:0.4rem;">
+              <h3 id="pickerCardHeading">Select Questions from Bank</h3>
+              <div id="pickerBulkBtns" style="display:flex; gap:0.4rem;">
                 <button type="button" class="btn btn-outline btn-sm" id="assignSelectVisibleBtn">Select All Filtered</button>
                 <button type="button" class="btn btn-outline btn-sm" id="assignClearPickedBtn">Clear</button>
               </div>
             </div>
-            <p class="card-subtitle">Filter by subject, grade, or difficulty and check questions to include.</p>
+            <p class="card-subtitle" id="pickerCardSubtitle">
+              Filter by subject, grade, or difficulty and check questions to include.
+            </p>
+
+            <div id="adaptiveLockBanner" class="adaptive-lock-banner hidden">
+              <strong>Full Adaptive Simulation Active:</strong> Manual selection is disabled. The simulation draws from all published questions in your bank automatically, scaling difficulty up or down based on student answers. You can still scroll and filter below to inspect the bank.
+            </div>
 
             <div class="assign-picker-filters">
               <input
@@ -386,9 +454,36 @@
               </select>
             </div>
 
-            <div id="assignQuestionPickerList" class="assign-q-list">
-              <!-- Populated dynamically -->
+            <div id="assignQuestionPickerList" class="assign-q-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL: ASSIGNED TESTS (CURRENTLY ASSIGNED & PREVIOUSLY ASSIGNED)
+      ========================================================= -->
+      <section id="assignedHistoryPanel" class="studio-panel hidden">
+        <div class="studio-grid">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <h3>Currently Assigned Tests</h3>
+              <span class="badge" id="activeAssignmentsCountBadge">0 active</span>
             </div>
+            <p class="card-subtitle">
+              Visible to students right now. Deleting a test removes it from student dashboards and moves it to Previously Assigned Tests.
+            </p>
+            <div id="currentlyAssignedList" class="stack-list"></div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <h3>Previously Assigned Tests</h3>
+              <span class="tag" id="archivedAssignmentsCountBadge">0 archived</span>
+            </div>
+            <p class="card-subtitle">
+              Removed from student view. Reassign any test back to students or permanently delete it.
+            </p>
+            <div id="previouslyAssignedList" class="stack-list"></div>
           </div>
         </div>
       </section>
@@ -631,7 +726,6 @@
           </div>
         </form>
 
-        <!-- LIVE STUDENT PREVIEW -->
         <div class="card live-preview-card">
           <div class="preview-header">
             <div>
@@ -748,7 +842,6 @@
     </div>
   </div>
 
-  <!-- Load Supabase, Auth & Teacher DB Helpers FIRST -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="gradebook/js/supabase-client.js"></script>
   <script src="gradebook/js/auth.js"></script>
@@ -766,7 +859,11 @@
       },
       assignTestPanel: {
         title: 'Assign Test',
-        subtitle: 'Build a timed or untimed test and assign it to an entire class or individual students.'
+        subtitle: 'Build a timed, untimed, or adaptive simulation test and assign it to classes or individual students.'
+      },
+      assignedHistoryPanel: {
+        title: 'Assigned Tests',
+        subtitle: 'Manage currently active tests and archive, reassign, or permanently delete past tests.'
       },
       studentResultsPanel: {
         title: 'Student Results',
@@ -840,6 +937,7 @@
       classes: [],
       students: [],
       questionBank: [],
+      assignments: [],
       selectedQuestionIds: new Set(),
       assignPickedQuestionIds: new Set(),
       assignTargetMode: 'class',
@@ -960,11 +1058,175 @@
       switchTab('createQuestionPanel');
     });
 
-    // --- Assign Test Tab Logic ---
+    // --- Assigned Tests Management (Currently Assigned & Previously Assigned) ---
+    function formatAssignmentDetails(asgn) {
+      const rawIds = Array.isArray(asgn.question_ids) ? asgn.question_ids : [];
+      const cleanIds = rawIds.filter(id => id !== 'ARCHIVED');
+      const adaptiveMarker = cleanIds.find(id => typeof id === 'string' && id.startsWith('ADAPTIVE'));
+      const isAdaptive = asgn.test_type === 'full_adaptive_simulation' || Boolean(adaptiveMarker);
+
+      let questionSummary = `${cleanIds.length} question(s)`;
+      let gradeLabel = asgn.target_grade || '';
+      if (isAdaptive) {
+        let count = 20;
+        if (adaptiveMarker) {
+          const parts = adaptiveMarker.split(':');
+          if (parts[1]) count = parseInt(parts[1], 10) || 20;
+          if (parts[2]) gradeLabel = parts[2];
+        }
+        questionSummary = `Full Adaptive (${count} Qs)`;
+      }
+
+      let recipientLabel = 'Unassigned';
+      if (asgn.class_id) {
+        const cls = state.classes.find(c => c.id === asgn.class_id);
+        recipientLabel = cls ? `Class: ${cls.name}` : 'Entire Class';
+      } else if (Array.isArray(asgn.student_ids) && asgn.student_ids.length > 0) {
+        const names = asgn.student_ids
+          .map(sid => state.students.find(s => s.id === sid)?.name)
+          .filter(Boolean);
+        recipientLabel = names.length > 0
+          ? `Students: ${names.join(', ')}`
+          : `${asgn.student_ids.length} individual student(s)`;
+      }
+
+      const dateStr = asgn.created_at
+        ? new Date(asgn.created_at).toLocaleDateString()
+        : '';
+
+      return {
+        isAdaptive,
+        questionSummary,
+        gradeLabel,
+        recipientLabel,
+        dateStr,
+        timeLimit: asgn.time_limit_minutes ? `${asgn.time_limit_minutes} min` : 'Untimed'
+      };
+    }
+
+    function renderAssignedHistoryPanel() {
+      const activeListEl = document.getElementById('currentlyAssignedList');
+      const prevListEl = document.getElementById('previouslyAssignedList');
+
+      const activeAssignments = state.assignments.filter(a => {
+        const ids = Array.isArray(a.question_ids) ? a.question_ids : [];
+        return !ids.includes('ARCHIVED');
+      });
+
+      const previousAssignments = state.assignments.filter(a => {
+        const ids = Array.isArray(a.question_ids) ? a.question_ids : [];
+        return ids.includes('ARCHIVED');
+      });
+
+      document.getElementById('activeAssignmentsCountBadge').textContent = `${activeAssignments.length} active`;
+      document.getElementById('archivedAssignmentsCountBadge').textContent = `${previousAssignments.length} archived`;
+
+      if (activeAssignments.length === 0) {
+        activeListEl.innerHTML = `<p class="item-meta">No tests are currently assigned. Create one in the <strong>Assign Test</strong> tab.</p>`;
+      } else {
+        activeListEl.innerHTML = activeAssignments.map(a => {
+          const info = formatAssignmentDetails(a);
+          return `
+            <div class="test-mgmt-item">
+              <div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; margin-bottom:0.35rem;">
+                  <span class="badge">${info.questionSummary}</span>
+                  ${info.gradeLabel ? `<span class="tag">${info.gradeLabel}</span>` : ''}
+                  <span class="tag">${info.timeLimit}</span>
+                </div>
+                <strong>${a.title}</strong>
+                <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • Assigned ' + info.dateStr : ''}</p>
+              </div>
+              <div class="test-mgmt-actions">
+                <button type="button" class="btn btn-danger-outline btn-sm" onclick="handleArchiveAssignment('${a.id}')">
+                  Delete
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (previousAssignments.length === 0) {
+        prevListEl.innerHTML = `<p class="item-meta">No previously assigned tests yet.</p>`;
+      } else {
+        prevListEl.innerHTML = previousAssignments.map(a => {
+          const info = formatAssignmentDetails(a);
+          return `
+            <div class="test-mgmt-item">
+              <div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; margin-bottom:0.35rem;">
+                  <span class="tag">${info.questionSummary}</span>
+                  ${info.gradeLabel ? `<span class="tag">${info.gradeLabel}</span>` : ''}
+                  <span class="tag">${info.timeLimit}</span>
+                </div>
+                <strong>${a.title}</strong>
+                <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • ' + info.dateStr : ''}</p>
+              </div>
+              <div class="test-mgmt-actions">
+                <button type="button" class="btn btn-primary btn-sm" onclick="handleReassignAssignment('${a.id}')">
+                  Reassign
+                </button>
+                <button type="button" class="btn btn-danger-outline btn-sm" onclick="handlePermanentDeleteAssignment('${a.id}')">
+                  Permanently Delete
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    window.handleArchiveAssignment = async function(assignmentId) {
+      const asgn = state.assignments.find(a => a.id === assignmentId);
+      if (!asgn) return;
+      if (!confirm(`Move "${asgn.title}" to Previously Assigned Tests? Students will no longer see it as active.`)) return;
+
+      try {
+        const updatedIds = await window.PrepifyTeacherDB.archiveAssignment(assignmentId);
+        asgn.question_ids = updatedIds;
+        renderAssignedHistoryPanel();
+      } catch (err) {
+        alert('Could not archive test: ' + err.message);
+      }
+    };
+
+    window.handleReassignAssignment = async function(assignmentId) {
+      const asgn = state.assignments.find(a => a.id === assignmentId);
+      if (!asgn) return;
+
+      try {
+        const updatedIds = await window.PrepifyTeacherDB.reassignAssignment(assignmentId);
+        asgn.question_ids = updatedIds;
+        asgn.created_at = new Date().toISOString();
+        renderAssignedHistoryPanel();
+      } catch (err) {
+        alert('Could not reassign test: ' + err.message);
+      }
+    };
+
+    window.handlePermanentDeleteAssignment = async function(assignmentId) {
+      const asgn = state.assignments.find(a => a.id === assignmentId);
+      if (!asgn) return;
+      if (!confirm(`Permanently delete "${asgn.title}"? This cannot be undone.`)) return;
+
+      try {
+        await window.PrepifyTeacherDB.permanentlyDeleteAssignment(assignmentId);
+        state.assignments = state.assignments.filter(a => a.id !== assignmentId);
+        renderAssignedHistoryPanel();
+      } catch (err) {
+        alert('Could not permanently delete test: ' + err.message);
+      }
+    };
+
+    // --- Assign Test Tab Logic (Manual + Full Adaptive Simulation) ---
     const modeClassBtn = document.getElementById('modeClassBtn');
     const modeStudentsBtn = document.getElementById('modeStudentsBtn');
     const assignClassTargetGroup = document.getElementById('assignClassTargetGroup');
     const assignStudentsTargetGroup = document.getElementById('assignStudentsTargetGroup');
+    const assignTestTypeEl = document.getElementById('assignTestType');
+    const assignTargetGradeEl = document.getElementById('assignTargetGrade');
+    const adaptiveCountInputEl = document.getElementById('adaptiveQuestionCountInput');
 
     function setAssignTargetMode(mode) {
       state.assignTargetMode = mode;
@@ -976,6 +1238,51 @@
 
     modeClassBtn.addEventListener('click', () => setAssignTargetMode('class'));
     modeStudentsBtn.addEventListener('click', () => setAssignTargetMode('students'));
+
+    function isAdaptiveModeSelected() {
+      return assignTestTypeEl.value === 'full_adaptive_simulation';
+    }
+
+    function updateAssignModeUI() {
+      const adaptive = isAdaptiveModeSelected();
+
+      const totalGroup = document.getElementById('adaptiveTotalQuestionsGroup');
+      totalGroup.classList.toggle('hidden', !adaptive);
+      adaptiveCountInputEl.required = adaptive;
+
+      document.getElementById('pickerCardHeading').textContent = adaptive
+        ? 'Question Bank Pool (Auto-Adaptive)'
+        : 'Select Questions from Bank';
+      document.getElementById('pickerCardSubtitle').textContent = adaptive
+        ? 'Scroll or filter to inspect the bank. Questions are selected automatically during the test.'
+        : 'Filter by subject, grade, or difficulty and check questions to include.';
+      document.getElementById('pickerBulkBtns').classList.toggle('hidden', adaptive);
+      document.getElementById('adaptiveLockBanner').classList.toggle('hidden', !adaptive);
+
+      renderAssignQuestionPickerList();
+      updateAssignSummaryCounter();
+    }
+
+    function updateAssignSummaryCounter() {
+      if (isAdaptiveModeSelected()) {
+        const targetGrade = assignTargetGradeEl.value;
+        const countVal = parseInt(adaptiveCountInputEl.value || '20', 10) || 0;
+        const eligiblePool = state.questionBank.filter(q =>
+          q.status === 'Published' && (targetGrade === 'Both' || q.grades.includes(targetGrade))
+        );
+        document.getElementById('assignSummaryLeftLabel').textContent = 'Adaptive Simulation';
+        document.getElementById('assignSelectedCountBadge').textContent =
+          `${countVal} question(s) (${eligiblePool.length} eligible in bank)`;
+      } else {
+        document.getElementById('assignSummaryLeftLabel').textContent = 'Selected Questions';
+        document.getElementById('assignSelectedCountBadge').textContent =
+          `${state.assignPickedQuestionIds.size} question(s)`;
+      }
+    }
+
+    assignTestTypeEl.addEventListener('change', updateAssignModeUI);
+    assignTargetGradeEl.addEventListener('change', updateAssignSummaryCounter);
+    adaptiveCountInputEl.addEventListener('input', updateAssignSummaryCounter);
 
     function getFilteredAssignPickerQuestions() {
       const search = document.getElementById('assignQSearch').value.trim().toLowerCase();
@@ -999,19 +1306,12 @@
       });
     }
 
-    function updateAssignPickedCounter() {
-      document.getElementById('assignSelectedCountBadge').textContent =
-        `${state.assignPickedQuestionIds.size} question(s)`;
-    }
-
     function renderAssignTestPanel() {
-      // Populate Class dropdown
       const classSelect = document.getElementById('assignTestClassSelect');
       classSelect.innerHTML = state.classes.length > 0
         ? state.classes.map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`).join('')
         : `<option value="">No classes created yet</option>`;
 
-      // Populate Individual Students checklist
       const studentBox = document.getElementById('assignStudentsChecklist');
       if (state.students.length === 0) {
         studentBox.innerHTML = `<span class="item-meta">No students enrolled yet. Create students in Student Passcodes first.</span>`;
@@ -1027,23 +1327,43 @@
         }).join('');
       }
 
-      renderAssignQuestionPickerList();
+      updateAssignModeUI();
     }
 
     function renderAssignQuestionPickerList() {
       const listEl = document.getElementById('assignQuestionPickerList');
+      const adaptive = isAdaptiveModeSelected();
+      listEl.classList.toggle('is-adaptive-locked', adaptive);
+
       const filtered = getFilteredAssignPickerQuestions();
 
       if (filtered.length === 0) {
         listEl.innerHTML = `<p class="item-meta">No questions match those filters. Try adjusting filters or create questions first.</p>`;
-        updateAssignPickedCounter();
+        updateAssignSummaryCounter();
         return;
       }
 
       listEl.innerHTML = filtered.map(q => {
-        const isPicked = state.assignPickedQuestionIds.has(q.id);
+        const isPicked = !adaptive && state.assignPickedQuestionIds.has(q.id);
         const gradeObj = getGradeDisplay(q.grades);
         const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
+
+        if (adaptive) {
+          return `
+            <div class="assign-q-card">
+              <input type="checkbox" disabled aria-hidden="true" />
+              <div style="flex: 1; min-width: 0;">
+                <div class="assign-q-meta">
+                  <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+                  <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
+                  <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
+                  <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
+                </div>
+                <p class="assign-q-prompt">${q.prompt}</p>
+              </div>
+            </div>
+          `;
+        }
 
         return `
           <label class="assign-q-card ${isPicked ? 'is-picked' : ''}">
@@ -1061,16 +1381,18 @@
         `;
       }).join('');
 
-      listEl.querySelectorAll('.assign-q-cb').forEach(cb => {
-        cb.addEventListener('change', () => {
-          if (cb.checked) state.assignPickedQuestionIds.add(cb.dataset.qid);
-          else state.assignPickedQuestionIds.delete(cb.dataset.qid);
-          cb.closest('.assign-q-card').classList.toggle('is-picked', cb.checked);
-          updateAssignPickedCounter();
+      if (!adaptive) {
+        listEl.querySelectorAll('.assign-q-cb').forEach(cb => {
+          cb.addEventListener('change', () => {
+            if (cb.checked) state.assignPickedQuestionIds.add(cb.dataset.qid);
+            else state.assignPickedQuestionIds.delete(cb.dataset.qid);
+            cb.closest('.assign-q-card').classList.toggle('is-picked', cb.checked);
+            updateAssignSummaryCounter();
+          });
         });
-      });
+      }
 
-      updateAssignPickedCounter();
+      updateAssignSummaryCounter();
     }
 
     ['assignQSearch', 'assignQSubjectFilter', 'assignQGradeFilter', 'assignQDiffFilter'].forEach(id => {
@@ -1079,11 +1401,13 @@
     });
 
     document.getElementById('assignSelectVisibleBtn').addEventListener('click', () => {
+      if (isAdaptiveModeSelected()) return;
       getFilteredAssignPickerQuestions().forEach(q => state.assignPickedQuestionIds.add(q.id));
       renderAssignQuestionPickerList();
     });
 
     document.getElementById('assignClearPickedBtn').addEventListener('click', () => {
+      if (isAdaptiveModeSelected()) return;
       state.assignPickedQuestionIds.clear();
       renderAssignQuestionPickerList();
     });
@@ -1091,13 +1415,28 @@
     document.getElementById('fullAssignTestForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('assignTestTitle').value.trim();
-      const testType = document.getElementById('assignTestType').value;
+      const testType = assignTestTypeEl.value;
+      const adaptive = isAdaptiveModeSelected();
+      const adaptiveQuestionCount = parseInt(adaptiveCountInputEl.value || '20', 10);
       const timeLimitRaw = document.getElementById('assignTimeLimit').value.trim();
-      const targetGrade = document.getElementById('assignTargetGrade').value;
+      const targetGrade = assignTargetGradeEl.value;
       const questionIds = Array.from(state.assignPickedQuestionIds);
 
       if (!title) return;
-      if (questionIds.length === 0) {
+
+      if (adaptive) {
+        if (!adaptiveQuestionCount || adaptiveQuestionCount < 1) {
+          alert('Please enter the total number of questions for this adaptive simulation.');
+          return;
+        }
+        const eligibleCount = state.questionBank.filter(q =>
+          q.status === 'Published' && (targetGrade === 'Both' || q.grades.includes(targetGrade))
+        ).length;
+        if (eligibleCount === 0) {
+          alert(`You don't have any Published questions for ${targetGrade} yet. Publish at least a few questions first!`);
+          return;
+        }
+      } else if (questionIds.length === 0) {
         alert('Please select at least 1 question from the right-hand list.');
         return;
       }
@@ -1127,7 +1466,7 @@
       btn.textContent = 'Assigning...';
 
       try {
-        await window.PrepifyTeacherDB.createTestAssignment({
+        const created = await window.PrepifyTeacherDB.createTestAssignment({
           title,
           testType,
           timeLimitMinutes: timeLimitRaw ? parseInt(timeLimitRaw, 10) : null,
@@ -1135,8 +1474,20 @@
           assignTargetType: state.assignTargetMode,
           classId,
           studentIds,
-          questionIds
+          questionIds,
+          adaptiveQuestionCount
         });
+
+        if (created) {
+          state.assignments.unshift(created);
+          renderAssignedHistoryPanel();
+        } else {
+          const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+          if (liveData?.assignments) {
+            state.assignments = liveData.assignments;
+            renderAssignedHistoryPanel();
+          }
+        }
 
         const msg = document.getElementById('assignTestSuccessMsg');
         msg.classList.remove('hidden');
@@ -1144,7 +1495,7 @@
 
         e.target.reset();
         state.assignPickedQuestionIds.clear();
-        renderAssignQuestionPickerList();
+        updateAssignModeUI();
       } catch (err) {
         alert('Error assigning test: ' + err.message);
       } finally {
@@ -1358,6 +1709,11 @@
 
       try {
         await window.PrepifyTeacherDB.createAssignment(title, clsId, state.selectedQuestionIds);
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData?.assignments) {
+          state.assignments = liveData.assignments;
+          renderAssignedHistoryPanel();
+        }
         alert(`Assigned "${title}" (${state.selectedQuestionIds.size} questions) to ${cls.name}.`);
         state.selectedQuestionIds.clear();
         document.getElementById('qbSelectAllCb').checked = false;
@@ -1847,13 +2203,13 @@
     function renderAll() {
       renderClassesAndRoster();
       renderAssignTestPanel();
+      renderAssignedHistoryPanel();
       populateResultsStudentDropdown();
       renderStudentResults();
       renderQuestionBankTable();
       renderBankHealth();
     }
 
-    // Boot with live Supabase session & data
     (async function bootTeacherStudio() {
       loadSettings();
       populateTopicsForSubject();
@@ -1871,6 +2227,7 @@
           state.classes = liveData.classes;
           state.students = liveData.students;
           state.questionBank = liveData.questions;
+          state.assignments = liveData.assignments || [];
         }
       } catch (err) {
         console.error('Failed to load workspace data:', err);

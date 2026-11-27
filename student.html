@@ -32,9 +32,6 @@
       <button type="button" class="studio-tab active" data-target="assignedTestsPanel">
         <span class="nav-dot"></span> Assigned Tests
       </button>
-      <button type="button" class="studio-tab" data-target="practiceBankPanel">
-        <span class="nav-dot"></span> Practice Bank
-      </button>
       <button type="button" class="studio-tab" data-target="progressPanel">
         <span class="nav-dot"></span> My Progress
       </button>
@@ -71,38 +68,7 @@
       </section>
 
       <!-- =========================================================
-           PANEL 2: PRACTICE BANK (SELF-STUDY DRILLS)
-      ========================================================= -->
-      <section id="practiceBankPanel" class="studio-panel hidden">
-        <div class="card filter-card">
-          <div class="practice-filter-row">
-            <select id="pracSubjectFilter" aria-label="Filter by Subject">
-              <option value="all">All Subjects</option>
-              <option value="Math">Math</option>
-              <option value="ELA">ELA</option>
-            </select>
-            <select id="pracTopicFilter" aria-label="Filter by Topic">
-              <option value="all">All Topics</option>
-            </select>
-            <select id="pracTypeFilter" aria-label="Filter by Question Type">
-              <option value="all">All Question Types</option>
-              <option value="multiple_choice">Multiple Choice</option>
-              <option value="multiple_response">Multiple Response</option>
-              <option value="fill_in_blank">Fill in the Blank</option>
-              <option value="drag_and_drop">Drag and Drop</option>
-              <option value="hotspot">Hotspot</option>
-              <option value="inline_choice">Inline Choice</option>
-              <option value="table_grid">Table Grid</option>
-            </select>
-            <button type="button" class="btn btn-gold" id="startFilteredDrillBtn">Practice Filtered Set</button>
-          </div>
-        </div>
-
-        <div id="practiceQuestionsList" class="stack-list"></div>
-      </section>
-
-      <!-- =========================================================
-           PANEL 3: INTERACTIVE QUESTION & TEST RUNNER
+           PANEL 2: INTERACTIVE QUESTION & TEST RUNNER
       ========================================================= -->
       <section id="testRunnerPanel" class="studio-panel hidden">
         <div class="card runner-card">
@@ -139,7 +105,7 @@
       </section>
 
       <!-- =========================================================
-           PANEL 4: MY PROGRESS
+           PANEL 3: MY PROGRESS
       ========================================================= -->
       <section id="progressPanel" class="studio-panel hidden">
         <div class="progress-stats-grid">
@@ -165,7 +131,7 @@
       </section>
 
       <!-- =========================================================
-           PANEL 5: SETTINGS
+           PANEL 4: SETTINGS
       ========================================================= -->
       <section id="studentSettingsPanel" class="studio-panel hidden">
         <div class="studio-grid">
@@ -240,10 +206,6 @@
         title: 'Assigned Tests',
         subtitle: 'Complete tests and practice sets assigned by your instructor.'
       },
-      practiceBankPanel: {
-        title: 'Practice Bank',
-        subtitle: 'Filter by subject, topic, or question format for self-paced practice.'
-      },
       testRunnerPanel: {
         title: 'Practice Session',
         subtitle: 'Answer each question and check your work for immediate feedback.'
@@ -294,12 +256,21 @@
       }
     };
 
-    // --- Adaptive Question Selection Helper ---
+    // --- Adaptive Pool & Routing Helpers ---
+    function getAdaptivePoolForGrade(targetGrade) {
+      if (!targetGrade || targetGrade === 'Both') {
+        return [...studentState.questions];
+      }
+      const matching = studentState.questions.filter(q =>
+        Array.isArray(q.grades) && q.grades.includes(targetGrade)
+      );
+      return matching.length > 0 ? matching : [...studentState.questions];
+    }
+
     function pickNextAdaptiveQuestion(pool, usedIds, targetDifficulty) {
       const unused = pool.filter(q => !usedIds.has(q.id));
       if (unused.length === 0) return null;
 
-      // Sort unused questions by closest numeric distance to targetDifficulty (with slight random tie-breaker)
       const ranked = unused
         .map(q => ({
           q,
@@ -313,7 +284,7 @@
 
     function stepDifficulty(currentRating, wasCorrect) {
       const idx = DIFFICULTY_LADDER.indexOf(currentRating);
-      const safeIdx = idx >= 0 ? idx : 2; // default 525
+      const safeIdx = idx >= 0 ? idx : 2;
       if (wasCorrect) {
         return DIFFICULTY_LADDER[Math.min(DIFFICULTY_LADDER.length - 1, safeIdx + 1)];
       } else {
@@ -416,7 +387,7 @@
           <div class="card">
             <h3>No Assignments Yet</h3>
             <p class="item-meta" style="margin-top:0.4rem;">
-              Your instructor hasn't assigned any tests to you yet. You can practice any published question in the <strong>Practice Bank</strong> tab!
+              Your instructor hasn't assigned any tests to you yet. Check back soon!
             </p>
           </div>
         `;
@@ -426,8 +397,13 @@
       const classLabel = studentState.classInfo?.name || 'Enrolled Class';
       grid.innerHTML = studentState.assignments.map(asgn => {
         const isDone = studentState.completedAssignmentIds.has(asgn.id) || asgn.completed;
+        const poolCount = asgn.isAdaptive ? getAdaptivePoolForGrade(asgn.targetGrade).length : 0;
+        const effectiveAdaptiveTotal = asgn.isAdaptive
+          ? Math.min(asgn.adaptiveCount || 20, poolCount)
+          : 0;
+
         const countLabel = asgn.isAdaptive
-          ? `Up to ${asgn.adaptiveCount} Adaptive Qs • ${asgn.targetGrade}`
+          ? `${effectiveAdaptiveTotal} Adaptive Question(s) • ${asgn.targetGrade}`
           : `${asgn.questions.length} question(s)`;
         const timeLabel = asgn.timeLimitMinutes ? ` • ${asgn.timeLimitMinutes} min` : '';
 
@@ -447,92 +423,25 @@
       }).join('');
     }
 
-    // --- Render Practice Bank ---
-    function populatePracticeTopics() {
-      const subj = document.getElementById('pracSubjectFilter').value;
-      const topics = [...new Set(
-        studentState.questions
-          .filter(q => subj === 'all' || q.subject === subj)
-          .map(q => q.topic)
-      )];
-      document.getElementById('pracTopicFilter').innerHTML =
-        `<option value="all">All Topics</option>` +
-        topics.map(t => `<option value="${t}">${t}</option>`).join('');
-    }
-
-    function getFilteredPracticeQuestions() {
-      const subj = document.getElementById('pracSubjectFilter').value;
-      const topic = document.getElementById('pracTopicFilter').value;
-      const type = document.getElementById('pracTypeFilter').value;
-
-      return studentState.questions.filter(q =>
-        (subj === 'all' || q.subject === subj) &&
-        (topic === 'all' || q.topic === topic) &&
-        (type === 'all' || q.type === type)
-      );
-    }
-
-    function renderPracticeBank() {
-      const list = document.getElementById('practiceQuestionsList');
-      const filtered = getFilteredPracticeQuestions();
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<div class="card"><p class="item-meta">No published practice questions match those filters yet.</p></div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(q => `
-        <div class="list-item-card">
-          <div>
-            <div style="display:flex; gap:0.45rem; align-items:center; margin-bottom:0.35rem;">
-              <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
-              <span class="tag">${q.topic}</span>
-              <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
-            </div>
-            <strong>${q.prompt}</strong>
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="startSingleQuestion('${q.id}')">Practice →</button>
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('pracSubjectFilter').addEventListener('change', () => {
-      populatePracticeTopics();
-      renderPracticeBank();
-    });
-    document.getElementById('pracTopicFilter').addEventListener('change', renderPracticeBank);
-    document.getElementById('pracTypeFilter').addEventListener('change', renderPracticeBank);
-
-    document.getElementById('startFilteredDrillBtn').addEventListener('click', () => {
-      const qs = getFilteredPracticeQuestions();
-      if (qs.length === 0) return;
-      launchRunner('Custom Topic Drill', null, qs);
-    });
-
     window.startAssignment = function(asgnId) {
       const asgn = studentState.assignments.find(a => a.id === asgnId);
       if (!asgn) return;
 
       if (asgn.isAdaptive) {
-        const pool = studentState.questions.filter(q =>
-          asgn.targetGrade === 'Both' || q.grades.includes(asgn.targetGrade)
-        );
+        const pool = getAdaptivePoolForGrade(asgn.targetGrade);
         if (pool.length === 0) {
-          alert('No published questions are available in the Question Bank for this grade level yet.');
+          alert('No published questions are available in the Question Bank yet. Ask your instructor to publish questions first.');
           return;
         }
-        launchAdaptiveRunner(asgn.title, asgn.id, pool, asgn.adaptiveCount);
+        launchAdaptiveRunner(asgn.title, asgn.id, pool, asgn.adaptiveCount || 20);
         return;
       }
 
-      if (asgn.questions.length === 0) return;
+      if (asgn.questions.length === 0) {
+        alert('This assignment does not have any published questions yet.');
+        return;
+      }
       launchRunner(asgn.title, asgn.id, asgn.questions);
-    };
-
-    window.startSingleQuestion = function(qid) {
-      const q = studentState.questions.find(item => item.id === qid);
-      if (!q) return;
-      launchRunner(`Single Practice: ${q.topic}`, null, [q]);
     };
 
     // --- Standard & Adaptive Runners ---
@@ -918,7 +827,7 @@
 
       const list = document.getElementById('historyList');
       if (total === 0) {
-        list.innerHTML = `<p class="item-meta">No questions attempted yet. Start an assignment or practice drill!</p>`;
+        list.innerHTML = `<p class="item-meta">No questions attempted yet. Start an assigned test to begin!</p>`;
         return;
       }
 
@@ -994,9 +903,7 @@
         console.error('Failed to load student workspace:', err);
       }
 
-      populatePracticeTopics();
       renderAssignedTests();
-      renderPracticeBank();
       renderProgress();
     })();
   </script>
