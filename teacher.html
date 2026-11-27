@@ -37,11 +37,11 @@
       </button>
 
       <span class="sidebar-group-label">CONTENT</span>
+      <button type="button" class="studio-tab" data-target="questionBankPanel">
+        <span class="nav-dot"></span> Question Bank
+      </button>
       <button type="button" class="studio-tab" data-target="createQuestionPanel">
         <span class="nav-dot"></span> Create Question
-      </button>
-      <button type="button" class="studio-tab" data-target="questionBankPanel">
-        <span class="nav-dot"></span> Question Bank & Assign
       </button>
 
       <span class="sidebar-group-label">PREFERENCES</span>
@@ -62,24 +62,16 @@
         <h1 id="topbarTitle">Classes & Roster</h1>
         <p id="topbarSubtitle">Create class join codes and manage your student roster.</p>
       </div>
-      <div class="dashboard-stats">
-        <div class="mini-stat">
-          <strong id="classCountStat">2</strong>
-          <span>Classes</span>
-        </div>
-        <div class="mini-stat">
-          <strong id="studentCountStat">3</strong>
-          <span>Students</span>
-        </div>
-        <div class="mini-stat">
-          <strong id="questionBankStat">2</strong>
-          <span>Questions</span>
-        </div>
+      <div class="topbar-right">
+        <!-- Upper-right CTA button shown on Question Bank tab -->
+        <button type="button" class="btn btn-gold hidden" id="topbarCreateQBtn">+ Create Question</button>
       </div>
     </header>
 
     <main class="app-body">
-      <!-- PANEL 1: CLASSES & ROSTER -->
+      <!-- =========================================================
+           PANEL 1: CLASSES & ROSTER
+      ========================================================= -->
       <section id="classesPanel" class="studio-panel">
         <div class="studio-grid">
           <div class="card">
@@ -106,7 +98,9 @@
         </div>
       </section>
 
-      <!-- PANEL 2: GENERATE STUDENT PASSCODES -->
+      <!-- =========================================================
+           PANEL 2: GENERATE STUDENT PASSCODES
+      ========================================================= -->
       <section id="passcodesPanel" class="studio-panel hidden">
         <div class="studio-grid">
           <div class="card">
@@ -145,17 +139,101 @@
         </div>
       </section>
 
-      <!-- PANEL 3: CREATE QUESTION -->
+      <!-- =========================================================
+           PANEL 3: QUESTION BANK (SEARCHABLE & FILTERABLE TABLE)
+      ========================================================= -->
+      <section id="questionBankPanel" class="studio-panel hidden">
+        <!-- Filter Bar Card -->
+        <div class="card qb-filter-card">
+          <div class="qb-filter-grid">
+            <input
+              type="text"
+              id="qbSearchInput"
+              placeholder="Search prompt or topic..."
+              aria-label="Search prompt or topic"
+            />
+            <select id="qbSubjectFilter" aria-label="Filter by Subject">
+              <option value="all">All Subjects</option>
+              <option value="Math">Math</option>
+              <option value="ELA">ELA</option>
+            </select>
+            <select id="qbGradeFilter" aria-label="Filter by Grade">
+              <option value="all">All Grades</option>
+              <option value="Grade 8">Grade 8</option>
+              <option value="Grade 9">Grade 9</option>
+              <option value="Both">Both (8 & 9)</option>
+            </select>
+            <select id="qbTypeFilter" aria-label="Filter by Question Type">
+              <option value="all">All Types</option>
+              <option value="multiple_choice">Multiple Choice</option>
+              <option value="multiple_response">Multiple Response</option>
+              <option value="fill_in_blank">Fill in the Blank</option>
+              <option value="drag_and_drop">Drag and Drop</option>
+              <option value="hotspot">Hotspot</option>
+              <option value="inline_choice">Inline Choice</option>
+              <option value="table_grid">Table Grid</option>
+            </select>
+            <select id="qbStatusFilter" aria-label="Filter by Status">
+              <option value="all">All Status</option>
+              <option value="Published">Published</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bulk Assign Bar (Appears when 1+ questions are checked) -->
+        <div id="bulkAssignBar" class="card qb-assign-bar hidden">
+          <form id="assignBundleForm" class="qb-assign-form">
+            <span class="qb-selected-label"><strong id="selectedBundleCount">0</strong> selected</span>
+            <input type="text" id="bundleTitleInput" placeholder="New Test / Assignment Title..." required />
+            <select id="bundleClassSelect" required></select>
+            <button type="submit" class="btn btn-primary btn-sm">Assign to Class</button>
+          </form>
+        </div>
+
+        <!-- Question Bank Table Card -->
+        <div class="card qb-table-card">
+          <div class="qb-table-wrapper">
+            <table class="qb-table">
+              <thead>
+                <tr>
+                  <th class="col-check"><input type="checkbox" id="qbSelectAllCb" aria-label="Select all questions" /></th>
+                  <th>ID</th>
+                  <th>SUBJECT</th>
+                  <th>GRADE</th>
+                  <th>TOPIC</th>
+                  <th>TYPE</th>
+                  <th>DIFFICULTY</th>
+                  <th>STATUS</th>
+                  <th>ACCURACY</th>
+                  <th>USES</th>
+                  <th class="col-actions">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="qbTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div id="qbEmptyState" class="empty-state hidden">
+            No questions match your current filters. Try clearing a filter or click <strong>+ Create Question</strong>.
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 4: CREATE QUESTION
+      ========================================================= -->
       <section id="createQuestionPanel" class="studio-panel hidden">
         <form id="createQuestionForm">
+          <input type="hidden" id="editingQuestionId" value="" />
           <div class="builder-two-col">
             <div class="card">
               <div class="form-group">
                 <label for="qSubject">Subject</label>
                 <select id="qSubject" required>
                   <option value="Math">Math</option>
-                  <option value="Reading & Writing">Reading & Writing</option>
-                  <option value="Science">Science</option>
+                  <option value="ELA">ELA</option>
                 </select>
               </div>
 
@@ -209,7 +287,8 @@
 
               <div class="builder-actions">
                 <button type="button" class="btn btn-outline" id="resetQuestionBuilderBtn">Clear Form</button>
-                <button type="submit" class="btn btn-navy">Save & Publish to Bank</button>
+                <button type="button" class="btn btn-outline" id="saveDraftBtn">Save as Draft</button>
+                <button type="submit" class="btn btn-gold" id="publishQuestionBtn">Save & Publish</button>
               </div>
             </div>
 
@@ -262,41 +341,9 @@
         </div>
       </section>
 
-      <!-- PANEL 4: QUESTION BANK & ASSIGN -->
-      <section id="questionBankPanel" class="studio-panel hidden">
-        <div class="studio-grid">
-          <div class="card">
-            <h3>Saved Question Bank</h3>
-            <p class="card-subtitle">Check the questions you want to bundle into a test or practice set.</p>
-            <div id="savedQuestionsList" class="stack-list"></div>
-          </div>
-
-          <div class="card">
-            <h3>Assign Selected Questions to Class</h3>
-            <p class="card-subtitle">Create an assignment from your checked questions above.</p>
-            <form id="assignBundleForm">
-              <div class="form-group">
-                <label for="bundleTitleInput">Assignment / Test Title</label>
-                <input type="text" id="bundleTitleInput" placeholder="e.g., Grade 8 Ratios & Proportions Check" required />
-              </div>
-              <div class="form-group">
-                <label for="bundleClassSelect">Target Class</label>
-                <select id="bundleClassSelect" required></select>
-              </div>
-              <p class="item-meta" style="margin-bottom: 1rem;">
-                Selected Questions: <strong id="selectedBundleCount">0</strong>
-              </p>
-              <button type="submit" class="btn btn-primary full-width">Publish Assignment to Class</button>
-            </form>
-
-            <hr class="divider" />
-            <h4>Published Class Assignments</h4>
-            <div id="publishedTestsList" class="stack-list" style="margin-top: 0.75rem;"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PANEL 5: SETTINGS -->
+      <!-- =========================================================
+           PANEL 5: SETTINGS
+      ========================================================= -->
       <section id="settingsPanel" class="studio-panel hidden">
         <div class="studio-grid">
           <div class="card">
@@ -364,6 +411,24 @@
     </main>
   </div>
 
+  <!-- =========================================================
+       QUESTION PREVIEW MODAL (Triggered from Question Bank Table)
+  ========================================================= -->
+  <div id="qbPreviewModal" class="qb-modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="card qb-modal-card">
+      <div class="qb-modal-header">
+        <div>
+          <span class="section-tag" id="modalQIdLabel">Question ID: epzgjv</span>
+          <h3 id="modalQTopicLabel">Equations & Expressions</h3>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="closePreviewModalBtn">✕ Close</button>
+      </div>
+      <div id="modalQMeta" class="preview-meta-bar"></div>
+      <div id="modalQBody" class="preview-canvas"></div>
+      <div id="modalQExplanation" class="explanation-preview"></div>
+    </div>
+  </div>
+
   <script>
     const PANEL_HEADERS = {
       classesPanel: {
@@ -374,13 +439,13 @@
         title: 'Student Passcodes',
         subtitle: 'Generate email-free student logins and reset passcodes anytime.'
       },
+      questionBankPanel: {
+        title: 'Question Bank',
+        subtitle: 'Every question in the platform, searchable and filterable.'
+      },
       createQuestionPanel: {
         title: 'Question Builder',
         subtitle: 'Create a new item in any supported technology-enhanced format.'
-      },
-      questionBankPanel: {
-        title: 'Question Bank & Assign',
-        subtitle: 'Bundle authored questions into tests and publish them to your classes.'
       },
       settingsPanel: {
         title: 'Settings',
@@ -390,31 +455,22 @@
 
     const SUBJECT_TOPICS = {
       'Math': [
-        'Ratios and Proportions',
-        'Linear Equations & Inequalities',
-        'Functions & Graphing',
+        'Equations & Expressions',
+        'Ratios & Proportions',
+        'Linear Functions',
+        'Number Systems',
         'Systems of Equations',
-        'Exponents & Radicals',
-        'Polynomials & Quadratics',
-        'Geometry & Pythagorean Theorem',
+        'Geometry',
         'Statistics & Probability'
       ],
-      'Reading & Writing': [
+      'ELA': [
+        "Author's Purpose",
+        'Textual Evidence',
+        'Revising/Editing',
+        'Reading Comprehension',
         'Central Ideas & Details',
-        'Command of Evidence',
-        'Inferences',
         'Words in Context',
-        'Text Structure & Purpose',
-        'Grammar & Punctuation',
-        'Rhetorical Synthesis'
-      ],
-      'Science': [
-        'Data Interpretation & Graphs',
-        'Experimental Design',
-        'Physical Science & Forces',
-        'Matter & Chemical Reactions',
-        'Cells, Genetics & Ecology',
-        'Earth & Space Systems'
+        'Grammar & Punctuation'
       ]
     };
 
@@ -428,13 +484,20 @@
       table_grid: 'Table Grid'
     };
 
-    const DIFFICULTY_LABELS = {
-      '300': 'Very Easy (300)',
-      '420': 'Easy (420)',
-      '525': 'Medium (525)',
-      '650': 'Hard (650)',
-      '800': 'Very Hard (800)'
+    const DIFFICULTY_SHORT = {
+      '300': { label: 'Very Easy · 300', tier: 'easy' },
+      '420': { label: 'Easy · 420', tier: 'easy' },
+      '525': { label: 'Medium · 525', tier: 'medium' },
+      '650': { label: 'Hard · 650', tier: 'hard' },
+      '800': { label: 'Very Hard · 800', tier: 'hard' }
     };
+
+    function generateShortId() {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let id = '';
+      for (let i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
 
     const state = {
       classes: [
@@ -448,42 +511,117 @@
       ],
       questionBank: [
         {
-          id: 'q1',
+          id: 'epzgjv',
           subject: 'Math',
           grades: ['Grade 8', 'Grade 9'],
           type: 'multiple_choice',
-          topic: 'Ratios and Proportions',
+          topic: 'Equations & Expressions',
+          subtopic: 'Linear Expressions',
+          difficulty: '420',
+          status: 'Published',
+          accuracy: 84,
+          uses: 2,
+          prompt: 'If 3(x + 4) = 27, what is the value of x?',
+          config: { options: ['3', '5', '9', '15'], correctIndex: 1 },
+          explanation: 'Divide both sides by 3 to get x + 4 = 9, then subtract 4 to get x = 5.'
+        },
+        {
+          id: 'wqeu0d',
+          subject: 'ELA',
+          grades: ['Grade 8', 'Grade 9'],
+          type: 'multiple_choice',
+          topic: "Author's Purpose",
+          subtopic: 'Tone & Intent',
+          difficulty: '420',
+          status: 'Published',
+          accuracy: 78,
+          uses: 1,
+          prompt: 'In the second paragraph, the author cites the 1924 expedition primarily to:',
+          config: {
+            options: [
+              'illustrate how early researchers underestimated the glacier’s movement',
+              'argue that modern equipment is unnecessary for polar exploration',
+              'contrast two competing theories of ocean currents',
+              'introduce a biographical sketch of the lead cartographer'
+            ],
+            correctIndex: 0
+          },
+          explanation: 'The 1924 measurements are immediately contrasted with modern satellite readings to show how earlier estimates fell short.'
+        },
+        {
+          id: '7qo2zs',
+          subject: 'Math',
+          grades: ['Grade 8'],
+          type: 'multiple_response',
+          topic: 'Number Systems',
+          subtopic: 'Irrational Numbers',
+          difficulty: '525',
+          status: 'Published',
+          accuracy: null,
+          uses: 0,
+          prompt: 'Select ALL numbers below that are irrational.',
+          config: { options: ['√16', '√20', 'π / 2', '0.375'], correctIndices: [1, 2] },
+          explanation: '√20 cannot be simplified to a ratio of integers, and π/2 is a non-zero rational multiple of π.'
+        },
+        {
+          id: 'j6jm1p',
+          subject: 'Math',
+          grades: ['Grade 8', 'Grade 9'],
+          type: 'fill_in_blank',
+          topic: 'Ratios & Proportions',
           subtopic: 'Unit Rates',
           difficulty: '420',
+          status: 'Published',
+          accuracy: 91,
+          uses: 3,
           prompt: 'A recipe uses 3 cups of flour for every 2 cups of sugar. How many cups of flour are needed for 9 cups of sugar?',
-          config: { options: ['6 cups', '12 cups', '13.5 cups', '18 cups'], correctIndex: 2 },
+          config: { acceptedAnswers: '13.5, 27/2', caseSensitive: false },
           explanation: 'Set up the proportion 3/2 = x/9. Cross-multiply to get 2x = 27, so x = 13.5 cups.'
         },
         {
-          id: 'q2',
+          id: 'bg2eqz',
           subject: 'Math',
           grades: ['Grade 9'],
           type: 'fill_in_blank',
-          topic: 'Linear Equations & Inequalities',
-          subtopic: 'Two-Step Equations',
+          topic: 'Linear Functions',
+          subtopic: 'Slope-Intercept Form',
           difficulty: '525',
-          prompt: 'Solve for x: 4x - 7 = 21',
-          config: { acceptedAnswers: '7', caseSensitive: false },
-          explanation: 'Add 7 to both sides to get 4x = 28, then divide by 4 to get x = 7.'
+          status: 'Draft',
+          accuracy: null,
+          uses: 0,
+          prompt: 'What is the slope of the line passing through (2, 5) and (6, 13)?',
+          config: { acceptedAnswers: '2', caseSensitive: false },
+          explanation: 'Use m = (13 - 5) / (6 - 2) = 8 / 4 = 2.'
+        },
+        {
+          id: '2sk15n',
+          subject: 'ELA',
+          grades: ['Grade 8', 'Grade 9'],
+          type: 'drag_and_drop',
+          topic: 'Revising/Editing',
+          subtopic: 'Transitions',
+          difficulty: '525',
+          status: 'Published',
+          accuracy: null,
+          uses: 0,
+          prompt: 'Match each transitional phrase to the logical relationship it signals.',
+          config: {
+            items: ['Conversely,', 'Consequently,', 'Furthermore,'],
+            targets: ['Contrast', 'Cause & Effect', 'Addition']
+          },
+          explanation: 'Conversely introduces a contrast, Consequently shows a result, and Furthermore adds supporting information.'
         }
       ],
-      publishedTests: [
-        { id: 't1', title: 'Diagnostic Warmup Set', classId: 'c1', questionCount: 2 }
-      ],
+      selectedQuestionIds: new Set(),
       showPreviewExplanation: false
     };
 
-    // --- Settings ---
+    // --- Settings & Theme Engine ---
     const teacherGreetingEl = document.getElementById('teacherGreeting');
     const instructorNameInput = document.getElementById('instructorNameInput');
     const themeCards = document.querySelectorAll('.mt-theme-card');
 
-const THEME_PALETTES = {
+    const THEME_PALETTES = {
       default: null,
       dracula: {
         '--t-bg': '#282a36',
@@ -528,23 +666,14 @@ const THEME_PALETTES = {
 
     function applyTheme(themeName) {
       const palette = THEME_PALETTES[themeName];
-
       if (!palette) {
         document.body.removeAttribute('data-theme');
-        Object.keys(THEME_PALETTES.dracula).forEach(prop => {
-          document.body.style.removeProperty(prop);
-        });
+        Object.keys(THEME_PALETTES.dracula).forEach(prop => document.body.style.removeProperty(prop));
       } else {
         document.body.setAttribute('data-theme', themeName);
-        Object.entries(palette).forEach(([prop, val]) => {
-          document.body.style.setProperty(prop, val);
-        });
+        Object.entries(palette).forEach(([prop, val]) => document.body.style.setProperty(prop, val));
       }
-
-      themeCards.forEach(card => {
-        card.classList.toggle('active', card.dataset.themeValue === themeName);
-      });
-
+      themeCards.forEach(card => card.classList.toggle('active', card.dataset.themeValue === themeName));
       localStorage.setItem('prepify_teacher_theme', themeName);
     }
 
@@ -552,48 +681,330 @@ const THEME_PALETTES = {
       const savedName = localStorage.getItem('prepify_instructor_name') || 'Instructor';
       teacherGreetingEl.textContent = savedName;
       instructorNameInput.value = savedName;
-
-      const savedTheme = localStorage.getItem('prepify_teacher_theme') || 'default';
-      applyTheme(savedTheme);
+      applyTheme(localStorage.getItem('prepify_teacher_theme') || 'default');
     }
 
     document.getElementById('instructorSettingsForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const newName = instructorNameInput.value.trim();
       if (!newName) return;
-
       localStorage.setItem('prepify_instructor_name', newName);
       teacherGreetingEl.textContent = newName;
-
       const msg = document.getElementById('settingsSavedMsg');
       msg.classList.remove('hidden');
       setTimeout(() => msg.classList.add('hidden'), 2500);
     });
 
-    themeCards.forEach(card => {
-      card.addEventListener('click', () => applyTheme(card.dataset.themeValue));
-    });
+    themeCards.forEach(card => card.addEventListener('click', () => applyTheme(card.dataset.themeValue)));
 
-    // --- Sidebar Tab Switching ---
+    // --- Navigation / Tab Switching ---
     const tabs = document.querySelectorAll('.studio-tab');
     const panels = document.querySelectorAll('.studio-panel');
+    const topbarCreateQBtn = document.getElementById('topbarCreateQBtn');
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const targetId = tab.dataset.target;
-        tabs.forEach(t => t.classList.remove('active'));
-        panels.forEach(p => p.classList.add('hidden'));
-        tab.classList.add('active');
-        document.getElementById(targetId).classList.remove('hidden');
+    function switchTab(targetId) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.target === targetId));
+      panels.forEach(p => p.classList.toggle('hidden', p.id !== targetId));
 
-        if (PANEL_HEADERS[targetId]) {
-          document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
-          document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
-        }
-      });
+      if (PANEL_HEADERS[targetId]) {
+        document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
+        document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
+      }
+
+      // Show "+ Create Question" button in upper-right on Question Bank tab
+      topbarCreateQBtn.classList.toggle('hidden', targetId !== 'questionBankPanel');
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.target)));
+    topbarCreateQBtn.addEventListener('click', () => {
+      resetQuestionForm();
+      switchTab('createQuestionPanel');
     });
 
-    // --- Topic Dropdown ---
+    // --- Render Question Bank Table ---
+    function getGradeDisplay(grades) {
+      if (grades.includes('Grade 8') && grades.includes('Grade 9')) {
+        return { text: 'Both', cls: 'pill-both' };
+      }
+      if (grades.includes('Grade 9')) {
+        return { text: 'Grade 9', cls: 'pill-g9' };
+      }
+      return { text: 'Grade 8', cls: 'pill-g8' };
+    }
+
+    function renderQuestionBankTable() {
+      const search = document.getElementById('qbSearchInput').value.trim().toLowerCase();
+      const subjFilter = document.getElementById('qbSubjectFilter').value;
+      const gradeFilter = document.getElementById('qbGradeFilter').value;
+      const typeFilter = document.getElementById('qbTypeFilter').value;
+      const statusFilter = document.getElementById('qbStatusFilter').value;
+
+      const filtered = state.questionBank.filter(q => {
+        const gradeObj = getGradeDisplay(q.grades);
+        const matchesSearch =
+          !search ||
+          q.prompt.toLowerCase().includes(search) ||
+          q.topic.toLowerCase().includes(search) ||
+          q.id.toLowerCase().includes(search);
+        const matchesSubj = subjFilter === 'all' || q.subject === subjFilter;
+        const matchesGrade =
+          gradeFilter === 'all' ||
+          (gradeFilter === 'Both' && gradeObj.text === 'Both') ||
+          (gradeFilter !== 'Both' && q.grades.includes(gradeFilter));
+        const matchesType = typeFilter === 'all' || q.type === typeFilter;
+        const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
+
+        return matchesSearch && matchesSubj && matchesGrade && matchesType && matchesStatus;
+      });
+
+      const tbody = document.getElementById('qbTableBody');
+      const emptyEl = document.getElementById('qbEmptyState');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      tbody.innerHTML = filtered.map(q => {
+        const gradeObj = getGradeDisplay(q.grades);
+        const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
+        const isChecked = state.selectedQuestionIds.has(q.id);
+        const subjCls = q.subject === 'Math' ? 'pill-math' : 'pill-ela';
+        const statusCls = q.status === 'Published' ? 'pill-published' : 'pill-draft';
+        const accDisplay = q.accuracy !== null && q.accuracy !== undefined ? `${q.accuracy}%` : '—';
+
+        return `
+          <tr>
+            <td class="col-check">
+              <input type="checkbox" class="qb-row-cb" data-qid="${q.id}" ${isChecked ? 'checked' : ''} />
+            </td>
+            <td class="qb-id-cell">${q.id}</td>
+            <td><span class="qb-pill ${subjCls}">${q.subject}</span></td>
+            <td><span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span></td>
+            <td class="qb-topic-cell" title="${q.prompt}">${q.topic}</td>
+            <td><span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span></td>
+            <td><span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span></td>
+            <td><span class="qb-pill ${statusCls}">${q.status}</span></td>
+            <td class="qb-num-cell">${accDisplay}</td>
+            <td class="qb-num-cell">${q.uses}</td>
+            <td class="col-actions">
+              <div class="qb-action-group">
+                <button type="button" class="qb-act-btn" onclick="editQuestion('${q.id}')">Edit</button>
+                <button type="button" class="qb-act-btn" onclick="openQuestionPreviewModal('${q.id}')">Preview</button>
+                <button type="button" class="qb-act-btn qb-act-del" onclick="deleteQuestion('${q.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.qb-row-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const qid = cb.dataset.qid;
+          if (cb.checked) state.selectedQuestionIds.add(qid);
+          else state.selectedQuestionIds.delete(qid);
+          updateBulkAssignBar();
+        });
+      });
+
+      updateBulkAssignBar();
+    }
+
+    function updateBulkAssignBar() {
+      const count = state.selectedQuestionIds.size;
+      document.getElementById('selectedBundleCount').textContent = count;
+      document.getElementById('bulkAssignBar').classList.toggle('hidden', count === 0);
+    }
+
+    ['qbSearchInput', 'qbSubjectFilter', 'qbGradeFilter', 'qbTypeFilter', 'qbStatusFilter'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderQuestionBankTable);
+      document.getElementById(id).addEventListener('change', renderQuestionBankTable);
+    });
+
+    document.getElementById('qbSelectAllCb').addEventListener('change', (e) => {
+      document.querySelectorAll('.qb-row-cb').forEach(cb => {
+        cb.checked = e.target.checked;
+        if (e.target.checked) state.selectedQuestionIds.add(cb.dataset.qid);
+        else state.selectedQuestionIds.delete(cb.dataset.qid);
+      });
+      updateBulkAssignBar();
+    });
+
+    // --- Edit, Preview Modal & Delete Actions ---
+    window.deleteQuestion = function(qid) {
+      const q = state.questionBank.find(item => item.id === qid);
+      if (!q) return;
+      if (!confirm(`Delete question "${q.id}" (${q.topic})?`)) return;
+
+      state.questionBank = state.questionBank.filter(item => item.id !== qid);
+      state.selectedQuestionIds.delete(qid);
+      renderAll();
+    };
+
+    window.editQuestion = function(qid) {
+      const q = state.questionBank.find(item => item.id === qid);
+      if (!q) return;
+
+      switchTab('createQuestionPanel');
+      document.getElementById('topbarTitle').textContent = `Edit Question (${q.id})`;
+      document.getElementById('editingQuestionId').value = q.id;
+
+      qSubjectEl.value = q.subject;
+      populateTopics();
+      qTopicEl.value = q.topic;
+      document.getElementById('qSubtopic').value = q.subtopic || '';
+      document.getElementById('qDifficulty').value = q.difficulty;
+
+      document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => {
+        cb.checked = q.grades.includes(cb.value);
+      });
+
+      qTypeEl.value = q.type;
+      renderAnswerConfigurator();
+
+      document.getElementById('qPrompt').value = q.prompt;
+      document.getElementById('qExplanation').value = q.explanation;
+
+      if (q.type === 'multiple_choice' && q.config.options) {
+        document.querySelectorAll('.mc-opt-input').forEach((inp, i) => (inp.value = q.config.options[i] || ''));
+        const radio = document.querySelector(`input[name="mcCorrect"][value="${q.config.correctIndex}"]`);
+        if (radio) radio.checked = true;
+      } else if (q.type === 'multiple_response' && q.config.options) {
+        document.querySelectorAll('.mr-opt-input').forEach((inp, i) => (inp.value = q.config.options[i] || ''));
+        document.querySelectorAll('.mr-correct-cb').forEach((cb, i) => {
+          cb.checked = (q.config.correctIndices || []).includes(i);
+        });
+      } else if (q.type === 'fill_in_blank') {
+        document.getElementById('fibAnswers').value = q.config.acceptedAnswers || '';
+        document.getElementById('fibCaseSensitive').checked = !!q.config.caseSensitive;
+      }
+
+      updateLivePreview();
+    };
+
+    function buildQuestionPreviewHTML(q, showAnswer) {
+      const displayPrompt = q.prompt || 'Your question prompt will appear here as you type...';
+      if (q.type === 'multiple_choice') {
+        const letters = ['A', 'B', 'C', 'D'];
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <div class="preview-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="preview-opt-item ${showAnswer && idx === q.config.correctIndex ? 'opt-is-correct' : ''}">
+                <input type="radio" name="prev_${q.id || 'live'}" />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      }
+      if (q.type === 'multiple_response') {
+        const letters = ['A', 'B', 'C', 'D'];
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <p class="item-meta" style="margin-bottom:0.5rem;"><em>Select all that apply:</em></p>
+          <div class="preview-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="preview-opt-item ${showAnswer && q.config.correctIndices.includes(idx) ? 'opt-is-correct' : ''}">
+                <input type="checkbox" />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      }
+      if (q.type === 'fill_in_blank') {
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <div class="form-group" style="max-width:340px; margin-top:0.75rem;">
+            <input type="text" placeholder="Student types answer here..." />
+            ${showAnswer ? `<p class="feedback-success" style="margin-top:0.4rem; font-size:0.85rem;">Accepted Answer(s): <strong>${q.config.acceptedAnswers || 'None set'}</strong></p>` : ''}
+          </div>
+        `;
+      }
+      if (q.type === 'drag_and_drop') {
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <div class="dnd-preview-wrap">
+            <div class="dnd-chips">
+              ${q.config.items.map(item => `<span class="dnd-chip">⠿ ${item}</span>`).join('')}
+            </div>
+            <div class="dnd-zones">
+              ${q.config.targets.map((zone, i) => `
+                <div class="dnd-zone">
+                  <span>${zone}</span>
+                  <div class="dnd-slot">${showAnswer ? `✓ ${q.config.items[i]}` : 'Drop item here'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+      if (q.type === 'hotspot') {
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <div class="hotspot-preview-box" id="hotspotClickArea">
+            ${q.config.imageUrl
+              ? `<img src="${q.config.imageUrl}" alt="Hotspot diagram" />`
+              : `<div class="hotspot-placeholder">Coordinate Grid / Diagram Area</div>`
+            }
+            <div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;"><span>🎯</span></div>
+          </div>
+        `;
+      }
+      if (q.type === 'inline_choice') {
+        const renderedSentence = displayPrompt
+          .replace('[blank1]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank1.choices.map(c => `<option ${showAnswer && c === q.config.blank1.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
+          .replace('[blank2]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank2.choices.map(c => `<option ${showAnswer && c === q.config.blank2.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
+        return `<p class="preview-prompt-text" style="line-height:2.1;">${renderedSentence}</p>`;
+      }
+      if (q.type === 'table_grid') {
+        return `
+          <p class="preview-prompt-text">${displayPrompt}</p>
+          <table class="preview-grid-table">
+            <thead><tr><th>Statement</th><th>${q.config.columns[0]}</th><th>${q.config.columns[1]}</th></tr></thead>
+            <tbody>
+              ${q.config.rows.map((row, rIdx) => `
+                <tr>
+                  <td>${row.statement}</td>
+                  <td style="text-align:center;"><input type="radio" name="p_grid_${rIdx}" ${showAnswer && row.correctCol === 0 ? 'checked' : ''} /></td>
+                  <td style="text-align:center;"><input type="radio" name="p_grid_${rIdx}" ${showAnswer && row.correctCol === 1 ? 'checked' : ''} /></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      return `<p class="preview-prompt-text">${displayPrompt}</p>`;
+    }
+
+    window.openQuestionPreviewModal = function(qid) {
+      const q = state.questionBank.find(item => item.id === qid);
+      if (!q) return;
+
+      const gradeObj = getGradeDisplay(q.grades);
+      const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
+
+      document.getElementById('modalQIdLabel').textContent = `Question ID: ${q.id} • ${q.status}`;
+      document.getElementById('modalQTopicLabel').textContent = q.topic;
+      document.getElementById('modalQMeta').innerHTML = `
+        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+        <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
+        <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
+        <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
+      `;
+      document.getElementById('modalQBody').innerHTML = buildQuestionPreviewHTML(q, true);
+      document.getElementById('modalQExplanation').innerHTML = `<strong>Answer Explanation:</strong><p>${q.explanation}</p>`;
+      document.getElementById('qbPreviewModal').classList.remove('hidden');
+    };
+
+    document.getElementById('closePreviewModalBtn').addEventListener('click', () => {
+      document.getElementById('qbPreviewModal').classList.add('hidden');
+    });
+
+    // --- Question Authoring Builder ---
     const qSubjectEl = document.getElementById('qSubject');
     const qTopicEl = document.getElementById('qTopic');
     const qTypeEl = document.getElementById('qType');
@@ -606,7 +1017,6 @@ const THEME_PALETTES = {
 
     qSubjectEl.addEventListener('change', populateTopics);
 
-    // --- Type-Specific Answer Configurator ---
     function renderAnswerConfigurator() {
       const type = qTypeEl.value;
       const box = document.getElementById('dynamicAnswerConfig');
@@ -619,7 +1029,7 @@ const THEME_PALETTES = {
           <div class="options-grid">
             ${['A', 'B', 'C', 'D'].map((letter, idx) => `
               <div class="choice-input-row">
-                <input type="radio" name="mcCorrect" value="${idx}" ${idx === 0 ? 'checked' : ''} title="Mark Option ${letter} as correct" />
+                <input type="radio" name="mcCorrect" value="${idx}" ${idx === 0 ? 'checked' : ''} />
                 <input type="text" class="mc-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
               </div>
             `).join('')}
@@ -631,7 +1041,7 @@ const THEME_PALETTES = {
           <div class="options-grid">
             ${['A', 'B', 'C', 'D'].map((letter, idx) => `
               <div class="choice-input-row">
-                <input type="checkbox" class="mr-correct-cb" value="${idx}" ${idx < 2 ? 'checked' : ''} title="Mark Option ${letter} as correct" />
+                <input type="checkbox" class="mr-correct-cb" value="${idx}" ${idx < 2 ? 'checked' : ''} />
                 <input type="text" class="mr-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
               </div>
             `).join('')}
@@ -659,8 +1069,8 @@ const THEME_PALETTES = {
           <div class="stack-list">
             ${[1, 2, 3].map(n => `
               <div class="form-row">
-                <input type="text" class="dnd-item-input" placeholder="Draggable Item ${n} (e.g., y = 2x + 1)" required />
-                <input type="text" class="dnd-target-input" placeholder="Matching Drop Zone ${n} (e.g., Slope = 2)" required />
+                <input type="text" class="dnd-item-input" placeholder="Draggable Item ${n}" required />
+                <input type="text" class="dnd-target-input" placeholder="Matching Drop Zone ${n}" required />
               </div>
             `).join('')}
           </div>
@@ -674,44 +1084,43 @@ const THEME_PALETTES = {
           </div>
           <div class="form-row">
             <div class="form-group" style="margin-bottom:0;">
-              <label for="hotspotX">Target X Position (% from left, 0–100)</label>
+              <label for="hotspotX">Target X Position (%)</label>
               <input type="number" id="hotspotX" min="0" max="100" value="50" required />
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label for="hotspotY">Target Y Position (% from top, 0–100)</label>
+              <label for="hotspotY">Target Y Position (%)</label>
               <input type="number" id="hotspotY" min="0" max="100" value="50" required />
             </div>
           </div>
-          <small class="field-hint">Tip: You can also click directly on the image inside the Live Preview below to set the hotspot coordinate.</small>
         `;
       } else if (type === 'inline_choice') {
-        hint.textContent = 'Tip: Write [blank1] and [blank2] inside your Question Prompt where inline dropdowns should appear.';
+        hint.textContent = 'Tip: Write [blank1] and [blank2] inside your Question Prompt.';
         box.innerHTML = `
           <label class="config-section-title">Inline Dropdown Options</label>
           <div class="form-row">
             <div class="form-group" style="margin-bottom:0;">
-              <label for="inline1Choices">[blank1] Choices (Comma-separated)</label>
-              <input type="text" id="inline1Choices" placeholder="e.g., increases, decreases, stays constant" required />
-              <input type="text" id="inline1Correct" placeholder="Correct choice for [blank1]" style="margin-top:0.5rem;" required />
+              <label for="inline1Choices">[blank1] Choices</label>
+              <input type="text" id="inline1Choices" placeholder="increases, decreases" required />
+              <input type="text" id="inline1Correct" placeholder="Correct for [blank1]" style="margin-top:0.5rem;" required />
             </div>
             <div class="form-group" style="margin-bottom:0;">
-              <label for="inline2Choices">[blank2] Choices (Optional, Comma-separated)</label>
-              <input type="text" id="inline2Choices" placeholder="e.g., directly, inversely" />
-              <input type="text" id="inline2Correct" placeholder="Correct choice for [blank2]" style="margin-top:0.5rem;" />
+              <label for="inline2Choices">[blank2] Choices (Optional)</label>
+              <input type="text" id="inline2Choices" placeholder="directly, inversely" />
+              <input type="text" id="inline2Correct" placeholder="Correct for [blank2]" style="margin-top:0.5rem;" />
             </div>
           </div>
         `;
       } else if (type === 'table_grid') {
         box.innerHTML = `
-          <label class="config-section-title">Table Grid Rows & Columns (Select the correct column per row)</label>
+          <label class="config-section-title">Table Grid Rows & Columns</label>
           <div class="form-row" style="margin-bottom:0.75rem;">
-            <input type="text" id="gridCol1" value="True" placeholder="Column 1 Header" required />
-            <input type="text" id="gridCol2" value="False" placeholder="Column 2 Header" required />
+            <input type="text" id="gridCol1" value="True" placeholder="Column 1" required />
+            <input type="text" id="gridCol2" value="False" placeholder="Column 2" required />
           </div>
           <div class="stack-list">
             ${[0, 1, 2].map(rIdx => `
               <div class="grid-row-config">
-                <input type="text" class="grid-statement-input" placeholder="Statement / Row ${rIdx + 1}" required />
+                <input type="text" class="grid-statement-input" placeholder="Statement ${rIdx + 1}" required />
                 <label><input type="radio" name="gridRow_${rIdx}" value="0" checked /> Col 1</label>
                 <label><input type="radio" name="gridRow_${rIdx}" value="1" /> Col 2</label>
               </div>
@@ -730,7 +1139,6 @@ const THEME_PALETTES = {
 
     qTypeEl.addEventListener('change', renderAnswerConfigurator);
 
-    // --- Extract Question Data ---
     function getCurrentQuestionData() {
       const subject = qSubjectEl.value;
       const grades = Array.from(document.querySelectorAll('input[name="gradeLevel"]:checked')).map(cb => cb.value);
@@ -742,7 +1150,6 @@ const THEME_PALETTES = {
       const explanation = document.getElementById('qExplanation').value.trim();
 
       let config = {};
-
       if (type === 'multiple_choice') {
         const options = Array.from(document.querySelectorAll('.mc-opt-input')).map(i => i.value.trim() || i.placeholder);
         const checked = document.querySelector('input[name="mcCorrect"]:checked');
@@ -789,188 +1196,83 @@ const THEME_PALETTES = {
       return { subject, grades, type, topic, subtopic, difficulty, prompt, config, explanation };
     }
 
-    // --- Update Live Student Preview ---
     function updateLivePreview() {
       const q = getCurrentQuestionData();
-      const metaBar = document.getElementById('previewMetaBar');
-      const canvas = document.getElementById('livePreviewCanvas');
-      const expBox = document.getElementById('previewExplanationBox');
-      const expText = document.getElementById('previewExplanationText');
+      const gradeObj = getGradeDisplay(q.grades);
+      const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
 
-      const gradeLabel = q.grades.length > 0 ? q.grades.join(' & ') : 'No Grade Selected';
-      metaBar.innerHTML = `
-        <span class="badge">${q.subject}</span>
-        <span class="tag">${gradeLabel}</span>
+      document.getElementById('previewMetaBar').innerHTML = `
+        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+        <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
         <span class="tag">${q.topic}${q.subtopic ? ' • ' + q.subtopic : ''}</span>
-        <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
-        <span class="code-pill">Difficulty: ${DIFFICULTY_LABELS[q.difficulty]}</span>
+        <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
+        <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
       `;
 
-      const displayPrompt = q.prompt || 'Your question prompt will appear here as you type...';
-      let interactionHTML = '';
-
-      if (q.type === 'multiple_choice') {
-        const letters = ['A', 'B', 'C', 'D'];
-        interactionHTML = `
-          <div class="preview-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="preview-opt-item ${state.showPreviewExplanation && idx === q.config.correctIndex ? 'opt-is-correct' : ''}">
-                <input type="radio" name="preview_mc" />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-      } else if (q.type === 'multiple_response') {
-        const letters = ['A', 'B', 'C', 'D'];
-        interactionHTML = `
-          <p class="item-meta" style="margin-bottom:0.5rem;"><em>Select all that apply:</em></p>
-          <div class="preview-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="preview-opt-item ${state.showPreviewExplanation && q.config.correctIndices.includes(idx) ? 'opt-is-correct' : ''}">
-                <input type="checkbox" />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-      } else if (q.type === 'fill_in_blank') {
-        interactionHTML = `
-          <div class="form-group" style="max-width:340px; margin-top:0.75rem;">
-            <input type="text" placeholder="Student types answer here..." />
-            ${state.showPreviewExplanation ? `<p class="feedback-success" style="margin-top:0.4rem; font-size:0.85rem;">Accepted Answer(s): <strong>${q.config.acceptedAnswers || 'None set'}</strong></p>` : ''}
-          </div>
-        `;
-      } else if (q.type === 'drag_and_drop') {
-        interactionHTML = `
-          <div class="dnd-preview-wrap">
-            <div class="dnd-chips">
-              ${q.config.items.map(item => `<span class="dnd-chip">⠿ ${item}</span>`).join('')}
-            </div>
-            <div class="dnd-zones">
-              ${q.config.targets.map((zone, i) => `
-                <div class="dnd-zone">
-                  <span>${zone}</span>
-                  <div class="dnd-slot">${state.showPreviewExplanation ? `✓ ${q.config.items[i]}` : 'Drop item here'}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      } else if (q.type === 'hotspot') {
-        interactionHTML = `
-          <div class="hotspot-preview-box" id="hotspotClickArea" title="Click anywhere to move hotspot target">
-            ${q.config.imageUrl
-              ? `<img src="${q.config.imageUrl}" alt="Hotspot diagram" />`
-              : `<div class="hotspot-placeholder">Coordinate Grid / Diagram Area (Paste an Image URL above, or click anywhere here to test placing the target pin)</div>`
-            }
-            <div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;">
-              <span>🎯</span>
-            </div>
-          </div>
-          <p class="item-meta" style="margin-top:0.4rem;">Target Coordinate: (${q.config.x}%, ${q.config.y}%)</p>
-        `;
-      } else if (q.type === 'inline_choice') {
-        let renderedSentence = displayPrompt
-          .replace('[blank1]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank1.choices.map(c => `<option ${state.showPreviewExplanation && c === q.config.blank1.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
-          .replace('[blank2]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank2.choices.map(c => `<option ${state.showPreviewExplanation && c === q.config.blank2.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
-
-        canvas.innerHTML = `<p class="preview-prompt-text" style="line-height:2.1;">${renderedSentence}</p>`;
-        expText.textContent = q.explanation || 'Your step-by-step explanation will appear here.';
-        expBox.classList.toggle('hidden', !state.showPreviewExplanation);
-        return;
-      } else if (q.type === 'table_grid') {
-        interactionHTML = `
-          <table class="preview-grid-table">
-            <thead>
-              <tr>
-                <th>Statement</th>
-                <th>${q.config.columns[0]}</th>
-                <th>${q.config.columns[1]}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${q.config.rows.map((row, rIdx) => `
-                <tr>
-                  <td>${row.statement}</td>
-                  <td style="text-align:center;">
-                    <input type="radio" name="p_grid_${rIdx}" ${state.showPreviewExplanation && row.correctCol === 0 ? 'checked' : ''} />
-                  </td>
-                  <td style="text-align:center;">
-                    <input type="radio" name="p_grid_${rIdx}" ${state.showPreviewExplanation && row.correctCol === 1 ? 'checked' : ''} />
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      }
-
-      canvas.innerHTML = `
-        <p class="preview-prompt-text">${displayPrompt}</p>
-        ${interactionHTML}
-      `;
-
-      const hotspotArea = document.getElementById('hotspotClickArea');
-      if (hotspotArea) {
-        hotspotArea.addEventListener('click', (e) => {
-          const rect = hotspotArea.getBoundingClientRect();
-          const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-          const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-          const xInput = document.getElementById('hotspotX');
-          const yInput = document.getElementById('hotspotY');
-          if (xInput && yInput) {
-            xInput.value = Math.max(0, Math.min(100, xPct));
-            yInput.value = Math.max(0, Math.min(100, yPct));
-            updateLivePreview();
-          }
-        });
-      }
-
-      expText.textContent = q.explanation || 'Your step-by-step explanation will appear here.';
-      expBox.classList.toggle('hidden', !state.showPreviewExplanation);
+      document.getElementById('livePreviewCanvas').innerHTML = buildQuestionPreviewHTML(q, state.showPreviewExplanation);
+      document.getElementById('previewExplanationText').textContent = q.explanation || 'Your step-by-step explanation will appear here.';
+      document.getElementById('previewExplanationBox').classList.toggle('hidden', !state.showPreviewExplanation);
     }
 
     ['qTopic', 'qSubtopic', 'qDifficulty', 'qPrompt', 'qExplanation'].forEach(id => {
       document.getElementById(id).addEventListener('input', updateLivePreview);
       document.getElementById(id).addEventListener('change', updateLivePreview);
     });
-    document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => {
-      cb.addEventListener('change', updateLivePreview);
-    });
+    document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => cb.addEventListener('change', updateLivePreview));
 
     document.getElementById('togglePreviewAnswerBtn').addEventListener('click', (e) => {
       state.showPreviewExplanation = !state.showPreviewExplanation;
-      e.target.textContent = state.showPreviewExplanation
-        ? 'Hide Post-Answer Explanation'
-        : 'Show Post-Answer Explanation';
+      e.target.textContent = state.showPreviewExplanation ? 'Hide Post-Answer Explanation' : 'Show Post-Answer Explanation';
       updateLivePreview();
     });
 
-    document.getElementById('createQuestionForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const newQ = getCurrentQuestionData();
-      if (newQ.grades.length === 0) {
+    function saveQuestionWithStatus(status) {
+      const form = document.getElementById('createQuestionForm');
+      if (!form.reportValidity()) return;
+
+      const qData = getCurrentQuestionData();
+      if (qData.grades.length === 0) {
         alert('Please select at least one grade level (Grade 8, Grade 9, or both).');
         return;
       }
 
-      newQ.id = 'q' + Date.now();
-      state.questionBank.unshift(newQ);
-      alert('Question saved to your Question Bank! You can bundle it into an assignment under Question Bank & Assign.');
-      e.target.reset();
-      populateTopics();
-      renderAnswerConfigurator();
+      const editingId = document.getElementById('editingQuestionId').value;
+      if (editingId) {
+        const idx = state.questionBank.findIndex(item => item.id === editingId);
+        if (idx !== -1) {
+          state.questionBank[idx] = { ...state.questionBank[idx], ...qData, status };
+        }
+      } else {
+        state.questionBank.unshift({
+          id: generateShortId(),
+          ...qData,
+          status,
+          accuracy: null,
+          uses: 0
+        });
+      }
+
+      resetQuestionForm();
       renderAll();
-    });
+      switchTab('questionBankPanel');
+    }
 
-    document.getElementById('resetQuestionBuilderBtn').addEventListener('click', () => {
+    function resetQuestionForm() {
       document.getElementById('createQuestionForm').reset();
+      document.getElementById('editingQuestionId').value = '';
       populateTopics();
       renderAnswerConfigurator();
+    }
+
+    document.getElementById('createQuestionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveQuestionWithStatus('Published');
     });
 
-    // --- Render Classes, Roster, Question Bank & Assignments ---
+    document.getElementById('saveDraftBtn').addEventListener('click', () => saveQuestionWithStatus('Draft'));
+    document.getElementById('resetQuestionBuilderBtn').addEventListener('click', resetQuestionForm);
+
+    // --- Classes, Students & Bulk Assign ---
     function generateCode(prefix) {
       return `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
     }
@@ -981,10 +1283,6 @@ const THEME_PALETTES = {
     }
 
     function renderAll() {
-      document.getElementById('classCountStat').textContent = state.classes.length;
-      document.getElementById('studentCountStat').textContent = state.students.length;
-      document.getElementById('questionBankStat').textContent = state.questionBank.length;
-
       const classOptionsHTML = state.classes
         .map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`)
         .join('');
@@ -1019,39 +1317,7 @@ const THEME_PALETTES = {
         `;
       }).join('');
 
-      document.getElementById('savedQuestionsList').innerHTML = state.questionBank.map(q => `
-        <label class="list-item-card" style="cursor:pointer; align-items:flex-start;">
-          <div style="display:flex; gap:0.75rem; align-items:flex-start;">
-            <input type="checkbox" class="bundle-q-cb" value="${q.id}" style="margin-top:0.3rem;" />
-            <div>
-              <strong>${q.prompt}</strong>
-              <p class="item-meta">
-                ${q.subject} • ${q.grades.join('/')} • ${q.topic}${q.subtopic ? ' (' + q.subtopic + ')' : ''} • ${QUESTION_TYPE_LABELS[q.type]} • Diff: ${q.difficulty}
-              </p>
-            </div>
-          </div>
-        </label>
-      `).join('');
-
-      document.querySelectorAll('.bundle-q-cb').forEach(cb => {
-        cb.addEventListener('change', () => {
-          document.getElementById('selectedBundleCount').textContent =
-            document.querySelectorAll('.bundle-q-cb:checked').length;
-        });
-      });
-
-      document.getElementById('publishedTestsList').innerHTML = state.publishedTests.map(t => {
-        const cls = state.classes.find(c => c.id === t.classId);
-        return `
-          <div class="list-item-card">
-            <div>
-              <strong>${t.title}</strong>
-              <p class="item-meta">${cls ? cls.name : 'General'} • ${t.questionCount} question(s)</p>
-            </div>
-            <span class="tag">Assigned</span>
-          </div>
-        `;
-      }).join('');
+      renderQuestionBankTable();
     }
 
     document.getElementById('createClassForm').addEventListener('submit', (e) => {
@@ -1097,19 +1363,18 @@ const THEME_PALETTES = {
 
     document.getElementById('assignBundleForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const selected = Array.from(document.querySelectorAll('.bundle-q-cb:checked'));
-      if (selected.length === 0) {
-        alert('Select at least one question from the Question Bank on the left.');
-        return;
-      }
-      state.publishedTests.push({
-        id: 't' + Date.now(),
-        title: document.getElementById('bundleTitleInput').value.trim(),
-        classId: document.getElementById('bundleClassSelect').value,
-        questionCount: selected.length
+      if (state.selectedQuestionIds.size === 0) return;
+
+      // Increment "Uses" counter for each selected question
+      state.questionBank.forEach(q => {
+        if (state.selectedQuestionIds.has(q.id)) q.uses += 1;
       });
+
+      const title = document.getElementById('bundleTitleInput').value.trim();
+      alert(`Published "${title}" with ${state.selectedQuestionIds.size} question(s)!`);
+      state.selectedQuestionIds.clear();
+      document.getElementById('qbSelectAllCb').checked = false;
       e.target.reset();
-      document.getElementById('selectedBundleCount').textContent = '0';
       renderAll();
     });
 
