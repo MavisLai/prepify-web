@@ -2,11 +2,20 @@
 
 const STUDENT_SESSION_KEY = 'prepify_student_session';
 
+function getClient() {
+  const client = window.supabaseClient || window.supabase;
+  if (!client || !client.auth) {
+    throw new Error('Supabase client is not initialized. Check your URL and anon key in gradebook/supabase-client.js.');
+  }
+  return client;
+}
+
 /**
  * 1. TEACHER SIGN UP (Email + Password)
  */
 async function signUpTeacher(email, password, displayName) {
-  const { data, error } = await window.supabaseClient.auth.signUp({
+  const sb = getClient();
+  const { data, error } = await sb.auth.signUp({
     email: email.trim(),
     password,
     options: {
@@ -20,7 +29,7 @@ async function signUpTeacher(email, password, displayName) {
   if (error) throw error;
 
   if (data.user) {
-    await window.supabaseClient.from('profiles').upsert({
+    await sb.from('profiles').upsert({
       id: data.user.id,
       email: email.trim(),
       display_name: displayName.trim(),
@@ -36,10 +45,11 @@ async function signUpTeacher(email, password, displayName) {
  * 2. TEACHER LOGIN (Email + Password)
  */
 async function loginTeacher(email, password) {
+  const sb = getClient();
   // Clear any leftover student session
   localStorage.removeItem(STUDENT_SESSION_KEY);
 
-  const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+  const { data, error } = await sb.auth.signInWithPassword({
     email: email.trim(),
     password
   });
@@ -48,7 +58,7 @@ async function loginTeacher(email, password) {
 
   // Fetch instructor display name if stored in profiles
   if (data.user) {
-    const { data: profile } = await window.supabaseClient
+    const { data: profile } = await sb
       .from('profiles')
       .select('display_name')
       .eq('id', data.user.id)
@@ -68,10 +78,11 @@ async function loginTeacher(email, password) {
  * No email address needed for students.
  */
 async function loginStudentWithPasscode(username, passcode) {
+  const sb = getClient();
   const cleanUser = username.trim().toLowerCase();
   const cleanCode = passcode.trim().toUpperCase();
 
-  const { data: student, error } = await window.supabaseClient
+  const { data: student, error } = await sb
     .from('students')
     .select('id, name, username, grade, class_id, passcode')
     .eq('username', cleanUser)
@@ -103,7 +114,8 @@ async function loginStudentWithPasscode(username, passcode) {
  * 4. SESSION HELPERS & ROUTE GUARDS
  */
 async function getCurrentTeacher() {
-  const { data: { session } } = await window.supabaseClient.auth.getSession();
+  const sb = getClient();
+  const { data: { session } } = await sb.auth.getSession();
   return session?.user || null;
 }
 
@@ -138,8 +150,9 @@ function requireStudent() {
  * 5. LOG OUT (Works for both Teachers and Students)
  */
 async function logoutUser() {
+  const sb = getClient();
   localStorage.removeItem(STUDENT_SESSION_KEY);
-  await window.supabaseClient.auth.signOut();
+  await sb.auth.signOut();
   window.location.href = 'login.html';
 }
 

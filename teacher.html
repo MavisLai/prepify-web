@@ -6,6 +6,116 @@
   <title>Teacher Studio | Prepify Tutoring</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="style-teacher.css" />
+  <style>
+    /* Assign Test Tab Layout & Question Picker Cards */
+    .assign-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1.35fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .assign-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+    .assign-picker-filters {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
+    }
+    @media (max-width: 720px) {
+      .assign-picker-filters {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .assign-q-list {
+      max-height: 540px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding-right: 0.25rem;
+    }
+    .assign-q-card {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--t-border, #e2e0d8);
+      border-radius: 10px;
+      background: var(--t-surface, #ffffff);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .assign-q-card:hover {
+      border-color: var(--t-accent, #16213e);
+    }
+    .assign-q-card.is-picked {
+      border-color: var(--t-accent, #16213e);
+      background: var(--t-sub-alt, #f4f3ee);
+    }
+    .assign-q-card input[type="checkbox"] {
+      margin-top: 0.25rem;
+      width: 17px;
+      height: 17px;
+      accent-color: var(--t-accent, #16213e);
+      cursor: pointer;
+    }
+    .assign-q-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .assign-q-prompt {
+      margin: 0;
+      font-size: 0.93rem;
+      line-height: 1.45;
+      color: var(--t-text, #1f2328);
+    }
+    .student-checklist-box {
+      max-height: 170px;
+      overflow-y: auto;
+      border: 1px solid var(--t-border, #d8d6ce);
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      background: var(--t-sub-alt, #faf9f6);
+    }
+    .student-check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .assign-target-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .target-mode-btn {
+      padding: 0.55rem 0.75rem;
+      border: 1.5px solid var(--t-border, #d8d6ce);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--t-text, #1f2328);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .target-mode-btn.active {
+      background: var(--t-accent, #16213e);
+      color: var(--t-accent-text, #ffffff);
+      border-color: var(--t-accent, #16213e);
+    }
+  </style>
 </head>
 <body class="app-shell">
 
@@ -34,6 +144,9 @@
       </button>
       <button type="button" class="studio-tab" data-target="passcodesPanel">
         <span class="nav-dot"></span> Student Passcodes
+      </button>
+      <button type="button" class="studio-tab" data-target="assignTestPanel">
+        <span class="nav-dot"></span> Assign Test
       </button>
       <button type="button" class="studio-tab" data-target="studentResultsPanel">
         <span class="nav-dot"></span> Student Results
@@ -69,7 +182,6 @@
         <p id="topbarSubtitle">Create class join codes and manage your student roster.</p>
       </div>
       <div class="topbar-right">
-        <!-- Upper-right CTA button shown on Question Bank tab -->
         <button type="button" class="btn btn-gold hidden" id="topbarCreateQBtn">+ Create Question</button>
       </div>
     </header>
@@ -146,10 +258,145 @@
       </section>
 
       <!-- =========================================================
+           PANEL: ASSIGN TEST (BUILDER + QUESTION BANK PICKER)
+      ========================================================= -->
+      <section id="assignTestPanel" class="studio-panel hidden">
+        <div class="assign-two-col">
+          <!-- Left Column: Test Configuration & Recipients -->
+          <div class="card">
+            <h3>Test Details & Recipients</h3>
+            <p class="card-subtitle">Configure test settings and choose who receives this assignment.</p>
+
+            <form id="fullAssignTestForm">
+              <div class="form-group">
+                <label for="assignTestTitle">Test Title</label>
+                <input
+                  type="text"
+                  id="assignTestTitle"
+                  placeholder="e.g., Grade 8 Full Diagnostic #1"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="assignTestType">Test Type</label>
+                <select id="assignTestType" required>
+                  <option value="diagnostic_test">Diagnostic Test</option>
+                  <option value="topic_test">Topic Test</option>
+                  <option value="ela_test">ELA Test</option>
+                  <option value="math_test">Math Test</option>
+                  <option value="full_adaptive_simulation">Full Adaptive Simulation</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="assignTimeLimit">Time Limit (Minutes)</label>
+                  <input
+                    type="number"
+                    id="assignTimeLimit"
+                    min="1"
+                    max="300"
+                    placeholder="e.g., 45 (blank = untimed)"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="assignTargetGrade">Grade Level</label>
+                  <select id="assignTargetGrade" required>
+                    <option value="Grade 8">Grade 8</option>
+                    <option value="Grade 9">Grade 9</option>
+                    <option value="Both">Both (Grade 8 & 9)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Assign To</label>
+                <div class="assign-target-toggle">
+                  <button type="button" class="target-mode-btn active" id="modeClassBtn" data-mode="class">
+                    Entire Class
+                  </button>
+                  <button type="button" class="target-mode-btn" id="modeStudentsBtn" data-mode="students">
+                    Individual Students
+                  </button>
+                </div>
+
+                <!-- Option A: Entire Class Dropdown -->
+                <div id="assignClassTargetGroup">
+                  <select id="assignTestClassSelect"></select>
+                </div>
+
+                <!-- Option B: Individual Students Checklist -->
+                <div id="assignStudentsTargetGroup" class="hidden">
+                  <div id="assignStudentsChecklist" class="student-checklist-box"></div>
+                </div>
+              </div>
+
+              <div class="list-item-card" style="margin-bottom: 1rem;">
+                <span>Selected Questions</span>
+                <strong id="assignSelectedCountBadge">0 question(s)</strong>
+              </div>
+
+              <button type="submit" id="submitAssignTestBtn" class="btn btn-gold full-width">
+                Assign Test Now
+              </button>
+              <p id="assignTestSuccessMsg" class="settings-saved-msg hidden" style="margin-top:0.65rem;">
+                ✓ Test assigned successfully!
+              </p>
+            </form>
+          </div>
+
+          <!-- Right Column: Question Bank Selector with Filters & Previews -->
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-bottom:0.35rem;">
+              <h3>Select Questions from Bank</h3>
+              <div style="display:flex; gap:0.4rem;">
+                <button type="button" class="btn btn-outline btn-sm" id="assignSelectVisibleBtn">Select All Filtered</button>
+                <button type="button" class="btn btn-outline btn-sm" id="assignClearPickedBtn">Clear</button>
+              </div>
+            </div>
+            <p class="card-subtitle">Filter by subject, grade, or difficulty and check questions to include.</p>
+
+            <div class="assign-picker-filters">
+              <input
+                type="text"
+                id="assignQSearch"
+                placeholder="Search prompt or topic..."
+                aria-label="Search questions"
+              />
+              <select id="assignQSubjectFilter" aria-label="Filter by Subject">
+                <option value="all">Math & ELA</option>
+                <option value="Math">Math</option>
+                <option value="ELA">ELA</option>
+              </select>
+              <select id="assignQGradeFilter" aria-label="Filter by Grade">
+                <option value="all">All Grades</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Both">Both (8 & 9)</option>
+              </select>
+              <select id="assignQDiffFilter" aria-label="Filter by Difficulty">
+                <option value="all">All Difficulties</option>
+                <option value="300">Very Easy (300)</option>
+                <option value="420">Easy (420)</option>
+                <option value="525">Medium (525)</option>
+                <option value="650">Hard (650)</option>
+                <option value="800">Very Hard (800)</option>
+              </select>
+            </div>
+
+            <div id="assignQuestionPickerList" class="assign-q-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
            PANEL: STUDENT RESULTS & ANALYTICS
       ========================================================= -->
       <section id="studentResultsPanel" class="studio-panel hidden">
-        <!-- Top Student Selector -->
         <div class="card" style="margin-bottom: 1.25rem;">
           <div class="form-group" style="margin-bottom: 0; max-width: 420px;">
             <label for="resultsStudentSelect">Select Student</label>
@@ -157,7 +404,6 @@
           </div>
         </div>
 
-        <!-- 4 Summary Metrics -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem;">
           <div class="card">
             <span class="item-meta">Tests Completed</span>
@@ -177,7 +423,6 @@
           </div>
         </div>
 
-        <!-- Two-Column Breakdown: Accuracy by Topic & Recently Missed Questions -->
         <div class="studio-grid" style="margin-bottom: 1.25rem;">
           <div class="card">
             <h3>Accuracy by Topic</h3>
@@ -192,7 +437,6 @@
           </div>
         </div>
 
-        <!-- Completed Tests History Table -->
         <div class="card qb-table-card">
           <div style="padding: 1.25rem 1.25rem 0.75rem;">
             <h3>Completed Tests</h3>
@@ -216,7 +460,6 @@
            PANEL 3: QUESTION BANK (SEARCHABLE & FILTERABLE TABLE)
       ========================================================= -->
       <section id="questionBankPanel" class="studio-panel hidden">
-        <!-- Filter Bar Card -->
         <div class="card qb-filter-card">
           <div class="qb-filter-grid">
             <input
@@ -254,7 +497,6 @@
           </div>
         </div>
 
-        <!-- Bulk Assign Bar (Appears when 1+ questions are checked) -->
         <div id="bulkAssignBar" class="card qb-assign-bar hidden">
           <form id="assignBundleForm" class="qb-assign-form">
             <span class="qb-selected-label"><strong id="selectedBundleCount">0</strong> selected</span>
@@ -264,7 +506,6 @@
           </form>
         </div>
 
-        <!-- Question Bank Table Card -->
         <div class="card qb-table-card">
           <div class="qb-table-wrapper">
             <table class="qb-table">
@@ -283,9 +524,7 @@
                   <th class="col-actions">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody id="qbTableBody">
-                <!-- Populated dynamically -->
-              </tbody>
+              <tbody id="qbTableBody"></tbody>
             </table>
           </div>
           <div id="qbEmptyState" class="empty-state hidden">
@@ -418,9 +657,7 @@
            PANEL 5: QUESTION BANK HEALTH
       ========================================================= -->
       <section id="bankHealthPanel" class="studio-panel hidden">
-        <div id="bankHealthGrid" class="bh-grid">
-          <!-- Populated dynamically by renderBankHealth() -->
-        </div>
+        <div id="bankHealthGrid" class="bh-grid"></div>
       </section>
 
       <!-- =========================================================
@@ -494,7 +731,7 @@
   </div>
 
   <!-- =========================================================
-       QUESTION PREVIEW MODAL (Triggered from Question Bank Table)
+       QUESTION PREVIEW MODAL
   ========================================================= -->
   <div id="qbPreviewModal" class="qb-modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="card qb-modal-card">
@@ -511,6 +748,12 @@
     </div>
   </div>
 
+  <!-- Load Supabase, Auth & Teacher DB Helpers FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="gradebook/js/supabase-client.js"></script>
+  <script src="gradebook/js/auth.js"></script>
+  <script src="gradebook/js/teacher.js"></script>
+
   <script>
     const PANEL_HEADERS = {
       classesPanel: {
@@ -520,6 +763,10 @@
       passcodesPanel: {
         title: 'Student Passcodes',
         subtitle: 'Generate email-free student logins and reset passcodes anytime.'
+      },
+      assignTestPanel: {
+        title: 'Assign Test',
+        subtitle: 'Build a timed or untimed test and assign it to an entire class or individual students.'
       },
       studentResultsPanel: {
         title: 'Student Results',
@@ -590,194 +837,20 @@
     }
 
     const state = {
-      classes: [
-        { id: 'c1', name: 'Grade 8 Math Foundations', schedule: 'Tue/Thu 4:30 PM', joinCode: 'MATH-492' },
-        { id: 'c2', name: 'Grade 9 Honors Algebra', schedule: 'Wed 5:00 PM', joinCode: 'ALG9-815' }
-      ],
-      students: [
-        {
-          id: 's1',
-          name: 'Alex M.',
-          username: 'alex_m',
-          grade: 'Grade 8',
-          classId: 'c1',
-          results: {
-            elaScore: 310,
-            mathScore: 345,
-            avgAccuracy: 82,
-            topicAccuracy: [
-              { topic: 'Ratios & Proportions', accuracy: 92 },
-              { topic: 'Equations & Expressions', accuracy: 86 },
-              { topic: 'Reading Comprehension', accuracy: 80 },
-              { topic: 'Number Systems', accuracy: 74 },
-              { topic: 'Revising/Editing', accuracy: 68 }
-            ],
-            missedQuestions: [
-              { id: '2sk15n', topic: 'Revising/Editing', subject: 'ELA', prompt: 'Match each transitional phrase to the logical relationship it signals.', date: 'Nov 25, 2026' },
-              { id: '7qo2zs', topic: 'Number Systems', subject: 'Math', prompt: 'Select ALL numbers below that are irrational.', date: 'Nov 22, 2026' }
-            ],
-            tests: [
-              { title: 'Full Adaptive Practice Sim #2', score: '655 (84%)', date: 'Nov 25, 2026' },
-              { title: 'Grade 8 Ratios & Proportions Check', score: '92%', date: 'Nov 22, 2026' },
-              { title: 'Diagnostic Warmup Set', score: '78%', date: 'Nov 18, 2026' }
-            ]
-          }
-        },
-        {
-          id: 's2',
-          name: 'Jordan P.',
-          username: 'jordan_p',
-          grade: 'Grade 8',
-          classId: 'c1',
-          results: {
-            elaScore: 335,
-            mathScore: 295,
-            avgAccuracy: 79,
-            topicAccuracy: [
-              { topic: "Author's Purpose", accuracy: 95 },
-              { topic: 'Textual Evidence', accuracy: 88 },
-              { topic: 'Ratios & Proportions', accuracy: 75 },
-              { topic: 'Geometry', accuracy: 62 }
-            ],
-            missedQuestions: [
-              { id: 'epzgjv', topic: 'Equations & Expressions', subject: 'Math', prompt: 'If 3(x + 4) = 27, what is the value of x?', date: 'Nov 24, 2026' }
-            ],
-            tests: [
-              { title: 'Full Adaptive Practice Sim #1', score: '630 (80%)', date: 'Nov 24, 2026' },
-              { title: 'Diagnostic Warmup Set', score: '78%', date: 'Nov 19, 2026' }
-            ]
-          }
-        },
-        {
-          id: 's3',
-          name: 'Priya S.',
-          username: 'priya_s',
-          grade: 'Grade 9',
-          classId: 'c2',
-          results: {
-            elaScore: 360,
-            mathScore: 375,
-            avgAccuracy: 91,
-            topicAccuracy: [
-              { topic: 'Linear Functions', accuracy: 96 },
-              { topic: 'Equations & Expressions', accuracy: 94 },
-              { topic: 'Reading Comprehension', accuracy: 90 },
-              { topic: 'Systems of Equations', accuracy: 85 }
-            ],
-            missedQuestions: [],
-            tests: [
-              { title: 'Grade 9 Honors Benchmark #1', score: '735 (92%)', date: 'Nov 26, 2026' },
-              { title: 'Linear Functions Mastery Check', score: '90%', date: 'Nov 20, 2026' }
-            ]
-          }
-        }
-      ],
-      questionBank: [
-        {
-          id: 'epzgjv',
-          subject: 'Math',
-          grades: ['Grade 8', 'Grade 9'],
-          type: 'multiple_choice',
-          topic: 'Equations & Expressions',
-          subtopic: 'Linear Expressions',
-          difficulty: '420',
-          status: 'Published',
-          accuracy: 84,
-          uses: 2,
-          prompt: 'If 3(x + 4) = 27, what is the value of x?',
-          config: { options: ['3', '5', '9', '15'], correctIndex: 1 },
-          explanation: 'Divide both sides by 3 to get x + 4 = 9, then subtract 4 to get x = 5.'
-        },
-        {
-          id: 'wqeu0d',
-          subject: 'ELA',
-          grades: ['Grade 8', 'Grade 9'],
-          type: 'multiple_choice',
-          topic: "Author's Purpose",
-          subtopic: 'Tone & Intent',
-          difficulty: '420',
-          status: 'Published',
-          accuracy: 78,
-          uses: 1,
-          prompt: 'In the second paragraph, the author cites the 1924 expedition primarily to:',
-          config: {
-            options: [
-              'illustrate how early researchers underestimated the glacier’s movement',
-              'argue that modern equipment is unnecessary for polar exploration',
-              'contrast two competing theories of ocean currents',
-              'introduce a biographical sketch of the lead cartographer'
-            ],
-            correctIndex: 0
-          },
-          explanation: 'The 1924 measurements are immediately contrasted with modern satellite readings to show how earlier estimates fell short.'
-        },
-        {
-          id: '7qo2zs',
-          subject: 'Math',
-          grades: ['Grade 8'],
-          type: 'multiple_response',
-          topic: 'Number Systems',
-          subtopic: 'Irrational Numbers',
-          difficulty: '525',
-          status: 'Published',
-          accuracy: null,
-          uses: 0,
-          prompt: 'Select ALL numbers below that are irrational.',
-          config: { options: ['√16', '√20', 'π / 2', '0.375'], correctIndices: [1, 2] },
-          explanation: '√20 cannot be simplified to a ratio of integers, and π/2 is a non-zero rational multiple of π.'
-        },
-        {
-          id: 'j6jm1p',
-          subject: 'Math',
-          grades: ['Grade 8', 'Grade 9'],
-          type: 'fill_in_blank',
-          topic: 'Ratios & Proportions',
-          subtopic: 'Unit Rates',
-          difficulty: '420',
-          status: 'Published',
-          accuracy: 91,
-          uses: 3,
-          prompt: 'A recipe uses 3 cups of flour for every 2 cups of sugar. How many cups of flour are needed for 9 cups of sugar?',
-          config: { acceptedAnswers: '13.5, 27/2', caseSensitive: false },
-          explanation: 'Set up the proportion 3/2 = x/9. Cross-multiply to get 2x = 27, so x = 13.5 cups.'
-        },
-        {
-          id: 'bg2eqz',
-          subject: 'Math',
-          grades: ['Grade 9'],
-          type: 'fill_in_blank',
-          topic: 'Linear Functions',
-          subtopic: 'Slope-Intercept Form',
-          difficulty: '525',
-          status: 'Draft',
-          accuracy: null,
-          uses: 0,
-          prompt: 'What is the slope of the line passing through (2, 5) and (6, 13)?',
-          config: { acceptedAnswers: '2', caseSensitive: false },
-          explanation: 'Use m = (13 - 5) / (6 - 2) = 8 / 4 = 2.'
-        },
-        {
-          id: '2sk15n',
-          subject: 'ELA',
-          grades: ['Grade 8', 'Grade 9'],
-          type: 'drag_and_drop',
-          topic: 'Revising/Editing',
-          subtopic: 'Transitions',
-          difficulty: '525',
-          status: 'Published',
-          accuracy: null,
-          uses: 0,
-          prompt: 'Match each transitional phrase to the logical relationship it signals.',
-          config: {
-            items: ['Conversely,', 'Consequently,', 'Furthermore,'],
-            targets: ['Contrast', 'Cause & Effect', 'Addition']
-          },
-          explanation: 'Conversely introduces a contrast, Consequently shows a result, and Furthermore adds supporting information.'
-        }
-      ],
+      classes: [],
+      students: [],
+      questionBank: [],
       selectedQuestionIds: new Set(),
+      assignPickedQuestionIds: new Set(),
+      assignTargetMode: 'class',
       showPreviewExplanation: false
     };
+
+    // --- Logout ---
+    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await window.PrepifyAuth.logoutUser();
+    });
 
     // --- Settings & Theme Engine ---
     const teacherGreetingEl = document.getElementById('teacherGreeting');
@@ -847,15 +920,19 @@
       applyTheme(localStorage.getItem('prepify_teacher_theme') || 'default');
     }
 
-    document.getElementById('instructorSettingsForm').addEventListener('submit', (e) => {
+    document.getElementById('instructorSettingsForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const newName = instructorNameInput.value.trim();
       if (!newName) return;
-      localStorage.setItem('prepify_instructor_name', newName);
-      teacherGreetingEl.textContent = newName;
-      const msg = document.getElementById('settingsSavedMsg');
-      msg.classList.remove('hidden');
-      setTimeout(() => msg.classList.add('hidden'), 2500);
+      try {
+        await window.PrepifyTeacherDB.updateInstructorName(newName);
+        teacherGreetingEl.textContent = newName;
+        const msg = document.getElementById('settingsSavedMsg');
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 2500);
+      } catch (err) {
+        alert('Could not update instructor name: ' + err.message);
+      }
     });
 
     themeCards.forEach(card => card.addEventListener('click', () => applyTheme(card.dataset.themeValue)));
@@ -883,10 +960,207 @@
       switchTab('createQuestionPanel');
     });
 
+    // --- Assign Test Tab Logic ---
+    const modeClassBtn = document.getElementById('modeClassBtn');
+    const modeStudentsBtn = document.getElementById('modeStudentsBtn');
+    const assignClassTargetGroup = document.getElementById('assignClassTargetGroup');
+    const assignStudentsTargetGroup = document.getElementById('assignStudentsTargetGroup');
+
+    function setAssignTargetMode(mode) {
+      state.assignTargetMode = mode;
+      modeClassBtn.classList.toggle('active', mode === 'class');
+      modeStudentsBtn.classList.toggle('active', mode === 'students');
+      assignClassTargetGroup.classList.toggle('hidden', mode !== 'class');
+      assignStudentsTargetGroup.classList.toggle('hidden', mode !== 'students');
+    }
+
+    modeClassBtn.addEventListener('click', () => setAssignTargetMode('class'));
+    modeStudentsBtn.addEventListener('click', () => setAssignTargetMode('students'));
+
+    function getFilteredAssignPickerQuestions() {
+      const search = document.getElementById('assignQSearch').value.trim().toLowerCase();
+      const subj = document.getElementById('assignQSubjectFilter').value;
+      const grade = document.getElementById('assignQGradeFilter').value;
+      const diff = document.getElementById('assignQDiffFilter').value;
+
+      return state.questionBank.filter(q => {
+        const gradeObj = getGradeDisplay(q.grades);
+        const matchesSearch =
+          !search ||
+          q.prompt.toLowerCase().includes(search) ||
+          q.topic.toLowerCase().includes(search);
+        const matchesSubj = subj === 'all' || q.subject === subj;
+        const matchesGrade =
+          grade === 'all' ||
+          (grade === 'Both' && gradeObj.text === 'Both') ||
+          (grade !== 'Both' && q.grades.includes(grade));
+        const matchesDiff = diff === 'all' || String(q.difficulty) === diff;
+        return matchesSearch && matchesSubj && matchesGrade && matchesDiff;
+      });
+    }
+
+    function updateAssignPickedCounter() {
+      document.getElementById('assignSelectedCountBadge').textContent =
+        `${state.assignPickedQuestionIds.size} question(s)`;
+    }
+
+    function renderAssignTestPanel() {
+      // Populate Class dropdown
+      const classSelect = document.getElementById('assignTestClassSelect');
+      classSelect.innerHTML = state.classes.length > 0
+        ? state.classes.map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`).join('')
+        : `<option value="">No classes created yet</option>`;
+
+      // Populate Individual Students checklist
+      const studentBox = document.getElementById('assignStudentsChecklist');
+      if (state.students.length === 0) {
+        studentBox.innerHTML = `<span class="item-meta">No students enrolled yet. Create students in Student Passcodes first.</span>`;
+      } else {
+        studentBox.innerHTML = state.students.map(s => {
+          const cls = state.classes.find(c => c.id === s.classId);
+          return `
+            <label class="student-check-row">
+              <input type="checkbox" name="assignTargetStudent" value="${s.id}" />
+              <span><strong>${s.name}</strong> <small class="item-meta">(@${s.username}${cls ? ' • ' + cls.name : ''})</small></span>
+            </label>
+          `;
+        }).join('');
+      }
+
+      renderAssignQuestionPickerList();
+    }
+
+    function renderAssignQuestionPickerList() {
+      const listEl = document.getElementById('assignQuestionPickerList');
+      const filtered = getFilteredAssignPickerQuestions();
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="item-meta">No questions match those filters. Try adjusting filters or create questions first.</p>`;
+        updateAssignPickedCounter();
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(q => {
+        const isPicked = state.assignPickedQuestionIds.has(q.id);
+        const gradeObj = getGradeDisplay(q.grades);
+        const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
+
+        return `
+          <label class="assign-q-card ${isPicked ? 'is-picked' : ''}">
+            <input type="checkbox" class="assign-q-cb" data-qid="${q.id}" ${isPicked ? 'checked' : ''} />
+            <div style="flex: 1; min-width: 0;">
+              <div class="assign-q-meta">
+                <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+                <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
+                <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
+                <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
+              </div>
+              <p class="assign-q-prompt">${q.prompt}</p>
+            </div>
+          </label>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('.assign-q-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (cb.checked) state.assignPickedQuestionIds.add(cb.dataset.qid);
+          else state.assignPickedQuestionIds.delete(cb.dataset.qid);
+          cb.closest('.assign-q-card').classList.toggle('is-picked', cb.checked);
+          updateAssignPickedCounter();
+        });
+      });
+
+      updateAssignPickedCounter();
+    }
+
+    ['assignQSearch', 'assignQSubjectFilter', 'assignQGradeFilter', 'assignQDiffFilter'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderAssignQuestionPickerList);
+      document.getElementById(id).addEventListener('change', renderAssignQuestionPickerList);
+    });
+
+    document.getElementById('assignSelectVisibleBtn').addEventListener('click', () => {
+      getFilteredAssignPickerQuestions().forEach(q => state.assignPickedQuestionIds.add(q.id));
+      renderAssignQuestionPickerList();
+    });
+
+    document.getElementById('assignClearPickedBtn').addEventListener('click', () => {
+      state.assignPickedQuestionIds.clear();
+      renderAssignQuestionPickerList();
+    });
+
+    document.getElementById('fullAssignTestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('assignTestTitle').value.trim();
+      const testType = document.getElementById('assignTestType').value;
+      const timeLimitRaw = document.getElementById('assignTimeLimit').value.trim();
+      const targetGrade = document.getElementById('assignTargetGrade').value;
+      const questionIds = Array.from(state.assignPickedQuestionIds);
+
+      if (!title) return;
+      if (questionIds.length === 0) {
+        alert('Please select at least 1 question from the right-hand list.');
+        return;
+      }
+
+      let classId = null;
+      let studentIds = [];
+
+      if (state.assignTargetMode === 'class') {
+        classId = document.getElementById('assignTestClassSelect').value;
+        if (!classId) {
+          alert('Please select a class to assign this test to.');
+          return;
+        }
+      } else {
+        studentIds = Array.from(
+          document.querySelectorAll('input[name="assignTargetStudent"]:checked')
+        ).map(cb => cb.value);
+
+        if (studentIds.length === 0) {
+          alert('Please check at least one student to assign this test to.');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('submitAssignTestBtn');
+      btn.disabled = true;
+      btn.textContent = 'Assigning...';
+
+      try {
+        await window.PrepifyTeacherDB.createTestAssignment({
+          title,
+          testType,
+          timeLimitMinutes: timeLimitRaw ? parseInt(timeLimitRaw, 10) : null,
+          targetGrade,
+          assignTargetType: state.assignTargetMode,
+          classId,
+          studentIds,
+          questionIds
+        });
+
+        const msg = document.getElementById('assignTestSuccessMsg');
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+
+        e.target.reset();
+        state.assignPickedQuestionIds.clear();
+        renderAssignQuestionPickerList();
+      } catch (err) {
+        alert('Error assigning test: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Assign Test Now';
+      }
+    });
+
     // --- Student Results Tab ---
     const resultsStudentSelect = document.getElementById('resultsStudentSelect');
 
     function populateResultsStudentDropdown() {
+      if (state.students.length === 0) {
+        resultsStudentSelect.innerHTML = `<option value="">No students enrolled yet</option>`;
+        return;
+      }
       const currentVal = resultsStudentSelect.value;
       resultsStudentSelect.innerHTML = state.students
         .map(s => `<option value="${s.id}">${s.name} — ${s.grade || 'Grade 8'}</option>`)
@@ -899,7 +1173,16 @@
 
     function renderStudentResults() {
       const student = state.students.find(s => s.id === resultsStudentSelect.value) || state.students[0];
-      if (!student) return;
+      if (!student) {
+        document.getElementById('resTestsCompleted').textContent = '0';
+        document.getElementById('resElaScore').textContent = '—';
+        document.getElementById('resMathScore').textContent = '—';
+        document.getElementById('resAvgAccuracy').textContent = '—';
+        document.getElementById('resTopicAccuracyList').innerHTML = `<p class="item-meta">Add a student in Student Passcodes to view results.</p>`;
+        document.getElementById('resMissedQuestionsList').innerHTML = `<p class="item-meta">No missed questions recorded.</p>`;
+        document.getElementById('resTestHistoryBody').innerHTML = `<tr><td colspan="3" class="item-meta">No tests completed yet.</td></tr>`;
+        return;
+      }
 
       const res = student.results || {
         elaScore: null,
@@ -1066,26 +1349,38 @@
       document.getElementById(id).addEventListener('change', renderQuestionBankTable);
     });
 
-    document.getElementById('assignBundleForm').addEventListener('submit', (e) => {
+    document.getElementById('assignBundleForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('bundleTitleInput').value.trim();
       const clsId = document.getElementById('bundleClassSelect').value;
       const cls = state.classes.find(c => c.id === clsId);
       if (!title || !cls) return;
-      alert(`Assigned "${title}" (${state.selectedQuestionIds.size} questions) to ${cls.name}.`);
-      state.selectedQuestionIds.clear();
-      document.getElementById('qbSelectAllCb').checked = false;
-      updateBulkAssignBar();
-      e.target.reset();
+
+      try {
+        await window.PrepifyTeacherDB.createAssignment(title, clsId, state.selectedQuestionIds);
+        alert(`Assigned "${title}" (${state.selectedQuestionIds.size} questions) to ${cls.name}.`);
+        state.selectedQuestionIds.clear();
+        document.getElementById('qbSelectAllCb').checked = false;
+        updateBulkAssignBar();
+        e.target.reset();
+      } catch (err) {
+        alert('Error assigning test: ' + err.message);
+      }
     });
 
     // --- Row Actions: Edit, Preview Modal, Delete ---
-    window.deleteQuestion = function(qid) {
+    window.deleteQuestion = async function(qid) {
       if (!confirm(`Delete question ${qid}?`)) return;
-      state.questionBank = state.questionBank.filter(q => q.id !== qid);
-      state.selectedQuestionIds.delete(qid);
-      updateBulkAssignBar();
-      renderAll();
+      try {
+        await window.PrepifyTeacherDB.deleteQuestion(qid);
+        state.questionBank = state.questionBank.filter(q => q.id !== qid);
+        state.selectedQuestionIds.delete(qid);
+        state.assignPickedQuestionIds.delete(qid);
+        updateBulkAssignBar();
+        renderAll();
+      } catch (err) {
+        alert('Error deleting question: ' + err.message);
+      }
     };
 
     window.editQuestion = function(qid) {
@@ -1407,19 +1702,24 @@
       document.getElementById('previewExplanationText').textContent = draftItem.explanation;
     }
 
-    function saveBuilderQuestion(status) {
+    async function saveBuilderQuestion(status) {
       const item = collectBuilderQuestion(status);
-      const idx = state.questionBank.findIndex(q => q.id === item.id);
-      if (idx >= 0) {
-        item.accuracy = state.questionBank[idx].accuracy;
-        item.uses = state.questionBank[idx].uses;
-        state.questionBank[idx] = item;
-      } else {
-        state.questionBank.unshift(item);
+      try {
+        await window.PrepifyTeacherDB.upsertQuestion(item);
+        const idx = state.questionBank.findIndex(q => q.id === item.id);
+        if (idx >= 0) {
+          item.accuracy = state.questionBank[idx].accuracy;
+          item.uses = state.questionBank[idx].uses;
+          state.questionBank[idx] = item;
+        } else {
+          state.questionBank.unshift(item);
+        }
+        resetQuestionForm();
+        renderAll();
+        switchTab('questionBankPanel');
+      } catch (err) {
+        alert('Error saving question: ' + err.message);
       }
-      resetQuestionForm();
-      renderAll();
-      switchTab('questionBankPanel');
     }
 
     function resetQuestionForm() {
@@ -1446,18 +1746,24 @@
     });
 
     // --- Classes & Student Passcodes ---
-    document.getElementById('createClassForm').addEventListener('submit', (e) => {
+    document.getElementById('createClassForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('classNameInput').value.trim();
       const schedule = document.getElementById('classScheduleInput').value.trim();
       if (!name) return;
       const code = name.slice(0, 4).toUpperCase().replace(/[^A-Z]/g, 'CLS') + '-' + Math.floor(100 + Math.random() * 900);
-      state.classes.push({ id: 'c_' + Date.now(), name, schedule, joinCode: code });
-      e.target.reset();
-      renderAll();
+
+      try {
+        const created = await window.PrepifyTeacherDB.createClass(name, schedule, code);
+        state.classes.push(created);
+        e.target.reset();
+        renderAll();
+      } catch (err) {
+        alert('Error creating class: ' + err.message);
+      }
     });
 
-    document.getElementById('createStudentForm').addEventListener('submit', (e) => {
+    document.getElementById('createStudentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('studentDisplayName').value.trim();
       const username = document.getElementById('studentUsernameInput').value.trim();
@@ -1465,29 +1771,36 @@
       if (!name || !username) return;
       const passcode = Math.random().toString(36).slice(-6).toUpperCase();
 
-      state.students.push({
-        id: 's_' + Date.now(),
-        name,
-        username,
-        grade: 'Grade 8',
-        classId,
-        results: {
-          elaScore: null,
-          mathScore: null,
-          avgAccuracy: null,
-          topicAccuracy: [],
-          missedQuestions: [],
-          tests: []
-        }
-      });
+      try {
+        const createdStudent = await window.PrepifyTeacherDB.createStudent({
+          name,
+          username,
+          classId,
+          grade: 'Grade 8',
+          passcode
+        });
+        state.students.push(createdStudent);
 
-      document.getElementById('revealName').textContent = name;
-      document.getElementById('revealUsername').textContent = username;
-      document.getElementById('revealPasscode').textContent = passcode;
-      document.getElementById('credentialRevealBox').classList.remove('hidden');
-      e.target.reset();
-      renderAll();
+        document.getElementById('revealName').textContent = name;
+        document.getElementById('revealUsername').textContent = username.toLowerCase();
+        document.getElementById('revealPasscode').textContent = passcode;
+        document.getElementById('credentialRevealBox').classList.remove('hidden');
+        e.target.reset();
+        renderAll();
+      } catch (err) {
+        alert('Error creating student: ' + err.message);
+      }
     });
+
+    window.handleResetPasscode = async function(studentId, studentName) {
+      const newCode = Math.random().toString(36).slice(-6).toUpperCase();
+      try {
+        await window.PrepifyTeacherDB.resetStudentPasscode(studentId, newCode);
+        alert(`New passcode for ${studentName}: ${newCode}`);
+      } catch (err) {
+        alert('Error resetting passcode: ' + err.message);
+      }
+    };
 
     document.getElementById('copyCredsBtn').addEventListener('click', () => {
       const txt = `Student: ${document.getElementById('revealName').textContent} | Username: ${document.getElementById('revealUsername').textContent} | Passcode: ${document.getElementById('revealPasscode').textContent}`;
@@ -1496,52 +1809,76 @@
     });
 
     function renderClassesAndRoster() {
-      const classOptionsHTML = state.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      const classOptionsHTML = state.classes.length > 0
+        ? state.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+        : `<option value="">Create a class first</option>`;
+
       document.getElementById('studentClassSelect').innerHTML = classOptionsHTML;
       document.getElementById('bundleClassSelect').innerHTML = classOptionsHTML;
 
-      document.getElementById('classesList').innerHTML = state.classes.map(c => `
-        <div class="list-item-card">
-          <div>
-            <strong>${c.name}</strong>
-            <p class="item-meta">${c.schedule || 'Flexible Schedule'}</p>
-          </div>
-          <span class="code-pill">${c.joinCode}</span>
-        </div>
-      `).join('');
-
-      document.getElementById('studentsRosterList').innerHTML = state.students.map(s => {
-        const cls = state.classes.find(c => c.id === s.classId);
-        return `
-          <div class="list-item-card">
-            <div>
-              <strong>${s.name}</strong> <span class="username-tag">@${s.username}</span>
-              <p class="item-meta">${cls ? cls.name : 'Unassigned'} • ${s.grade || 'Grade 8'}</p>
+      document.getElementById('classesList').innerHTML = state.classes.length > 0
+        ? state.classes.map(c => `
+            <div class="list-item-card">
+              <div>
+                <strong>${c.name}</strong>
+                <p class="item-meta">${c.schedule || 'Flexible Schedule'}</p>
+              </div>
+              <span class="code-pill">${c.joinCode}</span>
             </div>
-            <button type="button" class="btn btn-outline btn-sm" onclick="alert('New passcode for ${s.name}: ' + Math.random().toString(36).slice(-6).toUpperCase())">Reset Passcode</button>
-          </div>
-        `;
-      }).join('');
+          `).join('')
+        : `<p class="item-meta">No classes created yet. Create your first class on the left.</p>`;
+
+      document.getElementById('studentsRosterList').innerHTML = state.students.length > 0
+        ? state.students.map(s => {
+            const cls = state.classes.find(c => c.id === s.classId);
+            return `
+              <div class="list-item-card">
+                <div>
+                  <strong>${s.name}</strong> <span class="username-tag">@${s.username}</span>
+                  <p class="item-meta">${cls ? cls.name : 'Unassigned'} • ${s.grade || 'Grade 8'}</p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="handleResetPasscode('${s.id}', '${s.name}')">Reset Passcode</button>
+              </div>
+            `;
+          }).join('')
+        : `<p class="item-meta">No students enrolled yet.</p>`;
     }
 
     function renderAll() {
       renderClassesAndRoster();
+      renderAssignTestPanel();
       populateResultsStudentDropdown();
       renderStudentResults();
       renderQuestionBankTable();
       renderBankHealth();
     }
 
-    // Boot
-    loadSettings();
-    populateTopicsForSubject();
-    renderAnswerConfigFields();
-    renderAll();
-  </script>
+    // Boot with live Supabase session & data
+    (async function bootTeacherStudio() {
+      loadSettings();
+      populateTopicsForSubject();
+      renderAnswerConfigFields();
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="gradebook/supabase-client.js"></script>
-<script src="gradebook/auth.js"></script>
+      const sessionInfo = await window.PrepifyTeacherDB.initTeacherSession();
+      if (!sessionInfo) return;
+
+      teacherGreetingEl.textContent = sessionInfo.displayName;
+      instructorNameInput.value = sessionInfo.displayName;
+
+      try {
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData) {
+          state.classes = liveData.classes;
+          state.students = liveData.students;
+          state.questionBank = liveData.questions;
+        }
+      } catch (err) {
+        console.error('Failed to load workspace data:', err);
+      }
+
+      renderAll();
+    })();
+  </script>
 
 </body>
 </html>
