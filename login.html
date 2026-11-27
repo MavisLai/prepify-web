@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Login | Prepify Tutoring</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-light">
+
+  <!-- Shared Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">Apex<span>Prep</span></a>
+      <nav class="nav-links">
+        <a href="index.html">← Back to Main Site</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Centered Login Card -->
+  <main class="auth-wrapper">
+    <div class="card auth-card">
+      <div class="auth-header">
+        <h2>Learning Portal</h2>
+        <p>Sign in to access your classes, tests, and progress.</p>
+      </div>
+
+      <!-- Role Tab Switcher -->
+      <div class="role-tabs" role="tablist">
+        <button
+          type="button"
+          class="tab-btn active"
+          id="studentTab"
+          role="tab"
+          aria-selected="true"
+          aria-controls="studentForm"
+        >
+          Student Login
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          id="teacherTab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="teacherForm"
+        >
+          Teacher Login
+        </button>
+      </div>
+
+      <!-- Error / Status Banner (Hidden by default) -->
+      <div id="authAlert" class="auth-alert hidden" role="alert"></div>
+
+      <!-- STUDENT LOGIN FORM (Username + Teacher Passcode) -->
+      <form id="studentForm" class="auth-form">
+        <div class="form-group">
+          <label for="studentUsername">Student Username</label>
+          <input
+            type="text"
+            id="studentUsername"
+            name="username"
+            placeholder="e.g., alex_m"
+            autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="studentPasscode">Teacher-Issued Passcode</label>
+          <input
+            type="password"
+            id="studentPasscode"
+            name="passcode"
+            placeholder="e.g., TIGER-482"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="classJoinCode">
+            Class Join Code <span class="optional-label">(Optional)</span>
+          </label>
+          <input
+            type="text"
+            id="classJoinCode"
+            name="classCode"
+            placeholder="Enter 6-digit code to join a new class"
+            maxlength="10"
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary full-width">
+          Enter Student Portal
+        </button>
+
+        <p class="auth-help">
+          Don't have a passcode or forgot yours? Ask your tutor during your next session to generate a new one.
+        </p>
+      </form>
+
+      <!-- TEACHER LOGIN FORM (Email + Password) -->
+      <form id="teacherForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="teacherEmail">Instructor Email</label>
+          <input
+            type="email"
+            id="teacherEmail"
+            name="email"
+            placeholder="sarah@yourdomain.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="teacherPassword">Password</label>
+          <input
+            type="password"
+            id="teacherPassword"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn btn-primary full-width">
+          Sign In to Teacher Studio
+        </button>
+
+        <p class="auth-help">
+          Instructor accounts are invite-only. Contact the site administrator if you need access.
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Tab Switching & Placeholder Submit Logic -->
+  <script>
+    const studentTab = document.getElementById('studentTab');
+    const teacherTab = document.getElementById('teacherTab');
+    const studentForm = document.getElementById('studentForm');
+    const teacherForm = document.getElementById('teacherForm');
+    const authAlert = document.getElementById('authAlert');
+
+    function switchTab(role) {
+      authAlert.classList.add('hidden');
+      authAlert.textContent = '';
+
+      if (role === 'student') {
+        studentTab.classList.add('active');
+        studentTab.setAttribute('aria-selected', 'true');
+        teacherTab.classList.remove('active');
+        teacherTab.setAttribute('aria-selected', 'false');
+
+        studentForm.classList.remove('hidden');
+        teacherForm.classList.add('hidden');
+      } else {
+        teacherTab.classList.add('active');
+        teacherTab.setAttribute('aria-selected', 'true');
+        studentTab.classList.remove('active');
+        studentTab.setAttribute('aria-selected', 'false');
+
+        teacherForm.classList.remove('hidden');
+        studentForm.classList.add('hidden');
+      }
+    }
+
+    studentTab.addEventListener('click', () => switchTab('student'));
+    teacherTab.addEventListener('click', () => switchTab('teacher'));
+
+    // Temporary preview handlers (will be replaced by js/auth.js + Supabase)
+    studentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('studentUsername').value.trim().toLowerCase();
+      // Synthetic email format for Supabase Auth:
+      const syntheticEmail = `${username}@students.yourdomain.com`;
+      console.log('Ready to authenticate student via synthetic email:', syntheticEmail);
+      window.location.href = 'student.html';
+    });
+
+    teacherForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('teacherEmail').value.trim();
+      console.log('Ready to authenticate teacher:', email);
+      window.location.href = 'teacher.html';
+    });
+  </script>
+</body>
+</html>

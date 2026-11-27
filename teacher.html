@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Studio | Prepify Tutoring</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style-teacher.css" />
+</head>
+<body class="app-shell">
+
+  <!-- Full-Height Edge-to-Edge Left Sidebar -->
+  <aside class="app-sidebar">
+    <!-- Brand Header -->
+    <div class="sidebar-brand">
+      <a href="index.html" class="sidebar-logo">
+        <span class="brand-diamond">◆</span>
+        <div>
+          <strong>Prepify</strong>
+          <small>Tutoring & Practice Platform</small>
+        </div>
+      </a>
+    </div>
+
+    <!-- Instructor Profile & Log Out -->
+    <div class="sidebar-profile">
+      <strong id="teacherGreeting">Instructor</strong>
+      <span>Teacher Studio</span>
+      <a href="login.html" class="sidebar-switch-btn" id="logoutBtn">Switch Account / Log Out</a>
+    </div>
+
+    <!-- Sidebar Navigation Links -->
+    <nav class="sidebar-nav" role="tablist" aria-orientation="vertical">
+      <span class="sidebar-group-label">MANAGEMENT</span>
+      <button type="button" class="studio-tab active" data-target="classesPanel">
+        <span class="nav-dot"></span> Classes & Roster
+      </button>
+      <button type="button" class="studio-tab" data-target="passcodesPanel">
+        <span class="nav-dot"></span> Student Passcodes
+      </button>
+
+      <span class="sidebar-group-label">CONTENT</span>
+      <button type="button" class="studio-tab" data-target="createQuestionPanel">
+        <span class="nav-dot"></span> Create Question
+      </button>
+      <button type="button" class="studio-tab" data-target="questionBankPanel">
+        <span class="nav-dot"></span> Question Bank & Assign
+      </button>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <p>Prepify Learning Portal • Custom diagnostic & test authoring studio.</p>
+    </div>
+  </aside>
+
+  <!-- Right Main Content Column -->
+  <div class="app-main">
+    <!-- Top White Header Bar -->
+    <header class="app-topbar">
+      <div>
+        <h1 id="topbarTitle">Classes & Roster</h1>
+        <p id="topbarSubtitle">Create class join codes and manage your student roster.</p>
+      </div>
+      <div class="dashboard-stats">
+        <div class="mini-stat">
+          <strong id="classCountStat">2</strong>
+          <span>Classes</span>
+        </div>
+        <div class="mini-stat">
+          <strong id="studentCountStat">3</strong>
+          <span>Students</span>
+        </div>
+        <div class="mini-stat">
+          <strong id="questionBankStat">2</strong>
+          <span>Questions</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Workspace Content Body -->
+    <main class="app-body">
+      <!-- =========================================================
+           PANEL 1: CLASSES & ROSTER
+      ========================================================= -->
+      <section id="classesPanel" class="studio-panel">
+        <div class="studio-grid">
+          <div class="card">
+            <h3>Create a New Class</h3>
+            <p class="card-subtitle">Generate a class join code to group students and assignments.</p>
+            <form id="createClassForm">
+              <div class="form-group">
+                <label for="classNameInput">Class / Subject Name</label>
+                <input type="text" id="classNameInput" placeholder="e.g., Grade 8/9 Honors Algebra" required />
+              </div>
+              <div class="form-group">
+                <label for="classScheduleInput">Schedule Note (Optional)</label>
+                <input type="text" id="classScheduleInput" placeholder="e.g., Tuesdays & Thursdays @ 4:30 PM" />
+              </div>
+              <button type="submit" class="btn btn-primary full-width">+ Create Class & Join Code</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Your Active Classes</h3>
+            <p class="card-subtitle">Share the join code with students who already have an account.</p>
+            <div id="classesList" class="stack-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 2: GENERATE STUDENT PASSCODES
+      ========================================================= -->
+      <section id="passcodesPanel" class="studio-panel hidden">
+        <div class="studio-grid">
+          <div class="card">
+            <h3>Create Student Account</h3>
+            <p class="card-subtitle">No student email needed. Generate a username and one-time passcode.</p>
+            <form id="createStudentForm">
+              <div class="form-group">
+                <label for="studentDisplayName">Student Name (First + Last Initial)</label>
+                <input type="text" id="studentDisplayName" placeholder="e.g., Maya R." required />
+              </div>
+              <div class="form-group">
+                <label for="studentUsernameInput">Login Username</label>
+                <input type="text" id="studentUsernameInput" placeholder="e.g., maya_r" required />
+              </div>
+              <div class="form-group">
+                <label for="studentClassSelect">Assign to Class</label>
+                <select id="studentClassSelect" required></select>
+              </div>
+              <button type="submit" class="btn btn-primary full-width">Generate Student Passcode</button>
+            </form>
+
+            <div id="credentialRevealBox" class="credential-box hidden">
+              <span class="badge">Copy Now — Shown Once</span>
+              <p><strong>Student:</strong> <span id="revealName"></span></p>
+              <p><strong>Username:</strong> <code id="revealUsername"></code></p>
+              <p><strong>Passcode:</strong> <code id="revealPasscode" class="highlight-code"></code></p>
+              <button type="button" class="btn btn-outline full-width" id="copyCredsBtn">Copy Login Info</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Enrolled Students</h3>
+            <p class="card-subtitle">Reset a passcode anytime if a student forgets theirs.</p>
+            <div id="studentsRosterList" class="stack-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 3: CREATE QUESTION (TWO-COLUMN BUILDER + LIVE PREVIEW)
+      ========================================================= -->
+      <section id="createQuestionPanel" class="studio-panel hidden">
+        <form id="createQuestionForm">
+          <div class="builder-two-col">
+            <!-- Left Card: Metadata & Difficulty -->
+            <div class="card">
+              <div class="form-group">
+                <label for="qSubject">Subject</label>
+                <select id="qSubject" required>
+                  <option value="Math">Math</option>
+                  <option value="Reading & Writing">Reading & Writing</option>
+                  <option value="Science">Science</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Grade Level</label>
+                <div class="grade-checkbox-group">
+                  <label class="grade-pill">
+                    <input type="checkbox" name="gradeLevel" value="Grade 8" checked />
+                    <span>Grade 8</span>
+                  </label>
+                  <label class="grade-pill">
+                    <input type="checkbox" name="gradeLevel" value="Grade 9" />
+                    <span>Grade 9</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="qType">Question Type</label>
+                <select id="qType" required>
+                  <option value="multiple_choice">Multiple Choice</option>
+                  <option value="multiple_response">Multiple Response</option>
+                  <option value="fill_in_blank">Fill in the Blank</option>
+                  <option value="drag_and_drop">Drag and Drop</option>
+                  <option value="hotspot">Hotspot</option>
+                  <option value="inline_choice">Inline Choice</option>
+                  <option value="table_grid">Table Grid</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="qTopic">Topic</label>
+                <select id="qTopic" required></select>
+              </div>
+
+              <div class="form-group">
+                <label for="qSubtopic">Subtopic <span class="optional-label">(optional)</span></label>
+                <input type="text" id="qSubtopic" placeholder="e.g., Unit Rates & Scaling" />
+              </div>
+
+              <div class="form-group">
+                <label for="qDifficulty">Difficulty</label>
+                <select id="qDifficulty" required>
+                  <option value="300">Very Easy (300)</option>
+                  <option value="420">Easy (420)</option>
+                  <option value="525" selected>Medium (525)</option>
+                  <option value="650">Hard (650)</option>
+                  <option value="800">Very Hard (800)</option>
+                </select>
+              </div>
+
+              <div class="builder-actions">
+                <button type="button" class="btn btn-outline" id="resetQuestionBuilderBtn">Clear Form</button>
+                <button type="submit" class="btn btn-navy">Save & Publish to Bank</button>
+              </div>
+            </div>
+
+            <!-- Right Card: Prompt, Answer Choices & Explanation -->
+            <div class="card">
+              <div class="form-group">
+                <label for="qPrompt">Question Prompt</label>
+                <textarea
+                  id="qPrompt"
+                  rows="4"
+                  placeholder="Enter the question stem..."
+                  required
+                ></textarea>
+                <small id="promptHelperHint" class="field-hint"></small>
+              </div>
+
+              <!-- Dynamic Answer Configuration Area -->
+              <div id="dynamicAnswerConfig" class="answer-config-box"></div>
+
+              <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
+                <label for="qExplanation">Explanation <span class="optional-label">(shown after answering)</span></label>
+                <textarea
+                  id="qExplanation"
+                  rows="3"
+                  placeholder="Why is the correct answer correct?"
+                  required
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- LIVE STUDENT PREVIEW PANEL UNDERNEATH -->
+        <div class="card live-preview-card">
+          <div class="preview-header">
+            <div>
+              <span class="section-tag">Live Student Preview</span>
+              <h3>How This Question Appears to Students</h3>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="togglePreviewAnswerBtn">
+              Show Post-Answer Explanation
+            </button>
+          </div>
+
+          <div id="previewMetaBar" class="preview-meta-bar"></div>
+          <div id="livePreviewCanvas" class="preview-canvas"></div>
+
+          <div id="previewExplanationBox" class="explanation-preview hidden">
+            <strong>Answer Explanation (Shown After Submission):</strong>
+            <p id="previewExplanationText">Your step-by-step explanation will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 4: QUESTION BANK & ASSIGN TO CLASS
+      ========================================================= -->
+      <section id="questionBankPanel" class="studio-panel hidden">
+        <div class="studio-grid">
+          <div class="card">
+            <h3>Saved Question Bank</h3>
+            <p class="card-subtitle">Check the questions you want to bundle into a test or practice set.</p>
+            <div id="savedQuestionsList" class="stack-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Assign Selected Questions to Class</h3>
+            <p class="card-subtitle">Create an assignment from your checked questions above.</p>
+            <form id="assignBundleForm">
+              <div class="form-group">
+                <label for="bundleTitleInput">Assignment / Test Title</label>
+                <input type="text" id="bundleTitleInput" placeholder="e.g., Grade 8 Ratios & Proportions Check" required />
+              </div>
+              <div class="form-group">
+                <label for="bundleClassSelect">Target Class</label>
+                <select id="bundleClassSelect" required></select>
+              </div>
+              <p class="item-meta" style="margin-bottom: 1rem;">
+                Selected Questions: <strong id="selectedBundleCount">0</strong>
+              </p>
+              <button type="submit" class="btn btn-primary full-width">Publish Assignment to Class</button>
+            </form>
+
+            <hr class="divider" />
+            <h4>Published Class Assignments</h4>
+            <div id="publishedTestsList" class="stack-list" style="margin-top: 0.75rem;"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // --- Page Header Metadata per Tab ---
+    const PANEL_HEADERS = {
+      classesPanel: {
+        title: 'Classes & Roster',
+        subtitle: 'Create class join codes and manage your active tutoring sections.'
+      },
+      passcodesPanel: {
+        title: 'Student Passcodes',
+        subtitle: 'Generate email-free student logins and reset passcodes anytime.'
+      },
+      createQuestionPanel: {
+        title: 'Question Builder',
+        subtitle: 'Create a new item in any supported technology-enhanced format.'
+      },
+      questionBankPanel: {
+        title: 'Question Bank & Assign',
+        subtitle: 'Bundle authored questions into tests and publish them to your classes.'
+      }
+    };
+
+    // --- Subject -> Topics Map ---
+    const SUBJECT_TOPICS = {
+      'Math': [
+        'Ratios and Proportions',
+        'Linear Equations & Inequalities',
+        'Functions & Graphing',
+        'Systems of Equations',
+        'Exponents & Radicals',
+        'Polynomials & Quadratics',
+        'Geometry & Pythagorean Theorem',
+        'Statistics & Probability'
+      ],
+      'Reading & Writing': [
+        'Central Ideas & Details',
+        'Command of Evidence',
+        'Inferences',
+        'Words in Context',
+        'Text Structure & Purpose',
+        'Grammar & Punctuation',
+        'Rhetorical Synthesis'
+      ],
+      'Science': [
+        'Data Interpretation & Graphs',
+        'Experimental Design',
+        'Physical Science & Forces',
+        'Matter & Chemical Reactions',
+        'Cells, Genetics & Ecology',
+        'Earth & Space Systems'
+      ]
+    };
+
+    const QUESTION_TYPE_LABELS = {
+      multiple_choice: 'Multiple Choice',
+      multiple_response: 'Multiple Response',
+      fill_in_blank: 'Fill in the Blank',
+      drag_and_drop: 'Drag and Drop',
+      hotspot: 'Hotspot',
+      inline_choice: 'Inline Choice',
+      table_grid: 'Table Grid'
+    };
+
+    const DIFFICULTY_LABELS = {
+      '300': 'Very Easy (300)',
+      '420': 'Easy (420)',
+      '525': 'Medium (525)',
+      '650': 'Hard (650)',
+      '800': 'Very Hard (800)'
+    };
+
+    // --- Workspace State ---
+    const state = {
+      classes: [
+        { id: 'c1', name: 'Grade 8 Math Foundations', schedule: 'Tue/Thu 4:30 PM', joinCode: 'MATH-492' },
+        { id: 'c2', name: 'Grade 9 Honors Algebra', schedule: 'Wed 5:00 PM', joinCode: 'ALG9-815' }
+      ],
+      students: [
+        { id: 's1', name: 'Alex M.', username: 'alex_m', classId: 'c1' },
+        { id: 's2', name: 'Jordan P.', username: 'jordan_p', classId: 'c1' },
+        { id: 's3', name: 'Priya S.', username: 'priya_s', classId: 'c2' }
+      ],
+      questionBank: [
+        {
+          id: 'q1',
+          subject: 'Math',
+          grades: ['Grade 8', 'Grade 9'],
+          type: 'multiple_choice',
+          topic: 'Ratios and Proportions',
+          subtopic: 'Unit Rates',
+          difficulty: '420',
+          prompt: 'A recipe uses 3 cups of flour for every 2 cups of sugar. How many cups of flour are needed for 9 cups of sugar?',
+          config: { options: ['6 cups', '12 cups', '13.5 cups', '18 cups'], correctIndex: 2 },
+          explanation: 'Set up the proportion 3/2 = x/9. Cross-multiply to get 2x = 27, so x = 13.5 cups.'
+        },
+        {
+          id: 'q2',
+          subject: 'Math',
+          grades: ['Grade 9'],
+          type: 'fill_in_blank',
+          topic: 'Linear Equations & Inequalities',
+          subtopic: 'Two-Step Equations',
+          difficulty: '525',
+          prompt: 'Solve for x: 4x - 7 = 21',
+          config: { acceptedAnswers: '7', caseSensitive: false },
+          explanation: 'Add 7 to both sides to get 4x = 28, then divide by 4 to get x = 7.'
+        }
+      ],
+      publishedTests: [
+        { id: 't1', title: 'Diagnostic Warmup Set', classId: 'c1', questionCount: 2 }
+      ],
+      showPreviewExplanation: false
+    };
+
+    // --- Sidebar Tab Switching ---
+    const tabs = document.querySelectorAll('.studio-tab');
+    const panels = document.querySelectorAll('.studio-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.dataset.target;
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.add('hidden'));
+        tab.classList.add('active');
+        document.getElementById(targetId).classList.remove('hidden');
+
+        // Update Topbar Title & Subtitle
+        if (PANEL_HEADERS[targetId]) {
+          document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
+          document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
+        }
+      });
+    });
+
+    // --- Populate Topic Dropdown on Subject Change ---
+    const qSubjectEl = document.getElementById('qSubject');
+    const qTopicEl = document.getElementById('qTopic');
+    const qTypeEl = document.getElementById('qType');
+
+    function populateTopics() {
+      const topics = SUBJECT_TOPICS[qSubjectEl.value] || [];
+      qTopicEl.innerHTML = topics.map(t => `<option value="${t}">${t}</option>`).join('');
+      updateLivePreview();
+    }
+
+    qSubjectEl.addEventListener('change', populateTopics);
+
+    // --- Render Type-Specific Answer Configurator ---
+    function renderAnswerConfigurator() {
+      const type = qTypeEl.value;
+      const box = document.getElementById('dynamicAnswerConfig');
+      const hint = document.getElementById('promptHelperHint');
+      hint.textContent = '';
+
+      if (type === 'multiple_choice') {
+        box.innerHTML = `
+          <label class="config-section-title">Answer Choices (Select the single correct option)</label>
+          <div class="options-grid">
+            ${['A', 'B', 'C', 'D'].map((letter, idx) => `
+              <div class="choice-input-row">
+                <input type="radio" name="mcCorrect" value="${idx}" ${idx === 0 ? 'checked' : ''} title="Mark Option ${letter} as correct" />
+                <input type="text" class="mc-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (type === 'multiple_response') {
+        box.innerHTML = `
+          <label class="config-section-title">Answer Choices (Check ALL correct options)</label>
+          <div class="options-grid">
+            ${['A', 'B', 'C', 'D'].map((letter, idx) => `
+              <div class="choice-input-row">
+                <input type="checkbox" class="mr-correct-cb" value="${idx}" ${idx < 2 ? 'checked' : ''} title="Mark Option ${letter} as correct" />
+                <input type="text" class="mr-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (type === 'fill_in_blank') {
+        hint.textContent = 'Tip: Use underscores (______) in your prompt to show where the blank goes.';
+        box.innerHTML = `
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="fibAnswers">Accepted Correct Answer(s) <span class="optional-label">(Comma-separated)</span></label>
+              <input type="text" id="fibAnswers" placeholder="e.g., 13.5, 27/2" required />
+            </div>
+            <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+              <label class="grade-pill" style="width:100%;">
+                <input type="checkbox" id="fibCaseSensitive" />
+                <span>Case-Sensitive Grading</span>
+              </label>
+            </div>
+          </div>
+        `;
+      } else if (type === 'drag_and_drop') {
+        box.innerHTML = `
+          <label class="config-section-title">Draggable Items & Matching Target Zones</label>
+          <div class="stack-list">
+            ${[1, 2, 3].map(n => `
+              <div class="form-row">
+                <input type="text" class="dnd-item-input" placeholder="Draggable Item ${n} (e.g., y = 2x + 1)" required />
+                <input type="text" class="dnd-target-input" placeholder="Matching Drop Zone ${n} (e.g., Slope = 2)" required />
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (type === 'hotspot') {
+        box.innerHTML = `
+          <label class="config-section-title">Hotspot Image & Target Region</label>
+          <div class="form-group">
+            <label for="hotspotImgUrl">Diagram / Coordinate Plane Image URL</label>
+            <input type="url" id="hotspotImgUrl" placeholder="https://example.com/coordinate-grid.png" />
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="hotspotX">Target X Position (% from left, 0–100)</label>
+              <input type="number" id="hotspotX" min="0" max="100" value="50" required />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="hotspotY">Target Y Position (% from top, 0–100)</label>
+              <input type="number" id="hotspotY" min="0" max="100" value="50" required />
+            </div>
+          </div>
+          <small class="field-hint">Tip: You can also click directly on the image inside the Live Preview below to set the hotspot coordinate.</small>
+        `;
+      } else if (type === 'inline_choice') {
+        hint.textContent = 'Tip: Write [blank1] and [blank2] inside your Question Prompt where inline dropdowns should appear.';
+        box.innerHTML = `
+          <label class="config-section-title">Inline Dropdown Options</label>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="inline1Choices">[blank1] Choices (Comma-separated)</label>
+              <input type="text" id="inline1Choices" placeholder="e.g., increases, decreases, stays constant" required />
+              <input type="text" id="inline1Correct" placeholder="Correct choice for [blank1]" style="margin-top:0.5rem;" required />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="inline2Choices">[blank2] Choices (Optional, Comma-separated)</label>
+              <input type="text" id="inline2Choices" placeholder="e.g., directly, inversely" />
+              <input type="text" id="inline2Correct" placeholder="Correct choice for [blank2]" style="margin-top:0.5rem;" />
+            </div>
+          </div>
+        `;
+      } else if (type === 'table_grid') {
+        box.innerHTML = `
+          <label class="config-section-title">Table Grid Rows & Columns (Select the correct column per row)</label>
+          <div class="form-row" style="margin-bottom:0.75rem;">
+            <input type="text" id="gridCol1" value="True" placeholder="Column 1 Header" required />
+            <input type="text" id="gridCol2" value="False" placeholder="Column 2 Header" required />
+          </div>
+          <div class="stack-list">
+            ${[0, 1, 2].map(rIdx => `
+              <div class="grid-row-config">
+                <input type="text" class="grid-statement-input" placeholder="Statement / Row ${rIdx + 1}" required />
+                <label><input type="radio" name="gridRow_${rIdx}" value="0" checked /> Col 1</label>
+                <label><input type="radio" name="gridRow_${rIdx}" value="1" /> Col 2</label>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      box.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', updateLivePreview);
+        el.addEventListener('change', updateLivePreview);
+      });
+
+      updateLivePreview();
+    }
+
+    qTypeEl.addEventListener('change', renderAnswerConfigurator);
+
+    // --- Extract Structured Config from Current Form ---
+    function getCurrentQuestionData() {
+      const subject = qSubjectEl.value;
+      const grades = Array.from(document.querySelectorAll('input[name="gradeLevel"]:checked')).map(cb => cb.value);
+      const type = qTypeEl.value;
+      const topic = qTopicEl.value;
+      const subtopic = document.getElementById('qSubtopic').value.trim();
+      const difficulty = document.getElementById('qDifficulty').value;
+      const prompt = document.getElementById('qPrompt').value.trim();
+      const explanation = document.getElementById('qExplanation').value.trim();
+
+      let config = {};
+
+      if (type === 'multiple_choice') {
+        const options = Array.from(document.querySelectorAll('.mc-opt-input')).map(i => i.value.trim() || i.placeholder);
+        const checked = document.querySelector('input[name="mcCorrect"]:checked');
+        config = { options, correctIndex: checked ? parseInt(checked.value, 10) : 0 };
+      } else if (type === 'multiple_response') {
+        const options = Array.from(document.querySelectorAll('.mr-opt-input')).map(i => i.value.trim() || i.placeholder);
+        const correctIndices = Array.from(document.querySelectorAll('.mr-correct-cb:checked')).map(cb => parseInt(cb.value, 10));
+        config = { options, correctIndices };
+      } else if (type === 'fill_in_blank') {
+        config = {
+          acceptedAnswers: (document.getElementById('fibAnswers')?.value || '').trim(),
+          caseSensitive: document.getElementById('fibCaseSensitive')?.checked || false
+        };
+      } else if (type === 'drag_and_drop') {
+        const items = Array.from(document.querySelectorAll('.dnd-item-input')).map((el, i) => el.value.trim() || `Item ${i + 1}`);
+        const targets = Array.from(document.querySelectorAll('.dnd-target-input')).map((el, i) => el.value.trim() || `Zone ${i + 1}`);
+        config = { items, targets };
+      } else if (type === 'hotspot') {
+        config = {
+          imageUrl: document.getElementById('hotspotImgUrl')?.value.trim() || '',
+          x: parseInt(document.getElementById('hotspotX')?.value || '50', 10),
+          y: parseInt(document.getElementById('hotspotY')?.value || '50', 10)
+        };
+      } else if (type === 'inline_choice') {
+        const c1 = (document.getElementById('inline1Choices')?.value || 'Option 1, Option 2').split(',').map(s => s.trim()).filter(Boolean);
+        const c2 = (document.getElementById('inline2Choices')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+        config = {
+          blank1: { choices: c1, correct: document.getElementById('inline1Correct')?.value.trim() || c1[0] || '' },
+          blank2: { choices: c2, correct: document.getElementById('inline2Correct')?.value.trim() || c2[0] || '' }
+        };
+      } else if (type === 'table_grid') {
+        const col1 = document.getElementById('gridCol1')?.value.trim() || 'True';
+        const col2 = document.getElementById('gridCol2')?.value.trim() || 'False';
+        const rows = Array.from(document.querySelectorAll('.grid-statement-input')).map((el, idx) => {
+          const sel = document.querySelector(`input[name="gridRow_${idx}"]:checked`);
+          return {
+            statement: el.value.trim() || `Statement ${idx + 1}`,
+            correctCol: sel ? parseInt(sel.value, 10) : 0
+          };
+        });
+        config = { columns: [col1, col2], rows };
+      }
+
+      return { subject, grades, type, topic, subtopic, difficulty, prompt, config, explanation };
+    }
+
+    // --- Update Live Student Preview ---
+    function updateLivePreview() {
+      const q = getCurrentQuestionData();
+      const metaBar = document.getElementById('previewMetaBar');
+      const canvas = document.getElementById('livePreviewCanvas');
+      const expBox = document.getElementById('previewExplanationBox');
+      const expText = document.getElementById('previewExplanationText');
+
+      const gradeLabel = q.grades.length > 0 ? q.grades.join(' & ') : 'No Grade Selected';
+      metaBar.innerHTML = `
+        <span class="badge">${q.subject}</span>
+        <span class="tag">${gradeLabel}</span>
+        <span class="tag">${q.topic}${q.subtopic ? ' • ' + q.subtopic : ''}</span>
+        <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
+        <span class="code-pill">Difficulty: ${DIFFICULTY_LABELS[q.difficulty]}</span>
+      `;
+
+      const displayPrompt = q.prompt || 'Your question prompt will appear here as you type...';
+      let interactionHTML = '';
+
+      if (q.type === 'multiple_choice') {
+        const letters = ['A', 'B', 'C', 'D'];
+        interactionHTML = `
+          <div class="preview-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="preview-opt-item ${state.showPreviewExplanation && idx === q.config.correctIndex ? 'opt-is-correct' : ''}">
+                <input type="radio" name="preview_mc" />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      } else if (q.type === 'multiple_response') {
+        const letters = ['A', 'B', 'C', 'D'];
+        interactionHTML = `
+          <p class="item-meta" style="margin-bottom:0.5rem;"><em>Select all that apply:</em></p>
+          <div class="preview-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="preview-opt-item ${state.showPreviewExplanation && q.config.correctIndices.includes(idx) ? 'opt-is-correct' : ''}">
+                <input type="checkbox" />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      } else if (q.type === 'fill_in_blank') {
+        interactionHTML = `
+          <div class="form-group" style="max-width:340px; margin-top:0.75rem;">
+            <input type="text" placeholder="Student types answer here..." />
+            ${state.showPreviewExplanation ? `<p class="feedback-success" style="margin-top:0.4rem; font-size:0.85rem;">Accepted Answer(s): <strong>${q.config.acceptedAnswers || 'None set'}</strong></p>` : ''}
+          </div>
+        `;
+      } else if (q.type === 'drag_and_drop') {
+        interactionHTML = `
+          <div class="dnd-preview-wrap">
+            <div class="dnd-chips">
+              ${q.config.items.map(item => `<span class="dnd-chip">⠿ ${item}</span>`).join('')}
+            </div>
+            <div class="dnd-zones">
+              ${q.config.targets.map((zone, i) => `
+                <div class="dnd-zone">
+                  <span>${zone}</span>
+                  <div class="dnd-slot">${state.showPreviewExplanation ? `✓ ${q.config.items[i]}` : 'Drop item here'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (q.type === 'hotspot') {
+        interactionHTML = `
+          <div class="hotspot-preview-box" id="hotspotClickArea" title="Click anywhere to move hotspot target">
+            ${q.config.imageUrl
+              ? `<img src="${q.config.imageUrl}" alt="Hotspot diagram" />`
+              : `<div class="hotspot-placeholder">Coordinate Grid / Diagram Area (Paste an Image URL above, or click anywhere here to test placing the target pin)</div>`
+            }
+            <div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;">
+              <span>🎯</span>
+            </div>
+          </div>
+          <p class="item-meta" style="margin-top:0.4rem;">Target Coordinate: (${q.config.x}%, ${q.config.y}%)</p>
+        `;
+      } else if (q.type === 'inline_choice') {
+        let renderedSentence = displayPrompt
+          .replace('[blank1]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank1.choices.map(c => `<option ${state.showPreviewExplanation && c === q.config.blank1.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
+          .replace('[blank2]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank2.choices.map(c => `<option ${state.showPreviewExplanation && c === q.config.blank2.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
+
+        canvas.innerHTML = `<p class="preview-prompt-text" style="line-height:2.1;">${renderedSentence}</p>`;
+        expText.textContent = q.explanation || 'Your step-by-step explanation will appear here.';
+        expBox.classList.toggle('hidden', !state.showPreviewExplanation);
+        return;
+      } else if (q.type === 'table_grid') {
+        interactionHTML = `
+          <table class="preview-grid-table">
+            <thead>
+              <tr>
+                <th>Statement</th>
+                <th>${q.config.columns[0]}</th>
+                <th>${q.config.columns[1]}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${q.config.rows.map((row, rIdx) => `
+                <tr>
+                  <td>${row.statement}</td>
+                  <td style="text-align:center;">
+                    <input type="radio" name="p_grid_${rIdx}" ${state.showPreviewExplanation && row.correctCol === 0 ? 'checked' : ''} />
+                  </td>
+                  <td style="text-align:center;">
+                    <input type="radio" name="p_grid_${rIdx}" ${state.showPreviewExplanation && row.correctCol === 1 ? 'checked' : ''} />
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      canvas.innerHTML = `
+        <p class="preview-prompt-text">${displayPrompt}</p>
+        ${interactionHTML}
+      `;
+
+      const hotspotArea = document.getElementById('hotspotClickArea');
+      if (hotspotArea) {
+        hotspotArea.addEventListener('click', (e) => {
+          const rect = hotspotArea.getBoundingClientRect();
+          const xPct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+          const yPct = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+          const xInput = document.getElementById('hotspotX');
+          const yInput = document.getElementById('hotspotY');
+          if (xInput && yInput) {
+            xInput.value = Math.max(0, Math.min(100, xPct));
+            yInput.value = Math.max(0, Math.min(100, yPct));
+            updateLivePreview();
+          }
+        });
+      }
+
+      expText.textContent = q.explanation || 'Your step-by-step explanation will appear here.';
+      expBox.classList.toggle('hidden', !state.showPreviewExplanation);
+    }
+
+    ['qTopic', 'qSubtopic', 'qDifficulty', 'qPrompt', 'qExplanation'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateLivePreview);
+      document.getElementById(id).addEventListener('change', updateLivePreview);
+    });
+    document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => {
+      cb.addEventListener('change', updateLivePreview);
+    });
+
+    document.getElementById('togglePreviewAnswerBtn').addEventListener('click', (e) => {
+      state.showPreviewExplanation = !state.showPreviewExplanation;
+      e.target.textContent = state.showPreviewExplanation
+        ? 'Hide Post-Answer Explanation'
+        : 'Show Post-Answer Explanation';
+      updateLivePreview();
+    });
+
+    document.getElementById('createQuestionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newQ = getCurrentQuestionData();
+      if (newQ.grades.length === 0) {
+        alert('Please select at least one grade level (Grade 8, Grade 9, or both).');
+        return;
+      }
+
+      newQ.id = 'q' + Date.now();
+      state.questionBank.unshift(newQ);
+      alert('Question saved to your Question Bank! You can bundle it into an assignment under Question Bank & Assign.');
+      e.target.reset();
+      populateTopics();
+      renderAnswerConfigurator();
+      renderAll();
+    });
+
+    document.getElementById('resetQuestionBuilderBtn').addEventListener('click', () => {
+      document.getElementById('createQuestionForm').reset();
+      populateTopics();
+      renderAnswerConfigurator();
+    });
+
+    // --- Render Classes, Roster, Question Bank & Assignments ---
+    function generateCode(prefix) {
+      return `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    function generatePasscode() {
+      const words = ['TIGER', 'EAGLE', 'SOLAR', 'ORBIT', 'CEDAR', 'SPARK', 'ATLAS'];
+      return `${words[Math.floor(Math.random() * words.length)]}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    function renderAll() {
+      document.getElementById('classCountStat').textContent = state.classes.length;
+      document.getElementById('studentCountStat').textContent = state.students.length;
+      document.getElementById('questionBankStat').textContent = state.questionBank.length;
+
+      const classOptionsHTML = state.classes
+        .map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`)
+        .join('');
+      document.getElementById('studentClassSelect').innerHTML = classOptionsHTML;
+      document.getElementById('bundleClassSelect').innerHTML = classOptionsHTML;
+
+      document.getElementById('classesList').innerHTML = state.classes.map(c => {
+        const count = state.students.filter(s => s.classId === c.id).length;
+        return `
+          <div class="list-item-card">
+            <div>
+              <strong>${c.name}</strong>
+              <p class="item-meta">${c.schedule || 'Flexible schedule'} • ${count} student(s)</p>
+            </div>
+            <span class="code-pill">Join Code: ${c.joinCode}</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('studentsRosterList').innerHTML = state.students.map(s => {
+        const cls = state.classes.find(c => c.id === s.classId);
+        return `
+          <div class="list-item-card">
+            <div>
+              <strong>${s.name}</strong> <span class="username-tag">@${s.username}</span>
+              <p class="item-meta">${cls ? cls.name : 'Unassigned'}</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="resetStudentPasscode('${s.name}', '${s.username}')">
+              Reset Passcode
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('savedQuestionsList').innerHTML = state.questionBank.map(q => `
+        <label class="list-item-card" style="cursor:pointer; align-items:flex-start;">
+          <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+            <input type="checkbox" class="bundle-q-cb" value="${q.id}" style="margin-top:0.3rem;" />
+            <div>
+              <strong>${q.prompt}</strong>
+              <p class="item-meta">
+                ${q.subject} • ${q.grades.join('/')} • ${q.topic}${q.subtopic ? ' (' + q.subtopic + ')' : ''} • ${QUESTION_TYPE_LABELS[q.type]} • Diff: ${q.difficulty}
+              </p>
+            </div>
+          </div>
+        </label>
+      `).join('');
+
+      document.querySelectorAll('.bundle-q-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          document.getElementById('selectedBundleCount').textContent =
+            document.querySelectorAll('.bundle-q-cb:checked').length;
+        });
+      });
+
+      document.getElementById('publishedTestsList').innerHTML = state.publishedTests.map(t => {
+        const cls = state.classes.find(c => c.id === t.classId);
+        return `
+          <div class="list-item-card">
+            <div>
+              <strong>${t.title}</strong>
+              <p class="item-meta">${cls ? cls.name : 'General'} • ${t.questionCount} question(s)</p>
+            </div>
+            <span class="tag">Assigned</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('createClassForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('classNameInput').value.trim();
+      const schedule = document.getElementById('classScheduleInput').value.trim();
+      const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'CLS';
+      state.classes.push({ id: 'c' + Date.now(), name, schedule, joinCode: generateCode(prefix) });
+      e.target.reset();
+      renderAll();
+    });
+
+    document.getElementById('createStudentForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('studentDisplayName').value.trim();
+      const username = document.getElementById('studentUsernameInput').value.trim().toLowerCase().replace(/\s+/g, '_');
+      const classId = document.getElementById('studentClassSelect').value;
+      const passcode = generatePasscode();
+
+      state.students.push({ id: 's' + Date.now(), name, username, classId });
+      document.getElementById('revealName').textContent = name;
+      document.getElementById('revealUsername').textContent = username;
+      document.getElementById('revealPasscode').textContent = passcode;
+      document.getElementById('credentialRevealBox').classList.remove('hidden');
+      e.target.reset();
+      renderAll();
+    });
+
+    window.resetStudentPasscode = function(name, username) {
+      document.getElementById('revealName').textContent = name + ' (Reset)';
+      document.getElementById('revealUsername').textContent = username;
+      document.getElementById('revealPasscode').textContent = generatePasscode();
+      document.getElementById('credentialRevealBox').classList.remove('hidden');
+    };
+
+    document.getElementById('copyCredsBtn').addEventListener('click', () => {
+      const u = document.getElementById('revealUsername').textContent;
+      const p = document.getElementById('revealPasscode').textContent;
+      navigator.clipboard.writeText(`Prepify Login — Username: ${u} | Passcode: ${p}`);
+      document.getElementById('copyCredsBtn').textContent = 'Copied!';
+      setTimeout(() => (document.getElementById('copyCredsBtn').textContent = 'Copy Login Info'), 2000);
+    });
+
+    document.getElementById('assignBundleForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const selected = Array.from(document.querySelectorAll('.bundle-q-cb:checked'));
+      if (selected.length === 0) {
+        alert('Select at least one question from the Question Bank on the left.');
+        return;
+      }
+      state.publishedTests.push({
+        id: 't' + Date.now(),
+        title: document.getElementById('bundleTitleInput').value.trim(),
+        classId: document.getElementById('bundleClassSelect').value,
+        questionCount: selected.length
+      });
+      e.target.reset();
+      document.getElementById('selectedBundleCount').textContent = '0';
+      renderAll();
+    });
+
+    populateTopics();
+    renderAnswerConfigurator();
+    renderAll();
+  </script>
+</body>
+</html>

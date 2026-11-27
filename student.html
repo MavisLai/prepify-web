@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Portal | Prepify Tutoring</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-light">
+
+  <!-- Shared Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-content">
+      <a href="index.html" class="logo">Apex<span>Prep</span> <small class="role-badge">Student</small></a>
+      <nav class="nav-links">
+        <span class="user-greeting" id="studentGreeting">Welcome, Alex M.</span>
+        <a href="login.html" class="btn btn-outline" id="logoutBtn">Log Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <div>
+        <h1>Student Dashboard</h1>
+        <p>Join your tutor's class, complete assigned diagnostics, and review your scores.</p>
+      </div>
+      <div class="dashboard-stats">
+        <div class="mini-stat">
+          <strong id="enrolledClassCount">1</strong>
+          <span>Classes</span>
+        </div>
+        <div class="mini-stat">
+          <strong id="pendingTestCount">2</strong>
+          <span>To Do</span>
+        </div>
+        <div class="mini-stat">
+          <strong id="avgScoreStat">—</strong>
+          <span>Avg Score</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         VIEW 1: MAIN STUDENT DASHBOARD (Join Class + Assignments)
+    ========================================================= -->
+    <div id="dashboardView">
+      <div class="studio-grid">
+        <!-- Left Column: Join a Class & Enrolled Classes -->
+        <div class="stack-list">
+          <div class="card">
+            <h3>Join a Class</h3>
+            <p class="card-subtitle">Enter the class code provided by your tutor to unlock assignments.</p>
+            <form id="joinClassForm" class="join-form">
+              <input
+                type="text"
+                id="joinCodeInput"
+                placeholder="e.g., CALC-815"
+                maxlength="12"
+                required
+              />
+              <button type="submit" class="btn btn-primary">Join</button>
+            </form>
+            <p id="joinFeedback" class="join-feedback hidden"></p>
+          </div>
+
+          <div class="card">
+            <h3>Your Enrolled Classes</h3>
+            <div id="enrolledClassesList" class="stack-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Assigned Tests & Completed Grades -->
+        <div class="stack-list">
+          <div class="card">
+            <h3>Assigned Tests & Practice Sets</h3>
+            <p class="card-subtitle">Click "Start Test" when you are ready to begin.</p>
+            <div id="assignedTestsList" class="stack-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Completed & Graded</h3>
+            <p class="card-subtitle">Your auto-graded results and answer breakdowns.</p>
+            <div id="completedTestsList" class="stack-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         VIEW 2: ACTIVE TEST-TAKING & SCORE REVIEW INTERFACE
+    ========================================================= -->
+    <div id="quizView" class="hidden">
+      <div class="card quiz-container">
+        <div class="quiz-header">
+          <div>
+            <span class="badge" id="quizClassBadge">SAT Math Prep</span>
+            <h2 id="quizTitle">Algebra Foundations Quiz 1</h2>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="backToDashBtn">← Back to Dashboard</button>
+        </div>
+
+        <!-- Score Banner (Shown after submitting or when reviewing a past test) -->
+        <div id="scoreResultBanner" class="score-banner hidden">
+          <div>
+            <span class="score-label">Your Score</span>
+            <h2 id="finalScoreText">4 / 5 (80%)</h2>
+          </div>
+          <p id="scoreFeedbackText">Great work! Review any missed questions highlighted below.</p>
+        </div>
+
+        <form id="quizForm">
+          <div id="quizQuestionsContainer" class="stack-list">
+            <!-- Questions rendered dynamically -->
+          </div>
+
+          <div class="quiz-footer" id="quizSubmitBar">
+            <button type="submit" class="btn btn-primary full-width">Submit Test & Grade Now</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Student Portal Logic (Local Preview State — ready to connect to js/student.js + Supabase) -->
+  <script>
+    // --- Sample Data (Matches teacher.html structure) ---
+    const availableClasses = [
+      { id: 'c1', name: 'SAT Math Prep - Fall', teacher: 'Sarah M.', joinCode: 'SAT-492' },
+      { id: 'c2', name: 'AP Calculus AB', teacher: 'Sarah M.', joinCode: 'CALC-815' },
+      { id: 'c3', name: 'Honors Chemistry', teacher: 'David L.', joinCode: 'CHEM-304' }
+    ];
+
+    const state = {
+      enrolledClassIds: ['c1'],
+      assignments: [
+        {
+          id: 't1',
+          classId: 'c1',
+          title: 'Linear Equations & Inequalities Warmup',
+          questions: [
+            {
+              prompt: 'If 3x - 7 = 14, what is the value of 2x + 1?',
+              options: ['7', '14', '15', '21'],
+              correctIndex: 2
+            },
+            {
+              prompt: 'Which line is perpendicular to y = 2x + 5?',
+              options: ['y = 2x - 3', 'y = -2x + 5', 'y = (1/2)x + 1', 'y = -(1/2)x + 4'],
+              correctIndex: 3
+            },
+            {
+              prompt: 'If 4(x + 2) = 24, what is x?',
+              options: ['4', '5', '6', '8'],
+              correctIndex: 0
+            }
+          ]
+        },
+        {
+          id: 't2',
+          classId: 'c1',
+          title: 'Quadratic Functions Diagnostic',
+          questions: [
+            {
+              prompt: 'What are the x-intercepts of f(x) = (x - 3)(x + 5)?',
+              options: ['x = -3 and x = 5', 'x = 3 and x = -5', 'x = 3 and x = 5', 'x = -3 and x = -5'],
+              correctIndex: 1
+            },
+            {
+              prompt: 'What is the vertex of the parabola y = (x - 2)^2 + 6?',
+              options: ['(-2, 6)', '(2, -6)', '(2, 6)', '(-2, -6)'],
+              correctIndex: 2
+            }
+          ]
+        },
+        {
+          id: 't3',
+          classId: 'c2',
+          title: 'Limits & Continuity Check',
+          questions: [
+            {
+              prompt: 'What is the limit of (x^2 - 9) / (x - 3) as x approaches 3?',
+              options: ['0', '3', '6', 'Undefined'],
+              correctIndex: 2
+            }
+          ]
+        }
+      ],
+      submissions: [] // { assignmentId, answers: [0, 2, ...], score, total, percentage }
+    };
+
+    let activeAssignment = null;
+
+    // --- Render Dashboard ---
+    function renderDashboard() {
+      const enrolledClasses = availableClasses.filter(c => state.enrolledClassIds.includes(c.id));
+      const unlockedAssignments = state.assignments.filter(a => state.enrolledClassIds.includes(a.classId));
+      const completedIds = state.submissions.map(s => s.assignmentId);
+      const pendingAssignments = unlockedAssignments.filter(a => !completedIds.includes(a.id));
+
+      // Top stats
+      document.getElementById('enrolledClassCount').textContent = enrolledClasses.length;
+      document.getElementById('pendingTestCount').textContent = pendingAssignments.length;
+
+      if (state.submissions.length > 0) {
+        const avg = Math.round(
+          state.submissions.reduce((sum, s) => sum + s.percentage, 0) / state.submissions.length
+        );
+        document.getElementById('avgScoreStat').textContent = `${avg}%`;
+      }
+
+      // Enrolled classes list
+      document.getElementById('enrolledClassesList').innerHTML = enrolledClasses.map(c => `
+        <div class="list-item-card">
+          <div>
+            <strong>${c.name}</strong>
+            <p class="item-meta">Instructor: ${c.teacher}</p>
+          </div>
+          <span class="code-pill">${c.joinCode}</span>
+        </div>
+      `).join('');
+
+      // Pending assignments list
+      const assignedList = document.getElementById('assignedTestsList');
+      if (pendingAssignments.length === 0) {
+        assignedList.innerHTML = `<p class="empty-state">All caught up! No pending tests right now.</p>`;
+      } else {
+        assignedList.innerHTML = pendingAssignments.map(a => {
+          const cls = availableClasses.find(c => c.id === a.classId);
+          return `
+            <div class="list-item-card">
+              <div>
+                <strong>${a.title}</strong>
+                <p class="item-meta">${cls ? cls.name : ''} • ${a.questions.length} questions</p>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="startTest('${a.id}')">
+                Start Test
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Completed assignments list
+      const completedList = document.getElementById('completedTestsList');
+      if (state.submissions.length === 0) {
+        completedList.innerHTML = `<p class="empty-state">No completed tests yet. Finish an assigned test to see your score.</p>`;
+      } else {
+        completedList.innerHTML = state.submissions.map(sub => {
+          const assignment = state.assignments.find(a => a.id === sub.assignmentId);
+          return `
+            <div class="list-item-card">
+              <div>
+                <strong>${assignment.title}</strong>
+                <p class="item-meta">Score: <strong>${sub.score}/${sub.total} (${sub.percentage}%)</strong></p>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="reviewTest('${sub.assignmentId}')">
+                Review
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // --- Join Class Handler ---
+    document.getElementById('joinClassForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('joinCodeInput');
+      const feedback = document.getElementById('joinFeedback');
+      const code = input.value.trim().toUpperCase();
+
+      const matchedClass = availableClasses.find(c => c.joinCode === code);
+
+      feedback.classList.remove('hidden', 'feedback-error', 'feedback-success');
+
+      if (!matchedClass) {
+        feedback.textContent = `No class found with code "${code}". Try CALC-815 or CHEM-304.`;
+        feedback.classList.add('feedback-error');
+        return;
+      }
+
+      if (state.enrolledClassIds.includes(matchedClass.id)) {
+        feedback.textContent = `You are already enrolled in ${matchedClass.name}.`;
+        feedback.classList.add('feedback-error');
+        return;
+      }
+
+      state.enrolledClassIds.push(matchedClass.id);
+      feedback.textContent = `Joined ${matchedClass.name}! New assignments unlocked.`;
+      feedback.classList.add('feedback-success');
+      input.value = '';
+      renderDashboard();
+    });
+
+    // --- Open Quiz View (Take Mode or Review Mode) ---
+    window.startTest = function(assignmentId) {
+      const assignment = state.assignments.find(a => a.id === assignmentId);
+      if (!assignment) return;
+      activeAssignment = assignment;
+
+      const cls = availableClasses.find(c => c.id === assignment.classId);
+      document.getElementById('quizClassBadge').textContent = cls ? cls.name : 'Assignment';
+      document.getElementById('quizTitle').textContent = assignment.title;
+
+      // Reset banner & show submit button
+      document.getElementById('scoreResultBanner').classList.add('hidden');
+      document.getElementById('quizSubmitBar').classList.remove('hidden');
+
+      const letters = ['A', 'B', 'C', 'D'];
+      document.getElementById('quizQuestionsContainer').innerHTML = assignment.questions.map((q, qIdx) => `
+        <div class="quiz-question-card">
+          <p class="quiz-q-prompt"><strong>Question ${qIdx + 1}:</strong> ${q.prompt}</p>
+          <div class="quiz-options-list">
+            ${q.options.map((opt, oIdx) => `
+              <label class="quiz-option-label">
+                <input type="radio" name="q_${qIdx}" value="${oIdx}" required />
+                <span><strong>${letters[oIdx]}.</strong>${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('quizView').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    };
+
+    window.reviewTest = function(assignmentId) {
+      const assignment = state.assignments.find(a => a.id === assignmentId);
+      const submission = state.submissions.find(s => s.assignmentId === assignmentId);
+      if (!assignment || !submission) return;
+
+      const cls = availableClasses.find(c => c.id === assignment.classId);
+      document.getElementById('quizClassBadge').textContent = cls ? cls.name : 'Reviewed';
+      document.getElementById('quizTitle').textContent = assignment.title;
+
+      // Show score banner & hide submit button
+      const banner = document.getElementById('scoreResultBanner');
+      banner.classList.remove('hidden');
+      document.getElementById('finalScoreText').textContent = `${submission.score} / ${submission.total} (${submission.percentage}%)`;
+      document.getElementById('scoreFeedbackText').textContent =
+        submission.percentage >= 80
+          ? 'Strong mastery! Review your answers below.'
+          : 'Good effort! Check the green highlights below to see the correct solutions.';
+      document.getElementById('quizSubmitBar').classList.add('hidden');
+
+      const letters = ['A', 'B', 'C', 'D'];
+      document.getElementById('quizQuestionsContainer').innerHTML = assignment.questions.map((q, qIdx) => {
+        const studentChoice = submission.answers[qIdx];
+        const isRight = studentChoice === q.correctIndex;
+
+        return `
+          <div class="quiz-question-card ${isRight ? 'card-correct' : 'card-incorrect'}">
+            <div class="q-top">
+              <p class="quiz-q-prompt"><strong>Question ${qIdx + 1}:</strong> ${q.prompt}</p>
+              <span class="result-pill ${isRight ? 'pill-pass' : 'pill-fail'}">
+                ${isRight ? 'Correct' : 'Missed'}
+              </span>
+            </div>
+            <div class="quiz-options-list">
+              ${q.options.map((opt, oIdx) => {
+                let statusClass = '';
+                let marker = '';
+                if (oIdx === q.correctIndex) {
+                  statusClass = 'opt-is-correct';
+                  marker = ' ✓ (Correct Answer)';
+                } else if (oIdx === studentChoice && !isRight) {
+                  statusClass = 'opt-is-wrong';
+                  marker = ' ✗ (Your Answer)';
+                }
+                return `
+                  <div class="quiz-option-review ${statusClass}">
+                    <strong>${letters[oIdx]}.</strong> ${opt}${marker}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('quizView').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    };
+
+    // --- Auto-Grade Submission ---
+    document.getElementById('quizForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!activeAssignment) return;
+
+      const answers = [];
+      let score = 0;
+
+      activeAssignment.questions.forEach((q, qIdx) => {
+        const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
+        const chosenIndex = selected ? parseInt(selected.value, 10) : -1;
+        answers.push(chosenIndex);
+        if (chosenIndex === q.correctIndex) {
+          score++;
+        }
+      });
+
+      const total = activeAssignment.questions.length;
+      const percentage = Math.round((score / total) * 100);
+
+      const submissionRecord = {
+        assignmentId: activeAssignment.id,
+        answers,
+        score,
+        total,
+        percentage
+      };
+
+      // Ready for Supabase 'submissions' table insert
+      console.log('Ready to insert into Supabase submissions table:', submissionRecord);
+
+      state.submissions.push(submissionRecord);
+      renderDashboard();
+      reviewTest(activeAssignment.id);
+    });
+
+    // --- Back to Dashboard ---
+    document.getElementById('backToDashBtn').addEventListener('click', () => {
+      document.getElementById('quizView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+    });
+
+    // Initial render
+    renderDashboard();
+  </script>
+</body>
+</html>
