@@ -160,6 +160,28 @@
       background: #d9534f;
       color: #ffffff;
     }
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+      align-items: start;
+    }
+    .roster-class-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.65rem;
+    }
+    .roster-student-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 0.8rem;
+      border: 1px solid var(--t-border, #e2e0d8);
+      border-radius: 8px;
+      background: var(--t-sub-alt, #faf9f6);
+    }
   </style>
 </head>
 <body class="app-shell">
@@ -185,7 +207,10 @@
     <nav class="sidebar-nav" role="tablist" aria-orientation="vertical">
       <span class="sidebar-group-label">MANAGEMENT</span>
       <button type="button" class="studio-tab active" data-target="classesPanel">
-        <span class="nav-dot"></span> Classes & Roster
+        <span class="nav-dot"></span> Create Class
+      </button>
+      <button type="button" class="studio-tab" data-target="rosterPanel">
+        <span class="nav-dot"></span> Roster
       </button>
       <button type="button" class="studio-tab" data-target="passcodesPanel">
         <span class="nav-dot"></span> Student Passcodes
@@ -229,8 +254,8 @@
   <div class="app-main">
     <header class="app-topbar">
       <div>
-        <h1 id="topbarTitle">Classes & Roster</h1>
-        <p id="topbarSubtitle">Create class join codes and manage your student roster.</p>
+        <h1 id="topbarTitle">Create Class</h1>
+        <p id="topbarSubtitle">Create class join codes and organize your tutoring sections.</p>
       </div>
       <div class="topbar-right">
         <button type="button" class="btn btn-gold hidden" id="topbarCreateQBtn">+ Create Question</button>
@@ -239,7 +264,7 @@
 
     <main class="app-body">
       <!-- =========================================================
-           PANEL 1: CLASSES & ROSTER
+           PANEL 1: CREATE CLASS
       ========================================================= -->
       <section id="classesPanel" class="studio-panel">
         <div class="studio-grid">
@@ -265,6 +290,13 @@
             <div id="classesList" class="stack-list"></div>
           </div>
         </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL: ROSTER (CLASSES & ENROLLED STUDENTS)
+      ========================================================= -->
+      <section id="rosterPanel" class="studio-panel hidden">
+        <div id="rosterClassesGrid" class="roster-grid"></div>
       </section>
 
       <!-- =========================================================
@@ -898,8 +930,12 @@
   <script>
     const PANEL_HEADERS = {
       classesPanel: {
-        title: 'Classes & Roster',
-        subtitle: 'Create class join codes and manage your active tutoring sections.'
+        title: 'Create Class',
+        subtitle: 'Create class join codes and organize your tutoring sections.'
+      },
+      rosterPanel: {
+        title: 'Roster',
+        subtitle: 'View every created class and the students enrolled in each section.'
       },
       passcodesPanel: {
         title: 'Student Passcodes',
@@ -1109,6 +1145,84 @@
       resetQuestionForm();
       switchTab('createQuestionPanel');
     });
+
+    // --- Roster Tab Renderer ---
+    function renderRosterTab() {
+      const grid = document.getElementById('rosterClassesGrid');
+      if (!grid) return;
+
+      if (state.classes.length === 0 && state.students.length === 0) {
+        grid.innerHTML = `
+          <div class="card">
+            <h3>No Classes Created Yet</h3>
+            <p class="item-meta" style="margin-top:0.4rem;">
+              Go to the <strong>Create Class</strong> tab to create your first class and join code.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const classCardsHTML = state.classes.map(c => {
+        const enrolled = state.students.filter(s => s.classId === c.id);
+        const studentsHTML = enrolled.length > 0
+          ? enrolled.map(s => `
+              <div class="roster-student-row">
+                <div>
+                  <strong>${s.name}</strong>
+                  <span class="username-tag">@${s.username}</span>
+                </div>
+                <span class="tag">${s.grade || 'Grade 8'}</span>
+              </div>
+            `).join('')
+          : `<p class="item-meta">No students enrolled in this class yet.</p>`;
+
+        return `
+          <div class="card">
+            <div class="roster-class-header">
+              <div>
+                <h3>${c.name}</h3>
+                <p class="item-meta">${c.schedule || 'Flexible Schedule'}</p>
+              </div>
+              <span class="code-pill">${c.joinCode}</span>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <span class="badge">${enrolled.length} student${enrolled.length === 1 ? '' : 's'}</span>
+            </div>
+            <div class="stack-list">${studentsHTML}</div>
+          </div>
+        `;
+      }).join('');
+
+      const classIdsSet = new Set(state.classes.map(c => c.id));
+      const unassignedStudents = state.students.filter(s => !s.classId || !classIdsSet.has(s.classId));
+      const unassignedCardHTML = unassignedStudents.length > 0
+        ? `
+          <div class="card">
+            <div class="roster-class-header">
+              <div>
+                <h3>Unassigned Students</h3>
+                <p class="item-meta">Students not currently assigned to a class</p>
+              </div>
+              <span class="tag">${unassignedStudents.length} student${unassignedStudents.length === 1 ? '' : 's'}</span>
+            </div>
+            <div class="stack-list">
+              ${unassignedStudents.map(s => `
+                <div class="roster-student-row">
+                  <div>
+                    <strong>${s.name}</strong>
+                    <span class="username-tag">@${s.username}</span>
+                  </div>
+                  <span class="tag">${s.grade || 'Grade 8'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `
+        : '';
+
+      grid.innerHTML = classCardsHTML + unassignedCardHTML;
+    }
 
     // --- Assigned Tests Management ---
     function formatAssignmentDetails(asgn) {
@@ -2338,6 +2452,7 @@
 
     function renderAll() {
       renderClassesAndRoster();
+      renderRosterTab();
       renderAssignTestPanel();
       renderAssignedHistoryPanel();
       populateResultsClassDropdown();
