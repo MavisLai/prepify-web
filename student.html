@@ -5,7 +5,159 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Portal | Prepify Tutoring</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="style-student.css" />
+  <link rel="stylesheet" href="style-teacher.css" />
+  <style>
+    .hidden {
+      display: none !important;
+    }
+
+    .test-timer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      border: 1.5px solid var(--t-border, #d8d6ce);
+      background: var(--t-sub-alt, #f4f3ee);
+      color: var(--t-text, #1f2328);
+    }
+    .test-timer-pill.is-warning {
+      border-color: #d9534f;
+      background: rgba(217, 83, 79, 0.14);
+      color: #d9534f;
+    }
+    .choice-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--t-border, #d8d6ce);
+      border-radius: 8px;
+      background: var(--t-surface, #ffffff);
+      color: var(--t-text, #1f2328);
+      cursor: pointer;
+      font-size: 0.98rem;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .choice-btn:hover {
+      border-color: var(--t-accent, #16213e);
+      background: var(--t-sub-alt, #f7f6f2);
+    }
+    .progress-bar-track {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--t-sub-alt, #e8e6df);
+      overflow: hidden;
+      margin-top: 0.45rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+    .completed-test-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.95rem 1rem;
+      border: 1px solid var(--t-border, #e2e0d8);
+      border-radius: 10px;
+      background: var(--t-sub-alt, #faf9f6);
+    }
+    .completed-score-box {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Full-Screen Dedicated Test Tab Mode */
+    body.is-taking-test {
+      display: block !important;
+      grid-template-columns: 1fr !important;
+    }
+    body.is-taking-test .app-sidebar,
+    body.is-taking-test .app-topbar,
+    body.is-taking-test #testsOverviewGrid {
+      display: none !important;
+    }
+    body.is-taking-test .app-main {
+      display: block !important;
+      margin-left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    body.is-taking-test .app-body {
+      width: 100% !important;
+      max-width: 960px !important;
+      margin: 0 auto !important;
+      padding: 2.5rem 1.5rem !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    body.is-taking-test #testsPanel {
+      width: 100% !important;
+    }
+    .fullscreen-runner-card {
+      width: 100% !important;
+      padding: 2rem 2.25rem;
+      border-radius: 14px;
+    }
+    .runner-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--t-border, #e2e0d8);
+    }
+    .runner-nav-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid var(--t-border, #e2e0d8);
+    }
+
+    /* Exit Confirmation Modal */
+    .exit-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 20, 30, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 9999;
+    }
+    .exit-modal-box {
+      width: 100%;
+      max-width: 460px;
+      background: var(--t-surface, #ffffff);
+      color: var(--t-text, #1f2328);
+      border: 1px solid var(--t-border, #d8d6ce);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Dracula theme purple accent for brand diamond & active tab dot */
+    body[data-theme="dracula"] .brand-diamond {
+      color: #bd93f9 !important;
+    }
+    body[data-theme="dracula"] .studio-tab.active .nav-dot {
+      background-color: #bd93f9 !important;
+      box-shadow: 0 0 0 3px rgba(189, 147, 249, 0.25) !important;
+    }
+  </style>
 </head>
 <body class="app-shell">
 
@@ -16,23 +168,23 @@
         <span class="brand-diamond">◆</span>
         <div>
           <strong>Prepify</strong>
-          <small>Tutoring & Practice Platform</small>
+          <small>Student Learning Portal</small>
         </div>
       </a>
     </div>
 
     <div class="sidebar-profile">
       <strong id="studentGreeting">Student</strong>
-      <span id="studentClassBadge">Loading class...</span>
-      <a href="login.html" class="sidebar-switch-btn" id="logoutBtn">Switch Account / Log Out</a>
+      <span id="studentClassMeta">Loading class...</span>
+      <a href="login.html" class="sidebar-switch-btn" id="studentLogoutBtn">Switch Account / Log Out</a>
     </div>
 
     <nav class="sidebar-nav" role="tablist" aria-orientation="vertical">
-      <span class="sidebar-group-label">STUDY</span>
-      <button type="button" class="studio-tab active" data-target="assignedTestsPanel">
-        <span class="nav-dot"></span> Assigned Tests
+      <span class="sidebar-group-label">LEARNING</span>
+      <button type="button" class="studio-tab active" data-target="testsPanel">
+        <span class="nav-dot"></span> Tests
       </button>
-      <button type="button" class="studio-tab" data-target="progressPanel">
+      <button type="button" class="studio-tab" data-target="myProgressPanel">
         <span class="nav-dot"></span> My Progress
       </button>
 
@@ -43,7 +195,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <p>Prepify Student Workspace • Adaptive & teacher-assigned practice.</p>
+      <p>Prepify Student Portal • Adaptive SHSAT & Grade 8/9 Practice.</p>
     </div>
   </aside>
 
@@ -51,106 +203,128 @@
   <div class="app-main">
     <header class="app-topbar">
       <div>
-        <h1 id="topbarTitle">Assigned Tests</h1>
-        <p id="topbarSubtitle">Complete tests and practice sets assigned by your instructor.</p>
-      </div>
-      <div class="topbar-right">
-        <button type="button" class="btn btn-outline hidden" id="exitRunnerBtn">← Back to List</button>
+        <h1 id="studentTopbarTitle">Tests</h1>
+        <p id="studentTopbarSubtitle">Take active tests and review your completed test scores.</p>
       </div>
     </header>
 
     <main class="app-body">
       <!-- =========================================================
-           PANEL 1: ASSIGNED TESTS
+           PANEL 1: TESTS (ACTIVE TESTS + COMPLETED TESTS + DEDICATED TEST TAB)
       ========================================================= -->
-      <section id="assignedTestsPanel" class="studio-panel">
-        <div id="assignedTestsGrid" class="tests-grid"></div>
-      </section>
-
-      <!-- =========================================================
-           PANEL 2: INTERACTIVE QUESTION & TEST RUNNER
-      ========================================================= -->
-      <section id="testRunnerPanel" class="studio-panel hidden">
-        <div class="card runner-card">
-          <div class="runner-header">
-            <div class="runner-meta" id="runnerMetaPills"></div>
-            <span class="runner-counter" id="runnerCounter">Question 1 of 4</span>
+      <section id="testsPanel" class="studio-panel">
+        <div id="testsOverviewGrid" class="studio-grid">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <h3>Active Tests</h3>
+              <span class="badge" id="studentActiveTestsBadge">0 active</span>
+            </div>
+            <p class="card-subtitle">Click Start Test to open the dedicated test view. Timed tests auto-submit at 00:00.</p>
+            <div id="studentAssignmentsList" class="stack-list"></div>
           </div>
 
-          <div class="runner-progress-track">
-            <div class="runner-progress-fill" id="runnerProgressFill" style="width: 25%;"></div>
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <h3>Completed Tests</h3>
+              <span class="tag" id="studentCompletedTestsBadge">0 completed</span>
+            </div>
+            <p class="card-subtitle">Finished tests and timed-out attempts move here automatically with your overall score.</p>
+            <div id="studentCompletedTestsList" class="stack-list"></div>
           </div>
+        </div>
 
-          <div id="runnerQuestionBody" class="runner-body"></div>
-
-          <div id="runnerFeedbackBox" class="feedback-banner hidden"></div>
-
-          <div class="runner-footer">
-            <button type="button" class="btn btn-outline" id="runnerPrevBtn">Previous</button>
-            <div class="runner-footer-right">
-              <button type="button" class="btn btn-gold" id="runnerSubmitBtn">Check Answer</button>
-              <button type="button" class="btn btn-primary hidden" id="runnerNextBtn">Next Question →</button>
+        <!-- Dedicated Hidden Test Tab (Only Visible While Taking a Test) -->
+        <div id="testRunnerCard" class="card fullscreen-runner-card hidden">
+          <div class="runner-header-bar">
+            <div>
+              <strong id="runnerTestTitle" style="font-size:1.15rem;">Test Title</strong>
+              <p class="item-meta" id="runnerProgressLabel">Question 1 of 10</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.65rem;">
+              <span id="runnerTimerBadge" class="test-timer-pill hidden">⏱ 00:00</span>
+              <button type="button" class="btn btn-outline btn-sm" id="exitTestBtn">Exit Test</button>
             </div>
           </div>
+
+          <div id="runnerQuestionBody"></div>
+
+          <div class="runner-nav-footer">
+            <button type="button" class="btn btn-outline" id="runnerPrevQuestionBtn">← Previous</button>
+            <span class="item-meta" id="runnerAnsweredCounter">0 answered</span>
+            <button type="button" class="btn btn-primary" id="runnerNextQuestionBtn">Next →</button>
+          </div>
         </div>
 
-        <!-- Session Completion Summary -->
-        <div id="runnerSummaryCard" class="card summary-card hidden">
-          <span class="section-tag">Session Complete</span>
-          <h2 id="summaryScoreHeading">You scored 4 / 4 (100%)</h2>
-          <p class="card-subtitle" id="summarySubtext">Great work! Your progress has been recorded.</p>
-          <div id="summaryBreakdownList" class="stack-list" style="margin: 1.25rem 0;"></div>
-          <button type="button" class="btn btn-primary" id="summaryDoneBtn">Return to Assigned Tests</button>
+        <!-- Test Completion Summary -->
+        <div id="testSummaryCard" class="card hidden" style="max-width:620px; margin:0 auto; width:100%;">
+          <span class="badge" id="summaryBadge">Test Completed</span>
+          <h2 id="summaryHeadline" style="margin-top:0.6rem;">Score: 0%</h2>
+          <p class="card-subtitle" id="summarySubtext" style="margin-top:0.35rem;">
+            Your results have been saved to Completed Tests.
+          </p>
+          <button type="button" class="btn btn-primary" id="backToTestsBtn" style="margin-top:1rem;">
+            Back to Tests
+          </button>
         </div>
       </section>
 
       <!-- =========================================================
-           PANEL 3: MY PROGRESS
+           PANEL 2: MY PROGRESS (LOWEST ACCURACY TOPICS)
       ========================================================= -->
-      <section id="progressPanel" class="studio-panel hidden">
-        <div class="progress-stats-grid">
-          <div class="card stat-box">
-            <span class="stat-label">Questions Answered</span>
-            <strong id="statTotalAnswered">0</strong>
+      <section id="myProgressPanel" class="studio-panel hidden">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="card">
+            <span class="item-meta">Questions Answered</span>
+            <h2 id="progTotalAnswered" style="margin-top: 0.35rem;">0</h2>
           </div>
-          <div class="card stat-box">
-            <span class="stat-label">Overall Accuracy</span>
-            <strong id="statAccuracy">—</strong>
+          <div class="card">
+            <span class="item-meta">Overall Accuracy</span>
+            <h2 id="progAvgAccuracy" style="margin-top: 0.35rem;">—</h2>
           </div>
-          <div class="card stat-box">
-            <span class="stat-label">Tests Completed</span>
-            <strong id="statTestsDone">0</strong>
+          <div class="card">
+            <span class="item-meta">ELA Accuracy</span>
+            <h2 id="progElaAccuracy" style="margin-top: 0.35rem;">—</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Math Accuracy</span>
+            <h2 id="progMathAccuracy" style="margin-top: 0.35rem;">—</h2>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 1.5rem;">
-          <h3>Recent Attempt History</h3>
-          <p class="card-subtitle">Review questions you answered and revisit explanations.</p>
-          <div id="historyList" class="stack-list" style="margin-top: 1rem;"></div>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.35rem;">
+            <h3>Topics by Lowest Accuracy</h3>
+            <span class="tag">Lowest → Highest</span>
+          </div>
+          <p class="card-subtitle">
+            Topics where you have the lowest accuracy appear at the top so you know what to review first.
+          </p>
+          <div id="lowestAccuracyTopicsList" class="stack-list"></div>
         </div>
       </section>
 
       <!-- =========================================================
-           PANEL 4: SETTINGS
+           PANEL 3: SETTINGS
       ========================================================= -->
       <section id="studentSettingsPanel" class="studio-panel hidden">
         <div class="studio-grid">
           <div class="card">
-            <h3>Student Profile</h3>
-            <p class="card-subtitle">Join a new class using a join code provided by your instructor.</p>
+            <h3>Join a Class</h3>
+            <p class="card-subtitle">Have a class join code from your teacher? Enter it below.</p>
             <form id="joinClassForm">
               <div class="form-group">
                 <label for="joinCodeInput">Class Join Code</label>
-                <input type="text" id="joinCodeInput" placeholder="e.g., MATH-492" required />
+                <input type="text" id="joinCodeInput" placeholder="e.g., ALGE-412" required />
               </div>
               <button type="submit" class="btn btn-primary">Join Class</button>
-              <p id="joinClassMsg" class="settings-saved-msg hidden">✓ Joined class successfully.</p>
+              <p id="joinClassMsg" class="settings-saved-msg hidden" style="margin-top:0.65rem;">✓ Joined class!</p>
             </form>
           </div>
 
           <div class="card">
             <h3>Theme</h3>
-            <p class="card-subtitle">Choose a color palette for your Student Workspace.</p>
+            <p class="card-subtitle">Choose your preferred color theme.</p>
+
             <div class="mt-theme-grid" role="radiogroup" aria-label="Workspace Theme">
               <button type="button" class="mt-theme-card active" data-theme-value="default">
                 <span class="mt-theme-name">Prepify Classic</span>
@@ -166,7 +340,7 @@
                 <span class="mt-swatches">
                   <i style="background:#282a36;"></i>
                   <i style="background:#bd93f9;"></i>
-                  <i style="background:#50fa7b;"></i>
+                  <i style="background:#bd93f9;"></i>
                 </span>
               </button>
 
@@ -194,111 +368,71 @@
     </main>
   </div>
 
-  <!-- Load Supabase, Auth & Student DB Helpers FIRST -->
+  <!-- Exit Test Early Warning Modal -->
+  <div id="exitTestModal" class="exit-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <div class="exit-modal-box">
+      <span class="badge" style="background:rgba(217,83,79,0.15); color:#d9534f;">Early Exit Warning</span>
+      <h3 id="exitModalTitle" style="margin-top:0.55rem;">Submit & Exit Test Early?</h3>
+      <p id="exitModalWarningText" class="card-subtitle" style="margin-top:0.45rem; line-height:1.5;">
+        You have not finished the entire test. If you leave now, only the questions you have answered so far will be submitted and scored.
+      </p>
+      <div style="display:flex; justify-content:flex-end; gap:0.65rem; margin-top:1.25rem;">
+        <button type="button" class="btn btn-outline" id="cancelExitTestBtn">Continue Test</button>
+        <button type="button" class="btn btn-primary" id="confirmSubmitExitBtn">Submit & See Score</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="gradebook/js/supabase-client.js"></script>
   <script src="gradebook/js/auth.js"></script>
   <script src="gradebook/js/student.js"></script>
 
   <script>
-    const PANEL_HEADERS = {
-      assignedTestsPanel: {
-        title: 'Assigned Tests',
-        subtitle: 'Complete tests and practice sets assigned by your instructor.'
+    const STUDENT_PANEL_HEADERS = {
+      testsPanel: {
+        title: 'Tests',
+        subtitle: 'Take active tests and review your completed test scores.'
       },
-      testRunnerPanel: {
-        title: 'Practice Session',
-        subtitle: 'Answer each question and check your work for immediate feedback.'
-      },
-      progressPanel: {
+      myProgressPanel: {
         title: 'My Progress',
-        subtitle: 'Track your accuracy and review past questions.'
+        subtitle: 'Identify your lowest-accuracy topics to focus your study time.'
       },
       studentSettingsPanel: {
         title: 'Settings',
-        subtitle: 'Join a class with a code or customize your workspace theme.'
+        subtitle: 'Manage your class enrollment and color theme.'
       }
     };
-
-    const QUESTION_TYPE_LABELS = {
-      multiple_choice: 'Multiple Choice',
-      multiple_response: 'Multiple Response',
-      fill_in_blank: 'Fill in the Blank',
-      drag_and_drop: 'Drag and Drop',
-      hotspot: 'Hotspot',
-      inline_choice: 'Inline Choice',
-      table_grid: 'Table Grid'
-    };
-
-    const DIFFICULTY_LADDER = [300, 420, 525, 650, 800];
 
     const studentState = {
       session: null,
-      classInfo: null,
       questions: [],
+      attempts: [],
       assignments: [],
-      completedAssignmentIds: new Set(),
-      history: [],
-      runner: {
-        activeTitle: '',
-        assignmentId: null,
-        isAdaptive: false,
-        adaptivePool: [],
-        usedQuestionIds: new Set(),
-        targetTotal: 0,
-        currentDifficulty: 525,
-        queue: [],
-        currentIndex: 0,
-        answers: {},
-        graded: {},
-        selectedDndChip: null,
-        hotspotClick: null
-      }
+      completedAssignments: [],
+      stats: {
+        totalAnswered: 0,
+        correctCount: 0,
+        avgAccuracy: null,
+        elaAccuracy: null,
+        mathAccuracy: null,
+        topicAccuracy: []
+      },
+      activeTest: null,
+      timerIntervalId: null,
+      secondsRemaining: null
     };
 
-    // --- Adaptive Pool & Routing Helpers ---
-    function getAdaptivePoolForGrade(targetGrade) {
-      if (!targetGrade || targetGrade === 'Both') {
-        return [...studentState.questions];
-      }
-      const matching = studentState.questions.filter(q =>
-        Array.isArray(q.grades) && q.grades.includes(targetGrade)
-      );
-      return matching.length > 0 ? matching : [...studentState.questions];
-    }
-
-    function pickNextAdaptiveQuestion(pool, usedIds, targetDifficulty) {
-      const unused = pool.filter(q => !usedIds.has(q.id));
-      if (unused.length === 0) return null;
-
-      const ranked = unused
-        .map(q => ({
-          q,
-          dist: Math.abs(parseInt(q.difficulty || '525', 10) - targetDifficulty),
-          rand: Math.random()
-        }))
-        .sort((a, b) => (a.dist - b.dist) || (a.rand - b.rand));
-
-      return ranked[0].q;
-    }
-
-    function stepDifficulty(currentRating, wasCorrect) {
-      const idx = DIFFICULTY_LADDER.indexOf(currentRating);
-      const safeIdx = idx >= 0 ? idx : 2;
-      if (wasCorrect) {
-        return DIFFICULTY_LADDER[Math.min(DIFFICULTY_LADDER.length - 1, safeIdx + 1)];
-      } else {
-        return DIFFICULTY_LADDER[Math.max(0, safeIdx - 1)];
-      }
-    }
-
     // --- Logout ---
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+    document.getElementById('studentLogoutBtn').addEventListener('click', async (e) => {
       e.preventDefault();
+      clearTestTimer();
+      document.body.classList.remove('is-taking-test');
       await window.PrepifyAuth.logoutUser();
     });
 
     // --- Theme Engine ---
+    const themeCards = document.querySelectorAll('.mt-theme-card');
     const THEME_PALETTES = {
       default: null,
       dracula: {
@@ -312,7 +446,7 @@
         '--t-sub': '#6272a4',
         '--t-accent': '#bd93f9',
         '--t-accent-text': '#282a36',
-        '--t-dot': '#50fa7b'
+        '--t-dot': '#bd93f9'
       },
       iceberg_light: {
         '--t-bg': '#e8e9ec',
@@ -342,9 +476,7 @@
       }
     };
 
-    const themeCards = document.querySelectorAll('.mt-theme-card');
-
-    function applyTheme(themeName) {
+    function applyStudentTheme(themeName) {
       const palette = THEME_PALETTES[themeName];
       if (!palette) {
         document.body.removeAttribute('data-theme');
@@ -357,290 +489,159 @@
       localStorage.setItem('prepify_student_theme', themeName);
     }
 
-    themeCards.forEach(card => card.addEventListener('click', () => applyTheme(card.dataset.themeValue)));
+    themeCards.forEach(card => card.addEventListener('click', () => applyStudentTheme(card.dataset.themeValue)));
 
-    // --- Tab Navigation ---
+    // --- Sidebar Navigation ---
     const tabs = document.querySelectorAll('.studio-tab');
     const panels = document.querySelectorAll('.studio-panel');
-    const exitRunnerBtn = document.getElementById('exitRunnerBtn');
 
-    function switchTab(targetId) {
+    function switchStudentTab(targetId) {
       tabs.forEach(t => t.classList.toggle('active', t.dataset.target === targetId));
       panels.forEach(p => p.classList.toggle('hidden', p.id !== targetId));
-
-      if (PANEL_HEADERS[targetId]) {
-        document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
-        document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
+      if (STUDENT_PANEL_HEADERS[targetId]) {
+        document.getElementById('studentTopbarTitle').textContent = STUDENT_PANEL_HEADERS[targetId].title;
+        document.getElementById('studentTopbarSubtitle').textContent = STUDENT_PANEL_HEADERS[targetId].subtitle;
       }
-
-      exitRunnerBtn.classList.toggle('hidden', targetId !== 'testRunnerPanel');
     }
 
-    tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.target)));
-    exitRunnerBtn.addEventListener('click', () => switchTab('assignedTestsPanel'));
+    tabs.forEach(tab => tab.addEventListener('click', () => switchStudentTab(tab.dataset.target)));
 
-    // --- Render Assigned Tests ---
-    function renderAssignedTests() {
-      const grid = document.getElementById('assignedTestsGrid');
-      if (studentState.assignments.length === 0) {
-        grid.innerHTML = `
-          <div class="card">
-            <h3>No Assignments Yet</h3>
-            <p class="item-meta" style="margin-top:0.4rem;">
-              Your instructor hasn't assigned any tests to you yet. Check back soon!
-            </p>
-          </div>
+    // --- My Progress Tab (Lowest Accuracy Topics) ---
+    function renderMyProgressTab() {
+      const stats = studentState.stats || {
+        totalAnswered: 0,
+        avgAccuracy: null,
+        elaAccuracy: null,
+        mathAccuracy: null,
+        topicAccuracy: []
+      };
+
+      document.getElementById('progTotalAnswered').textContent = stats.totalAnswered;
+      document.getElementById('progAvgAccuracy').textContent = stats.avgAccuracy !== null ? `${stats.avgAccuracy}%` : '—';
+      document.getElementById('progElaAccuracy').textContent = stats.elaAccuracy !== null ? `${stats.elaAccuracy}%` : '—';
+      document.getElementById('progMathAccuracy').textContent = stats.mathAccuracy !== null ? `${stats.mathAccuracy}%` : '—';
+
+      const listEl = document.getElementById('lowestAccuracyTopicsList');
+      const topics = [...(stats.topicAccuracy || [])];
+
+      if (topics.length === 0) {
+        listEl.innerHTML = `
+          <p class="item-meta">
+            You haven't answered any questions yet. Complete a test in the <strong>Tests</strong> tab to see your accuracy breakdown!
+          </p>
         `;
         return;
       }
 
-      const classLabel = studentState.classInfo?.name || 'Enrolled Class';
-      grid.innerHTML = studentState.assignments.map(asgn => {
-        const isDone = studentState.completedAssignmentIds.has(asgn.id) || asgn.completed;
-        const poolCount = asgn.isAdaptive ? getAdaptivePoolForGrade(asgn.targetGrade).length : 0;
-        const effectiveAdaptiveTotal = asgn.isAdaptive
-          ? Math.min(asgn.adaptiveCount || 20, poolCount)
-          : 0;
+      topics.sort((a, b) => (a.accuracy - b.accuracy) || (b.total - a.total));
 
-        const countLabel = asgn.isAdaptive
-          ? `${effectiveAdaptiveTotal} Adaptive Question(s) • ${asgn.targetGrade}`
-          : `${asgn.questions.length} question(s)`;
-        const timeLabel = asgn.timeLimitMinutes ? ` • ${asgn.timeLimitMinutes} min` : '';
+      listEl.innerHTML = topics.map(t => {
+        const pillClass = t.accuracy < 65
+          ? 'pill-diff-hard'
+          : t.accuracy < 80
+            ? 'pill-ela'
+            : 'pill-math';
+        const barColor = t.accuracy < 65
+          ? '#d9534f'
+          : t.accuracy < 80
+            ? '#d4a359'
+            : '#2e7d32';
 
         return `
-          <div class="card test-card">
-            <div class="test-card-top">
-              <span class="badge">${asgn.isAdaptive ? 'Full Adaptive Sim' : classLabel}</span>
-              <span class="status-pill ${isDone ? 'is-done' : 'is-open'}">${isDone ? (asgn.scoreText || 'Completed') : 'Assigned'}</span>
+          <div class="list-item-card" style="display:block;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem;">
+              <div>
+                <strong>${t.topic}</strong>
+                ${t.subject ? `<span class="tag" style="margin-left:0.35rem;">${t.subject}</span>` : ''}
+                <p class="item-meta" style="margin-top:0.2rem;">
+                  ${t.correct} of ${t.total} correct
+                </p>
+              </div>
+              <span class="qb-pill ${pillClass}">${t.accuracy}%</span>
             </div>
-            <h3>${asgn.title}</h3>
-            <p class="item-meta">${countLabel}${timeLabel}</p>
-            <button type="button" class="btn ${isDone ? 'btn-outline' : 'btn-primary'} full-width" style="margin-top:1rem;" onclick="startAssignment('${asgn.id}')">
-              ${isDone ? 'Retake Practice Set' : 'Start Assignment →'}
-            </button>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width:${t.accuracy}%; background:${barColor};"></div>
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    window.startAssignment = function(asgnId) {
-      const asgn = studentState.assignments.find(a => a.id === asgnId);
-      if (!asgn) return;
-
-      if (asgn.isAdaptive) {
-        const pool = getAdaptivePoolForGrade(asgn.targetGrade);
-        if (pool.length === 0) {
-          alert('No published questions are available in the Question Bank yet. Ask your instructor to publish questions first.');
-          return;
-        }
-        launchAdaptiveRunner(asgn.title, asgn.id, pool, asgn.adaptiveCount || 20);
-        return;
-      }
-
-      if (asgn.questions.length === 0) {
-        alert('This assignment does not have any published questions yet.');
-        return;
-      }
-      launchRunner(asgn.title, asgn.id, asgn.questions);
-    };
-
-    // --- Standard & Adaptive Runners ---
-    function launchRunner(title, assignmentId, questions) {
-      studentState.runner = {
-        activeTitle: title,
-        assignmentId,
-        isAdaptive: false,
-        adaptivePool: [],
-        usedQuestionIds: new Set(questions.map(q => q.id)),
-        targetTotal: questions.length,
-        currentDifficulty: 525,
-        queue: questions,
-        currentIndex: 0,
-        answers: {},
-        graded: {},
-        selectedDndChip: null,
-        hotspotClick: null
-      };
-
-      document.getElementById('runnerSummaryCard').classList.add('hidden');
-      document.querySelector('.runner-card').classList.remove('hidden');
-      switchTab('testRunnerPanel');
-      document.getElementById('topbarTitle').textContent = title;
-      renderRunnerQuestion();
-    }
-
-    function launchAdaptiveRunner(title, assignmentId, pool, maxQuestions) {
-      const targetTotal = Math.min(maxQuestions, pool.length);
-      const startDifficulty = 525;
-      const usedIds = new Set();
-      const firstQ = pickNextAdaptiveQuestion(pool, usedIds, startDifficulty);
-      if (!firstQ) return;
-      usedIds.add(firstQ.id);
-
-      studentState.runner = {
-        activeTitle: title,
-        assignmentId,
-        isAdaptive: true,
-        adaptivePool: pool,
-        usedQuestionIds: usedIds,
-        targetTotal,
-        currentDifficulty: parseInt(firstQ.difficulty || '525', 10),
-        queue: [firstQ],
-        currentIndex: 0,
-        answers: {},
-        graded: {},
-        selectedDndChip: null,
-        hotspotClick: null
-      };
-
-      document.getElementById('runnerSummaryCard').classList.add('hidden');
-      document.querySelector('.runner-card').classList.remove('hidden');
-      switchTab('testRunnerPanel');
-      document.getElementById('topbarTitle').textContent = title;
-      renderRunnerQuestion();
-    }
-
-    function renderRunnerQuestion() {
-      const r = studentState.runner;
-      const q = r.queue[r.currentIndex];
-      const total = r.isAdaptive ? r.targetTotal : r.queue.length;
-      const isGraded = r.graded[q.id] !== undefined;
-
-      document.getElementById('runnerCounter').textContent = `Question ${r.currentIndex + 1} of ${total}`;
-      document.getElementById('runnerProgressFill').style.width = `${Math.round(((r.currentIndex + 1) / total) * 100)}%`;
-
-      document.getElementById('runnerMetaPills').innerHTML = `
-        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
-        <span class="tag">${q.topic}</span>
-        <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
-        ${r.isAdaptive ? `<span class="badge">Difficulty: ${q.difficulty}</span>` : ''}
-      `;
-
-      const body = document.getElementById('runnerQuestionBody');
-      const savedAns = r.answers[q.id];
-
+    // --- Question Rendering, State Capture & Grading ---
+    function renderInteractiveQuestionHTML(q, prefix, savedResponse) {
       if (q.type === 'multiple_choice') {
-        const letters = ['A', 'B', 'C', 'D'];
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <div class="runner-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="runner-opt ${savedAns === idx ? 'is-selected' : ''} ${isGraded && idx === q.config.correctIndex ? 'is-correct' : ''} ${isGraded && savedAns === idx && idx !== q.config.correctIndex ? 'is-wrong' : ''}">
-                <input type="radio" name="ans_mc" value="${idx}" ${savedAns === idx ? 'checked' : ''} ${isGraded ? 'disabled' : ''} />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
+        const options = q.config?.options || [];
+        return `
+          <p style="font-size:1.12rem; line-height:1.6; margin-bottom:1.25rem;">${q.prompt}</p>
+          <div class="stack-list">
+            ${options.map((opt, idx) => {
+              const checked = savedResponse?.selectedIndex === idx ? 'checked' : '';
+              return `
+                <label class="choice-btn" style="display:flex; align-items:center; gap:0.65rem;">
+                  <input type="radio" name="${prefix}_choice" value="${idx}" ${checked} />
+                  <span>${opt}</span>
+                </label>
+              `;
+            }).join('')}
           </div>
         `;
-      } else if (q.type === 'multiple_response') {
-        const letters = ['A', 'B', 'C', 'D'];
-        const selSet = new Set(savedAns || []);
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <p class="item-meta" style="margin-bottom:0.65rem;"><em>Select all that apply:</em></p>
-          <div class="runner-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="runner-opt ${selSet.has(idx) ? 'is-selected' : ''} ${isGraded && q.config.correctIndices.includes(idx) ? 'is-correct' : ''}">
-                <input type="checkbox" class="ans-mr-cb" value="${idx}" ${selSet.has(idx) ? 'checked' : ''} ${isGraded ? 'disabled' : ''} />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
+      }
+
+      if (q.type === 'multiple_response') {
+        const options = q.config?.options || [];
+        const savedSet = new Set(savedResponse?.selectedIndices || []);
+        return `
+          <p style="font-size:1.12rem; line-height:1.6; margin-bottom:1.25rem;">${q.prompt}</p>
+          <div class="stack-list">
+            ${options.map((opt, idx) => {
+              const checked = savedSet.has(idx) ? 'checked' : '';
+              return `
+                <label class="choice-btn" style="display:flex; align-items:center; gap:0.65rem;">
+                  <input type="checkbox" name="${prefix}_choice" value="${idx}" ${checked} />
+                  <span>${opt}</span>
+                </label>
+              `;
+            }).join('')}
           </div>
         `;
-      } else if (q.type === 'fill_in_blank') {
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <div class="form-group" style="max-width:340px;">
-            <input type="text" id="ansFibInput" value="${savedAns || ''}" placeholder="Type your answer..." ${isGraded ? 'disabled' : ''} />
-          </div>
+      }
+
+      if (q.type === 'fill_in_blank') {
+        const val = savedResponse?.textValue ? String(savedResponse.textValue).replace(/"/g, '&quot;') : '';
+        return `
+          <p style="font-size:1.12rem; line-height:1.6; margin-bottom:1.25rem;">${q.prompt}</p>
+          <input type="text" id="${prefix}_fib" value="${val}" placeholder="Type your answer..." style="width:100%; padding:0.75rem;" />
         `;
-      } else if (q.type === 'drag_and_drop') {
-        const mapping = savedAns || {};
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <p class="item-meta" style="margin-bottom:0.75rem;">Click an item on the left, then click its matching target box on the right.</p>
-          <div class="dnd-runner-grid">
-            <div class="dnd-bank">
-              ${q.config.items.map(item => `
-                <button type="button" class="dnd-chip-btn ${r.selectedDndChip === item ? 'is-active' : ''}" data-item="${item}" ${isGraded ? 'disabled' : ''}>
-                  ${item}
-                </button>
-              `).join('')}
-            </div>
-            <div class="dnd-targets">
-              ${q.config.targets.map((target, idx) => `
-                <div class="dnd-target-box" data-target-idx="${idx}">
-                  <strong>${target}</strong>
-                  <span class="dnd-placed">${mapping[idx] || 'Click to place selected item'}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-        if (!isGraded) {
-          body.querySelectorAll('.dnd-chip-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-              r.selectedDndChip = btn.dataset.item;
-              renderRunnerQuestion();
-            });
-          });
-          body.querySelectorAll('.dnd-target-box').forEach(box => {
-            box.addEventListener('click', () => {
-              if (!r.selectedDndChip) return;
-              const current = r.answers[q.id] || {};
-              current[box.dataset.targetIdx] = r.selectedDndChip;
-              r.answers[q.id] = current;
-              r.selectedDndChip = null;
-              renderRunnerQuestion();
-            });
-          });
-        }
-      } else if (q.type === 'hotspot') {
-        const pt = savedAns || null;
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <div class="hotspot-runner-box" id="studentHotspotBox">
-            ${q.config.imageUrl
-              ? `<img src="${q.config.imageUrl}" alt="Interactive diagram" />`
-              : `<div class="hotspot-placeholder">Click anywhere inside this coordinate area to place your answer marker</div>`
-            }
-            ${pt ? `<div class="hotspot-pin" style="left:${pt.x}%; top:${pt.y}%;">📍</div>` : ''}
-            ${isGraded ? `<div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;">🎯</div>` : ''}
-          </div>
-        `;
-        if (!isGraded) {
-          document.getElementById('studentHotspotBox').addEventListener('click', (e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-            r.answers[q.id] = { x, y };
-            renderRunnerQuestion();
-          });
-        }
-      } else if (q.type === 'inline_choice') {
-        const ansObj = savedAns || {};
-        const sentence = q.prompt
-          .replace('[blank1]', `<select id="ansInline1" class="inline-select" ${isGraded ? 'disabled' : ''}><option value="">-- Select --</option>${q.config.blank1.choices.map(c => `<option value="${c}" ${ansObj.b1 === c ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
-          .replace('[blank2]', `<select id="ansInline2" class="inline-select" ${isGraded ? 'disabled' : ''}><option value="">-- Select --</option>${q.config.blank2.choices.map(c => `<option value="${c}" ${ansObj.b2 === c ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
-        body.innerHTML = `<p class="runner-prompt" style="line-height:2.1;">${sentence}</p>`;
-      } else if (q.type === 'table_grid') {
-        const rowAns = savedAns || {};
-        body.innerHTML = `
-          <p class="runner-prompt">${q.prompt}</p>
-          <table class="runner-grid-table">
-            <thead>
-              <tr>
-                <th>Statement</th>
-                <th>${q.config.columns[0]}</th>
-                <th>${q.config.columns[1]}</th>
-              </tr>
-            </thead>
+      }
+
+      if (q.type === 'inline_choice') {
+        const b1 = q.config?.blank1?.choices || [];
+        const b2 = q.config?.blank2?.choices || [];
+        const htmlPrompt = q.prompt
+          .replace('[blank1]', `<select id="${prefix}_ic1" class="inline-select">
+            <option value="">Select...</option>
+            ${b1.map(c => `<option value="${c}" ${savedResponse?.v1 === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>`)
+          .replace('[blank2]', `<select id="${prefix}_ic2" class="inline-select">
+            <option value="">Select...</option>
+            ${b2.map(c => `<option value="${c}" ${savedResponse?.v2 === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>`);
+        return `<p style="font-size:1.12rem; line-height:1.65;">${htmlPrompt}</p>`;
+      }
+
+      if (q.type === 'table_grid') {
+        const rows = q.config?.rows || [];
+        const savedRows = savedResponse?.rowSelections || {};
+        return `
+          <p style="font-size:1.12rem; line-height:1.6; margin-bottom:1.25rem;">${q.prompt}</p>
+          <table class="preview-grid-table">
+            <thead><tr><th>Statement</th><th>True</th><th>False</th></tr></thead>
             <tbody>
-              ${q.config.rows.map((row, rIdx) => `
+              ${rows.map((r, idx) => `
                 <tr>
-                  <td>${row.statement}</td>
-                  <td style="text-align:center;"><input type="radio" name="grid_ans_${rIdx}" value="0" ${rowAns[rIdx] === 0 ? 'checked' : ''} ${isGraded ? 'disabled' : ''} /></td>
-                  <td style="text-align:center;"><input type="radio" name="grid_ans_${rIdx}" value="1" ${rowAns[rIdx] === 1 ? 'checked' : ''} ${isGraded ? 'disabled' : ''} /></td>
+                  <td>${r.statement}</td>
+                  <td><input type="radio" name="${prefix}_grid_${idx}" value="0" ${savedRows[idx] === 0 ? 'checked' : ''} /></td>
+                  <td><input type="radio" name="${prefix}_grid_${idx}" value="1" ${savedRows[idx] === 1 ? 'checked' : ''} /></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -648,263 +649,540 @@
         `;
       }
 
-      const fbBox = document.getElementById('runnerFeedbackBox');
-      if (isGraded) {
-        const correct = r.graded[q.id];
-        fbBox.className = `feedback-banner ${correct ? 'fb-correct' : 'fb-incorrect'}`;
-        fbBox.innerHTML = `
-          <strong>${correct ? '✓ Correct!' : '✕ Not Quite'}</strong>
-          <p>${q.explanation}</p>
-        `;
-        fbBox.classList.remove('hidden');
-      } else {
-        fbBox.classList.add('hidden');
-      }
-
-      document.getElementById('runnerPrevBtn').disabled = r.currentIndex === 0;
-      document.getElementById('runnerSubmitBtn').classList.toggle('hidden', isGraded);
-      const nextBtn = document.getElementById('runnerNextBtn');
-      nextBtn.classList.toggle('hidden', !isGraded);
-      nextBtn.textContent = r.currentIndex === total - 1 ? 'Finish & View Results' : 'Next Question →';
+      return `
+        <p style="font-size:1.12rem; line-height:1.6; margin-bottom:1rem;">${q.prompt}</p>
+        <p class="item-meta">Interactive format: ${q.type}</p>
+      `;
     }
 
-    async function captureAndGradeCurrent() {
-      const r = studentState.runner;
-      const q = r.queue[r.currentIndex];
-      let isCorrect = false;
-
+    function captureQuestionResponse(q, prefix) {
       if (q.type === 'multiple_choice') {
-        const sel = document.querySelector('input[name="ans_mc"]:checked');
-        if (!sel) { alert('Please select an answer choice.'); return; }
-        const val = parseInt(sel.value, 10);
-        r.answers[q.id] = val;
-        isCorrect = val === q.config.correctIndex;
-      } else if (q.type === 'multiple_response') {
-        const chosen = Array.from(document.querySelectorAll('.ans-mr-cb:checked')).map(cb => parseInt(cb.value, 10));
-        if (chosen.length === 0) { alert('Please select at least one option.'); return; }
-        r.answers[q.id] = chosen;
-        const expected = [...q.config.correctIndices].sort();
-        isCorrect = chosen.length === expected.length && chosen.sort().every((v, i) => v === expected[i]);
-      } else if (q.type === 'fill_in_blank') {
-        const raw = document.getElementById('ansFibInput').value.trim();
-        if (!raw) { alert('Please enter your answer.'); return; }
-        r.answers[q.id] = raw;
-        const accepted = q.config.acceptedAnswers.split(',').map(s => s.trim());
-        isCorrect = accepted.some(ans => q.config.caseSensitive ? ans === raw : ans.toLowerCase() === raw.toLowerCase());
-      } else if (q.type === 'drag_and_drop') {
-        const mapping = r.answers[q.id] || {};
-        if (Object.keys(mapping).length < q.config.targets.length) {
-          alert('Please match all items to their target boxes.');
+        const picked = document.querySelector(`input[name="${prefix}_choice"]:checked`);
+        if (!picked) return { answered: false, isCorrect: false, raw: null };
+        const selectedIndex = parseInt(picked.value, 10);
+        return {
+          answered: true,
+          isCorrect: selectedIndex === q.config.correctIndex,
+          raw: { selectedIndex }
+        };
+      }
+
+      if (q.type === 'multiple_response') {
+        const picked = Array.from(document.querySelectorAll(`input[name="${prefix}_choice"]:checked`))
+          .map(el => parseInt(el.value, 10))
+          .sort();
+        if (picked.length === 0) return { answered: false, isCorrect: false, raw: null };
+        const expected = [...(q.config.correctIndices || [])].sort();
+        const isCorrect = picked.length === expected.length && picked.every((v, i) => v === expected[i]);
+        return {
+          answered: true,
+          isCorrect,
+          raw: { selectedIndices: picked }
+        };
+      }
+
+      if (q.type === 'fill_in_blank') {
+        const rawText = document.getElementById(`${prefix}_fib`)?.value || '';
+        const val = rawText.trim().toLowerCase();
+        if (!val) return { answered: false, isCorrect: false, raw: null };
+        const accepted = String(q.config.acceptedAnswers || '')
+          .split(',')
+          .map(s => s.trim().toLowerCase())
+          .filter(Boolean);
+        return {
+          answered: true,
+          isCorrect: accepted.includes(val),
+          raw: { textValue: rawText }
+        };
+      }
+
+      if (q.type === 'inline_choice') {
+        const v1 = document.getElementById(`${prefix}_ic1`)?.value || '';
+        const v2 = document.getElementById(`${prefix}_ic2`)?.value || '';
+        const needsB1 = Boolean(q.config?.blank1);
+        const needsB2 = Boolean(q.config?.blank2);
+        const hasAny = (needsB1 && v1 !== '') || (needsB2 && v2 !== '');
+        if (!hasAny) return { answered: false, isCorrect: false, raw: null };
+
+        const ok1 = !needsB1 || v1 === q.config.blank1.correct;
+        const ok2 = !needsB2 || v2 === q.config.blank2.correct;
+        return {
+          answered: true,
+          isCorrect: ok1 && ok2,
+          raw: { v1, v2 }
+        };
+      }
+
+      if (q.type === 'table_grid') {
+        const rows = q.config?.rows || [];
+        let anyAnswered = false;
+        let allAnswered = true;
+        let allRight = true;
+        const rowSelections = {};
+
+        rows.forEach((r, idx) => {
+          const picked = document.querySelector(`input[name="${prefix}_grid_${idx}"]:checked`);
+          if (!picked) {
+            allAnswered = false;
+            allRight = false;
+          } else {
+            anyAnswered = true;
+            const colVal = parseInt(picked.value, 10);
+            rowSelections[idx] = colVal;
+            if (colVal !== r.correctCol) allRight = false;
+          }
+        });
+
+        if (!anyAnswered) return { answered: false, isCorrect: false, raw: null };
+        return {
+          answered: true,
+          isCorrect: allAnswered && allRight,
+          raw: { rowSelections }
+        };
+      }
+
+      return { answered: false, isCorrect: false, raw: null };
+    }
+
+    // --- Tests & Time Limit Enforcement ---
+    function formatSecondsMMSS(totalSeconds) {
+      const clamped = Math.max(0, Math.floor(totalSeconds));
+      const mins = Math.floor(clamped / 60);
+      const secs = clamped % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function clearTestTimer() {
+      if (studentState.timerIntervalId) {
+        clearInterval(studentState.timerIntervalId);
+        studentState.timerIntervalId = null;
+      }
+      studentState.secondsRemaining = null;
+      const badge = document.getElementById('runnerTimerBadge');
+      if (badge) {
+        badge.classList.add('hidden');
+        badge.classList.remove('is-warning');
+      }
+    }
+
+    function startTestTimer(timeLimitMinutes) {
+      clearTestTimer();
+      const mins = parseInt(timeLimitMinutes, 10);
+      if (!mins || mins <= 0) return;
+
+      studentState.secondsRemaining = mins * 60;
+      const badge = document.getElementById('runnerTimerBadge');
+      badge.classList.remove('hidden');
+
+      const updateDisplay = () => {
+        badge.textContent = `⏱ ${formatSecondsMMSS(studentState.secondsRemaining)}`;
+        badge.classList.toggle('is-warning', studentState.secondsRemaining <= 60);
+      };
+
+      updateDisplay();
+
+      studentState.timerIntervalId = setInterval(() => {
+        studentState.secondsRemaining -= 1;
+        if (studentState.secondsRemaining <= 0) {
+          studentState.secondsRemaining = 0;
+          updateDisplay();
+          clearTestTimer();
+          finishActiveTest('timeout');
+        } else {
+          updateDisplay();
+        }
+      }, 1000);
+    }
+
+    function renderStudentTestsSection() {
+      const activeListEl = document.getElementById('studentAssignmentsList');
+      const completedListEl = document.getElementById('studentCompletedTestsList');
+
+      document.getElementById('studentActiveTestsBadge').textContent = `${studentState.assignments.length} active`;
+      document.getElementById('studentCompletedTestsBadge').textContent = `${studentState.completedAssignments.length} completed`;
+
+      if (studentState.assignments.length === 0) {
+        activeListEl.innerHTML = `<p class="item-meta">No active tests right now.</p>`;
+      } else {
+        activeListEl.innerHTML = studentState.assignments.map(asgn => {
+          const meta = asgn.meta || {};
+          const timeText = meta.timeLimitMinutes ? `${meta.timeLimitMinutes} min limit` : 'Untimed';
+          const countText = meta.isAdaptive
+            ? `Adaptive (${meta.adaptiveCount} Qs)`
+            : `${meta.questionIds.length} question(s)`;
+          const topicsLine = asgn.topics && asgn.topics.length > 0
+            ? ` • ${asgn.topics.join(', ')}`
+            : '';
+
+          return `
+            <div class="list-item-card">
+              <div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; margin-bottom:0.3rem;">
+                  <span class="tag">${meta.testTypeLabel || 'Assigned Test'}</span>
+                  <span class="tag">${timeText}</span>
+                </div>
+                <strong>${asgn.title}</strong>
+                <p class="item-meta">${countText}${topicsLine}</p>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="startAssignedTest('${asgn.id}')">
+                Start Test
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (studentState.completedAssignments.length === 0) {
+        completedListEl.innerHTML = `<p class="item-meta">No completed tests yet. Once you finish a test or its timer ends, it will appear here.</p>`;
+      } else {
+        completedListEl.innerHTML = studentState.completedAssignments.map(asgn => {
+          const meta = asgn.meta || {};
+          const timeText = meta.timeLimitMinutes ? `${meta.timeLimitMinutes} min` : 'Untimed';
+          const topicsText = asgn.topics && asgn.topics.length > 0
+            ? asgn.topics.join(', ')
+            : (meta.isAdaptive ? 'Adaptive Mix' : 'General');
+          const scorePillClass = asgn.scorePercent >= 80
+            ? 'pill-math'
+            : asgn.scorePercent >= 65
+              ? 'pill-ela'
+              : 'pill-diff-hard';
+
+          return `
+            <div class="completed-test-card">
+              <div style="min-width: 0;">
+                <div style="display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; margin-bottom:0.35rem;">
+                  <span class="tag">${meta.testTypeLabel || 'Assigned Test'}</span>
+                  <span class="tag">${timeText}</span>
+                  ${meta.targetGrade ? `<span class="tag">${meta.targetGrade}</span>` : ''}
+                </div>
+                <strong>${asgn.title}</strong>
+                <p class="item-meta" style="margin-top:0.2rem;">
+                  <strong>Topics:</strong> ${topicsText}
+                </p>
+                <p class="item-meta" style="margin-top:0.15rem;">
+                  ${asgn.correctCount}/${asgn.totalQuestions} correct${asgn.completedDate ? ' • Completed ' + asgn.completedDate : ''}
+                </p>
+              </div>
+              <div class="completed-score-box">
+                <span class="qb-pill ${scorePillClass}" style="font-size:0.95rem; padding:0.3rem 0.65rem;">
+                  ${asgn.scorePercent}%
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function saveCurrentQuestionState() {
+      const t = studentState.activeTest;
+      if (!t) return;
+      const q = t.questions[t.currentIndex];
+      if (!q) return;
+
+      const captured = captureQuestionResponse(q, 'runner');
+      if (captured.answered) {
+        t.responses[q.id] = captured;
+      } else {
+        delete t.responses[q.id];
+      }
+      updateAnsweredCounterUI();
+    }
+
+    function updateAnsweredCounterUI() {
+      const t = studentState.activeTest;
+      if (!t) return;
+      const totalPlanned = t.isAdaptive ? t.targetAdaptiveCount : t.questions.length;
+      const answeredCount = Object.keys(t.responses).length;
+      document.getElementById('runnerAnsweredCounter').textContent = `${answeredCount} of ${totalPlanned} answered`;
+    }
+
+    window.startAssignedTest = function(assignmentId) {
+      const asgn = studentState.assignments.find(a => a.id === assignmentId);
+      if (!asgn) return;
+
+      const meta = asgn.meta || {};
+      let testQuestions = [];
+      let isAdaptive = Boolean(meta.isAdaptive);
+      let targetAdaptiveCount = meta.adaptiveCount || 20;
+      let targetGrade = meta.targetGrade || 'Both';
+
+      if (isAdaptive) {
+        const pool = studentState.questions.filter(q =>
+          targetGrade === 'Both' || q.grades.includes(targetGrade)
+        );
+        if (pool.length === 0) {
+          alert('No published questions are available for this adaptive simulation yet.');
           return;
         }
-        isCorrect = q.config.items.every((item, idx) => mapping[idx] === item);
-      } else if (q.type === 'hotspot') {
-        const pt = r.answers[q.id];
-        if (!pt) { alert('Click on the diagram to place your marker first.'); return; }
-        const dist = Math.hypot(pt.x - q.config.x, pt.y - q.config.y);
-        isCorrect = dist <= 12;
-      } else if (q.type === 'inline_choice') {
-        const b1 = document.getElementById('ansInline1')?.value || '';
-        const b2El = document.getElementById('ansInline2');
-        const b2 = b2El ? b2El.value : '';
-        if (!b1 || (b2El && !b2)) { alert('Please select an option for every blank.'); return; }
-        r.answers[q.id] = { b1, b2 };
-        isCorrect = b1 === q.config.blank1.correct && (!b2El || b2 === q.config.blank2.correct);
-      } else if (q.type === 'table_grid') {
-        const rowAns = {};
-        for (let i = 0; i < q.config.rows.length; i++) {
-          const sel = document.querySelector(`input[name="grid_ans_${i}"]:checked`);
-          if (!sel) { alert('Please select an option for every row.'); return; }
-          rowAns[i] = parseInt(sel.value, 10);
-        }
-        r.answers[q.id] = rowAns;
-        isCorrect = q.config.rows.every((row, idx) => rowAns[idx] === row.correctCol);
-      }
-
-      r.graded[q.id] = isCorrect;
-
-      // In Adaptive mode, adjust target difficulty & queue the next question dynamically
-      if (r.isAdaptive && r.queue.length < r.targetTotal && r.currentIndex === r.queue.length - 1) {
-        const qRating = parseInt(q.difficulty || String(r.currentDifficulty), 10);
-        const nextDifficulty = stepDifficulty(qRating, isCorrect);
-        r.currentDifficulty = nextDifficulty;
-
-        const nextQ = pickNextAdaptiveQuestion(r.adaptivePool, r.usedQuestionIds, nextDifficulty);
-        if (nextQ) {
-          r.usedQuestionIds.add(nextQ.id);
-          r.queue.push(nextQ);
-        }
-      }
-
-      studentState.history.unshift({
-        questionId: q.id,
-        topic: q.topic,
-        subject: q.subject,
-        prompt: q.prompt,
-        isCorrect
-      });
-
-      if (studentState.session?.id) {
-        try {
-          await window.PrepifyStudentDB.recordAttempts(
-            studentState.session.id,
-            r.assignmentId,
-            [{ questionId: q.id, isCorrect }]
-          );
-        } catch (err) {
-          console.error('Could not record attempt to Supabase:', err);
-        }
-      }
-
-      renderRunnerQuestion();
-      renderProgress();
-    }
-
-    document.getElementById('runnerSubmitBtn').addEventListener('click', captureAndGradeCurrent);
-
-    document.getElementById('runnerPrevBtn').addEventListener('click', () => {
-      if (studentState.runner.currentIndex > 0) {
-        studentState.runner.currentIndex -= 1;
-        renderRunnerQuestion();
-      }
-    });
-
-    document.getElementById('runnerNextBtn').addEventListener('click', () => {
-      const r = studentState.runner;
-      if (r.currentIndex < r.queue.length - 1) {
-        r.currentIndex += 1;
-        renderRunnerQuestion();
+        const sortedByMid = [...pool].sort(
+          (a, b) => Math.abs(Number(a.difficulty) - 525) - Math.abs(Number(b.difficulty) - 525)
+        );
+        testQuestions = [sortedByMid[0]];
       } else {
-        showSessionSummary();
-      }
-    });
+        testQuestions = (meta.questionIds || [])
+          .map(qid => studentState.questions.find(q => q.id === qid))
+          .filter(Boolean);
 
-    function showSessionSummary() {
-      const r = studentState.runner;
-      const total = r.queue.length;
-      const correctCount = r.queue.filter(q => r.graded[q.id]).length;
-      const pct = Math.round((correctCount / total) * 100);
-
-      if (r.assignmentId) {
-        studentState.completedAssignmentIds.add(r.assignmentId);
-        const asgn = studentState.assignments.find(a => a.id === r.assignmentId);
-        if (asgn) {
-          asgn.completed = true;
-          asgn.scoreText = `${pct}% (${correctCount}/${total})`;
+        if (testQuestions.length === 0) {
+          alert('This assignment has no published questions available.');
+          return;
         }
-        renderAssignedTests();
       }
 
-      document.querySelector('.runner-card').classList.add('hidden');
-      const sumCard = document.getElementById('runnerSummaryCard');
-      sumCard.classList.remove('hidden');
+      studentState.activeTest = {
+        assignmentId: asgn.id,
+        title: asgn.title,
+        isAdaptive,
+        targetAdaptiveCount,
+        targetGrade,
+        usedIds: new Set(testQuestions.map(q => q.id)),
+        currentDifficulty: Number(testQuestions[0].difficulty) || 525,
+        questions: testQuestions,
+        currentIndex: 0,
+        responses: {}
+      };
 
-      document.getElementById('summaryScoreHeading').textContent = `You scored ${correctCount} / ${total} (${pct}%)`;
-      document.getElementById('summaryBreakdownList').innerHTML = r.queue.map((q, idx) => `
-        <div class="list-item-card">
-          <div>
-            <strong>Q${idx + 1}: ${q.topic}</strong> <span class="tag">Difficulty ${q.difficulty}</span>
-            <p class="item-meta">${q.prompt}</p>
-          </div>
-          <span class="qb-pill ${r.graded[q.id] ? 'pill-math' : 'pill-hard'}">
-            ${r.graded[q.id] ? 'Correct' : 'Missed'}
-          </span>
-        </div>
-      `).join('');
+      // Switch to dedicated hidden full-screen test tab
+      document.body.classList.add('is-taking-test');
+      document.getElementById('testsOverviewGrid').classList.add('hidden');
+      document.getElementById('testSummaryCard').classList.add('hidden');
+      document.getElementById('testRunnerCard').classList.remove('hidden');
 
-      renderProgress();
+      renderCurrentTestQuestion();
+      startTestTimer(meta.timeLimitMinutes);
+    };
+
+    function renderCurrentTestQuestion() {
+      const t = studentState.activeTest;
+      if (!t) return;
+
+      const q = t.questions[t.currentIndex];
+      const totalPlanned = t.isAdaptive ? t.targetAdaptiveCount : t.questions.length;
+      const isLastQuestion = t.currentIndex + 1 >= totalPlanned;
+
+      document.getElementById('runnerTestTitle').textContent = t.title;
+      document.getElementById('runnerProgressLabel').textContent = `Question ${t.currentIndex + 1} of ${totalPlanned}`;
+
+      const saved = t.responses[q.id]?.raw || null;
+      document.getElementById('runnerQuestionBody').innerHTML = renderInteractiveQuestionHTML(q, 'runner', saved);
+
+      const prevBtn = document.getElementById('runnerPrevQuestionBtn');
+      prevBtn.disabled = t.currentIndex === 0;
+      prevBtn.style.visibility = t.currentIndex === 0 ? 'hidden' : 'visible';
+
+      const nextBtn = document.getElementById('runnerNextQuestionBtn');
+      if (isLastQuestion) {
+        nextBtn.textContent = 'Submit Test';
+        nextBtn.classList.remove('btn-primary');
+        nextBtn.classList.add('btn-gold');
+      } else {
+        nextBtn.textContent = 'Next →';
+        nextBtn.classList.remove('btn-gold');
+        nextBtn.classList.add('btn-primary');
+      }
+
+      updateAnsweredCounterUI();
     }
 
-    document.getElementById('summaryDoneBtn').addEventListener('click', () => switchTab('assignedTestsPanel'));
+    document.getElementById('runnerQuestionBody').addEventListener('change', () => {
+      saveCurrentQuestionState();
+    });
+    document.getElementById('runnerQuestionBody').addEventListener('input', () => {
+      saveCurrentQuestionState();
+    });
 
-    // --- Progress & Settings ---
-    function renderProgress() {
-      const total = studentState.history.length;
-      const correct = studentState.history.filter(h => h.isCorrect).length;
-      document.getElementById('statTotalAnswered').textContent = total;
-      document.getElementById('statAccuracy').textContent = total > 0 ? `${Math.round((correct / total) * 100)}%` : '—';
-      document.getElementById('statTestsDone').textContent = studentState.completedAssignmentIds.size;
+    document.getElementById('runnerPrevQuestionBtn').addEventListener('click', () => {
+      const t = studentState.activeTest;
+      if (!t || t.currentIndex <= 0) return;
 
-      const list = document.getElementById('historyList');
-      if (total === 0) {
-        list.innerHTML = `<p class="item-meta">No questions attempted yet. Start an assigned test to begin!</p>`;
+      saveCurrentQuestionState();
+      t.currentIndex -= 1;
+      renderCurrentTestQuestion();
+    });
+
+    document.getElementById('runnerNextQuestionBtn').addEventListener('click', () => {
+      const t = studentState.activeTest;
+      if (!t) return;
+
+      saveCurrentQuestionState();
+
+      const totalPlanned = t.isAdaptive ? t.targetAdaptiveCount : t.questions.length;
+      const isLastQuestion = t.currentIndex + 1 >= totalPlanned;
+
+      if (isLastQuestion) {
+        finishActiveTest('completed');
         return;
       }
 
-      list.innerHTML = studentState.history.slice(0, 15).map(item => `
-        <div class="list-item-card">
-          <div>
-            <strong>${item.topic}</strong> <span class="tag">${item.subject}</span>
-            <p class="item-meta">${item.prompt}</p>
-          </div>
-          <span class="qb-pill ${item.isCorrect ? 'pill-math' : 'pill-hard'}">
-            ${item.isCorrect ? 'Correct' : 'Incorrect'}
-          </span>
-        </div>
-      `).join('');
+      if (t.isAdaptive && t.currentIndex + 1 >= t.questions.length) {
+        const currentQ = t.questions[t.currentIndex];
+        const wasRight = Boolean(t.responses[currentQ.id]?.isCorrect);
+        t.currentDifficulty = wasRight
+          ? Math.min(800, t.currentDifficulty + 110)
+          : Math.max(300, t.currentDifficulty - 110);
+
+        const pool = studentState.questions.filter(q =>
+          !t.usedIds.has(q.id) && (t.targetGrade === 'Both' || q.grades.includes(t.targetGrade))
+        );
+        if (pool.length === 0) {
+          finishActiveTest('completed');
+          return;
+        }
+        pool.sort(
+          (a, b) => Math.abs(Number(a.difficulty) - t.currentDifficulty) - Math.abs(Number(b.difficulty) - t.currentDifficulty)
+        );
+        const nextQ = pool[0];
+        t.usedIds.add(nextQ.id);
+        t.questions.push(nextQ);
+      }
+
+      t.currentIndex += 1;
+      renderCurrentTestQuestion();
+    });
+
+    // --- Exit Test Early Warning Modal ---
+    const exitModalEl = document.getElementById('exitTestModal');
+
+    document.getElementById('exitTestBtn').addEventListener('click', () => {
+      const t = studentState.activeTest;
+      if (!t) return;
+      saveCurrentQuestionState();
+
+      const totalPlanned = t.isAdaptive ? t.targetAdaptiveCount : t.questions.length;
+      const answeredCount = Object.keys(t.responses).length;
+
+      document.getElementById('exitModalWarningText').textContent =
+        `You have answered ${answeredCount} of ${totalPlanned} questions. If you leave now, only the ${answeredCount} question(s) you have answered so far will be submitted and scored.`;
+
+      exitModalEl.classList.remove('hidden');
+    });
+
+    document.getElementById('cancelExitTestBtn').addEventListener('click', () => {
+      exitModalEl.classList.add('hidden');
+    });
+
+    document.getElementById('confirmSubmitExitBtn').addEventListener('click', () => {
+      exitModalEl.classList.add('hidden');
+      finishActiveTest('early_exit');
+    });
+
+    async function finishActiveTest(reason) {
+      saveCurrentQuestionState();
+      clearTestTimer();
+
+      const t = studentState.activeTest;
+      if (!t) return;
+
+      const answeredEntries = Object.entries(t.responses);
+      const answeredCount = answeredEntries.length;
+      const correctCount = answeredEntries.filter(([, res]) => res.isCorrect).length;
+      const totalPlanned = t.isAdaptive ? Math.max(answeredCount, t.targetAdaptiveCount) : t.questions.length;
+
+      if (answeredEntries.length > 0) {
+        await Promise.all(
+          answeredEntries.map(([questionId, res]) =>
+            window.PrepifyStudentDB.recordAttempt({
+              studentId: studentState.session.id,
+              questionId,
+              assignmentId: t.assignmentId,
+              isCorrect: res.isCorrect
+            }).catch(err => console.error('Failed to record attempt:', err))
+          )
+        );
+      } else if (t.questions[0]) {
+        await window.PrepifyStudentDB.recordAttempt({
+          studentId: studentState.session.id,
+          questionId: t.questions[0].id,
+          assignmentId: t.assignmentId,
+          isCorrect: false
+        }).catch(err => console.error('Failed to record empty submission attempt:', err));
+      }
+
+      const pct = Math.round((correctCount / Math.max(1, totalPlanned)) * 100);
+
+      // Exit dedicated full-screen test tab and restore normal layout
+      document.body.classList.remove('is-taking-test');
+      document.getElementById('testRunnerCard').classList.add('hidden');
+      document.getElementById('testSummaryCard').classList.remove('hidden');
+
+      if (reason === 'timeout') {
+        document.getElementById('summaryBadge').textContent = 'Time Expired — Auto-Submitted';
+        document.getElementById('summarySubtext').textContent =
+          `Time ran out. ${answeredCount} of ${totalPlanned} answered question(s) were submitted and moved to Completed Tests.`;
+      } else if (reason === 'early_exit') {
+        document.getElementById('summaryBadge').textContent = 'Submitted Early';
+        document.getElementById('summarySubtext').textContent =
+          `You exited early. Only the ${answeredCount} question(s) you answered were submitted and moved to Completed Tests.`;
+      } else {
+        document.getElementById('summaryBadge').textContent = 'Test Completed';
+        document.getElementById('summarySubtext').textContent =
+          'Your test has been submitted and moved to Completed Tests.';
+      }
+
+      document.getElementById('summaryHeadline').textContent =
+        `${t.title}: ${pct}% (${correctCount}/${totalPlanned} correct)`;
+
+      studentState.activeTest = null;
+      await refreshStudentWorkspace();
     }
 
+    document.getElementById('backToTestsBtn').addEventListener('click', () => {
+      document.getElementById('testSummaryCard').classList.add('hidden');
+      document.getElementById('testsOverviewGrid').classList.remove('hidden');
+    });
+
+    // --- Join Class Form ---
     document.getElementById('joinClassForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-      if (!code || !studentState.session?.id) return;
+      const code = document.getElementById('joinCodeInput').value.trim();
+      if (!code) return;
 
       try {
-        const joinedCls = await window.PrepifyStudentDB.joinClassByCode(studentState.session.id, code);
-        studentState.classInfo = joinedCls;
-        studentState.session.classId = joinedCls.id;
-        document.getElementById('studentClassBadge').textContent = joinedCls.name;
+        const cls = await window.PrepifyStudentDB.joinClassByCode(studentState.session.id, code);
+        studentState.session.classId = cls.id;
+        studentState.session.className = cls.name;
+        document.getElementById('studentClassMeta').textContent = `${cls.name} (${cls.join_code})`;
 
         const msg = document.getElementById('joinClassMsg');
         msg.classList.remove('hidden');
         setTimeout(() => msg.classList.add('hidden'), 2500);
         e.target.reset();
-
-        const liveData = await window.PrepifyStudentDB.loadStudentWorkspace(studentState.session);
-        studentState.assignments = liveData.assignments;
-        renderAssignedTests();
+        await refreshStudentWorkspace();
       } catch (err) {
-        alert(err.message || 'Could not join class.');
+        alert(err.message);
       }
     });
 
+    async function refreshStudentWorkspace() {
+      const workspace = await window.PrepifyStudentDB.loadStudentWorkspace(studentState.session);
+      studentState.questions = workspace.questions;
+      studentState.attempts = workspace.attempts;
+      studentState.assignments = workspace.assignments;
+      studentState.completedAssignments = workspace.completedAssignments;
+      studentState.stats = workspace.stats;
+
+      renderStudentTestsSection();
+      renderMyProgressTab();
+    }
+
     (async function bootStudentPortal() {
-      applyTheme(localStorage.getItem('prepify_student_theme') || 'default');
+      applyStudentTheme(localStorage.getItem('prepify_student_theme') || 'default');
 
       const session = await window.PrepifyStudentDB.initStudentSession();
       if (!session) return;
-      studentState.session = session;
 
+      studentState.session = session;
       document.getElementById('studentGreeting').textContent = session.name || 'Student';
-      document.getElementById('studentClassBadge').textContent = session.grade || 'Student Workspace';
+      document.getElementById('studentClassMeta').textContent = session.className
+        ? `${session.className}${session.joinCode ? ' (' + session.joinCode + ')' : ''}`
+        : 'No class assigned';
 
       try {
-        const liveData = await window.PrepifyStudentDB.loadStudentWorkspace(session);
-        studentState.classInfo = liveData.classInfo;
-        studentState.questions = liveData.publishedQuestions;
-        studentState.assignments = liveData.assignments;
-
-        if (liveData.classInfo?.name) {
-          document.getElementById('studentClassBadge').textContent = liveData.classInfo.name;
-        }
-
-        studentState.history = (liveData.attempts || []).map(att => ({
-          questionId: att.question_id,
-          topic: att.questions?.topic || 'Topic',
-          subject: att.questions?.subject || 'Math',
-          prompt: att.questions?.prompt || '',
-          isCorrect: att.is_correct
-        }));
-
-        liveData.assignments.forEach(a => {
-          if (a.completed) studentState.completedAssignmentIds.add(a.id);
-        });
+        await refreshStudentWorkspace();
       } catch (err) {
         console.error('Failed to load student workspace:', err);
       }
-
-      renderAssignedTests();
-      renderProgress();
     })();
   </script>
 

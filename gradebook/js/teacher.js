@@ -118,6 +118,7 @@
 
     const attempts = attemptRows || [];
     const rawStudents = studentRows || [];
+    const classNameById = new Map((classRows || []).map(c => [c.id, c.name]));
 
     const classes = (classRows || []).map(c => {
       const classStudentIds = new Set(
@@ -198,6 +199,7 @@
         name: s.name,
         username: s.username,
         classId: s.class_id,
+        className: classNameById.get(s.class_id) || 'Unassigned',
         grade: s.grade || 'Grade 8',
         results: {
           elaScore,
@@ -210,11 +212,65 @@
       };
     });
 
+    // Compute per-assignment student completion & auto-archive when all assigned students finish
+    const completedStudentIdsByAssignment = {};
+    attempts.forEach(a => {
+      if (!a.assignment_id || !a.student_id) return;
+      if (!completedStudentIdsByAssignment[a.assignment_id]) {
+        completedStudentIdsByAssignment[a.assignment_id] = new Set();
+      }
+      completedStudentIdsByAssignment[a.assignment_id].add(a.student_id);
+    });
+
+    const autoArchivePromises = [];
+    const assignments = (assignmentRows || []).map(asgn => {
+      const qIds = Array.isArray(asgn.question_ids) ? [...asgn.question_ids] : [];
+      const wasArchived = qIds.includes('ARCHIVED');
+
+      let targetStudents = [];
+      if (Array.isArray(asgn.student_ids) && asgn.student_ids.length > 0) {
+        const idSet = new Set(asgn.student_ids);
+        targetStudents = students.filter(s => idSet.has(s.id));
+      } else if (asgn.class_id) {
+        targetStudents = students.filter(s => s.classId === asgn.class_id);
+      }
+
+      const completedSet = completedStudentIdsByAssignment[asgn.id] || new Set();
+      const completedStudents = targetStudents.filter(s => completedSet.has(s.id));
+      const unfinishedStudents = targetStudents.filter(s => !completedSet.has(s.id));
+
+      const allStudentsFinished = targetStudents.length > 0 && unfinishedStudents.length === 0;
+      let isArchived = wasArchived;
+
+      if (!wasArchived && allStudentsFinished) {
+        isArchived = true;
+        const nextIds = ['ARCHIVED', ...qIds];
+        asgn.question_ids = nextIds;
+        autoArchivePromises.push(
+          sb.from('assignments').update({ question_ids: nextIds }).eq('id', asgn.id)
+        );
+      }
+
+      return {
+        ...asgn,
+        isArchived,
+        targetStudents,
+        completedStudents,
+        unfinishedStudents
+      };
+    });
+
+    if (autoArchivePromises.length > 0) {
+      await Promise.all(autoArchivePromises).catch(err =>
+        console.error('Failed to persist auto-archived assignments:', err)
+      );
+    }
+
     return {
       classes,
       students,
       questions,
-      assignments: assignmentRows || []
+      assignments
     };
   }
 
@@ -241,6 +297,44 @@
         topicAccuracy: []
       }
     };
+  }
+
+  async function deleteClassAndStudents(classId) {
+    const sb = getClient();
+
+    const { data: classStudents, error: fetchStudErr } = await sb
+      .from('students')
+      .select('id')
+      .eq('class_id', classId);
+    if (fetchStudErr) throw fetchStudErr;
+
+    const studentIds = (classStudents || []).map(s => s.id);
+    if (studentIds.length > 0) {
+      await sb.from('student_attempts').delete().in('student_id', studentIds);
+      const { error: delStudErr } = await sb
+        .from('students')
+        .delete()
+        .in('id', studentIds);
+      if (delStudErr) throw delStudErr;
+    }
+
+    const { data: classAssignments } = await sb
+      .from('assignments')
+      .select('id')
+      .eq('class_id', classId);
+    const assignmentIds = (classAssignments || []).map(a => a.id);
+    if (assignmentIds.length > 0) {
+      await sb.from('student_attempts').delete().in('assignment_id', assignmentIds);
+      await sb.from('assignments').delete().in('id', assignmentIds);
+    }
+
+    const { error: delClassErr } = await sb
+      .from('classes')
+      .delete()
+      .eq('id', classId);
+    if (delClassErr) throw delClassErr;
+
+    return true;
   }
 
   async function createStudent({ name, username, classId, grade, passcode }) {
@@ -367,34 +461,47 @@
   }) {
     const sb = getClient();
     const isAdaptive = testType === 'full_adaptive_simulation';
-    const storedQuestionIds = isAdaptive
-      ? [`ADAPTIVE:${adaptiveQuestionCount || 20}:${targetGrade || 'Both'}`]
-      : questionIds;
+    const parsedTime = timeLimitMinutes ? parseInt(timeLimitMinutes, 10) : null;
 
-    const payload = {
+    const metaMarker = `META:time=${parsedTime || 0}:type=${testType || 'diagnostic_test'}:grade=${targetGrade || 'Both'}`;
+    const storedQuestionIds = isAdaptive
+      ? [metaMarker, `ADAPTIVE:${adaptiveQuestionCount || 20}:${targetGrade || 'Both'}`]
+      : [metaMarker, ...questionIds];
+
+    const basePayload = {
       title,
       class_id: assignTargetType === 'class' ? (classId || null) : null,
-      student_ids: assignTargetType === 'students' ? studentIds : [],
-      question_ids: storedQuestionIds,
+      question_ids: storedQuestionIds
+    };
+
+    const extendedPayload = {
+      ...basePayload,
       test_type: testType,
-      time_limit_minutes: timeLimitMinutes || null,
+      time_limit_minutes: parsedTime,
       target_grade: targetGrade || 'Both'
     };
 
+    if (assignTargetType === 'students' && Array.isArray(studentIds) && studentIds.length > 0) {
+      extendedPayload.student_ids = studentIds;
+    }
+
     let { data, error } = await sb
       .from('assignments')
-      .insert([payload])
+      .insert([extendedPayload])
       .select()
       .single();
 
-    if (error && error.message && error.message.includes('column')) {
-      const fallbackPayload = {
-        title,
-        class_id: assignTargetType === 'class' ? (classId || null) : null,
-        student_ids: assignTargetType === 'students' ? studentIds : [],
-        question_ids: storedQuestionIds
-      };
-      const retry = await sb.from('assignments').insert([fallbackPayload]).select().single();
+    if (error && error.message && (error.message.includes('column') || error.message.includes('schema cache'))) {
+      if (assignTargetType === 'students') {
+        throw new Error(
+          "Your database 'assignments' table does not have a 'student_ids' column yet. Run: ALTER TABLE assignments ADD COLUMN student_ids uuid[] DEFAULT '{}';"
+        );
+      }
+      const retry = await sb
+        .from('assignments')
+        .insert([basePayload])
+        .select()
+        .single();
       data = retry.data;
       error = retry.error;
     }
@@ -435,6 +542,9 @@
     const currentIds = Array.isArray(row?.question_ids) ? row.question_ids : [];
     const nextIds = currentIds.filter(id => id !== 'ARCHIVED');
 
+    // Clear previous attempts for this assignment so students can retake it cleanly
+    await sb.from('student_attempts').delete().eq('assignment_id', assignmentId);
+
     const { error } = await sb
       .from('assignments')
       .update({
@@ -459,6 +569,7 @@
     updateInstructorName,
     loadTeacherWorkspace,
     createClass,
+    deleteClassAndStudents,
     createStudent,
     resetStudentPasscode,
     moveStudentToClass,

@@ -189,6 +189,45 @@
       gap: 0.4rem;
       flex-shrink: 0;
     }
+    /* Dracula theme purple accent for brand diamond & active tab dot */
+    body[data-theme="dracula"] .brand-diamond {
+      color: #bd93f9 !important;
+    }
+    body[data-theme="dracula"] .studio-tab.active .nav-dot {
+      background-color: #bd93f9 !important;
+      box-shadow: 0 0 0 3px rgba(189, 147, 249, 0.25) !important;
+    }
+
+    .assigned-test-card {
+      display: block;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .assigned-test-card:hover {
+      border-color: var(--t-accent, #16213e);
+    }
+    .unfinished-students-drawer {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--t-border, #d8d6ce);
+    }
+    .unfinished-student-pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.45rem;
+    }
+    .unfinished-student-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      background: var(--t-sub-alt, #f4f3ee);
+      border: 1px solid var(--t-border, #d8d6ce);
+      color: var(--t-text, #1f2328);
+    }
   </style>
 </head>
 <body class="app-shell">
@@ -293,7 +332,7 @@
 
           <div class="card">
             <h3>Your Active Classes</h3>
-            <p class="card-subtitle">Share the join code with students who already have an account.</p>
+            <p class="card-subtitle">Share the join code with students, or delete a class and its enrolled student accounts.</p>
             <div id="classesList" class="stack-list"></div>
           </div>
         </div>
@@ -883,7 +922,7 @@
                 <span class="mt-swatches">
                   <i style="background:#282a36;"></i>
                   <i style="background:#bd93f9;"></i>
-                  <i style="background:#50fa7b;"></i>
+                  <i style="background:#bd93f9;"></i>
                 </span>
               </button>
 
@@ -1062,7 +1101,8 @@
       selectedQuestionIds: new Set(),
       assignPickedQuestionIds: new Set(),
       assignTargetMode: 'class',
-      showPreviewExplanation: false
+      showPreviewExplanation: false,
+      expandedAssignmentId: null
     };
 
     // --- Logout ---
@@ -1089,7 +1129,7 @@
         '--t-sub': '#6272a4',
         '--t-accent': '#bd93f9',
         '--t-accent-text': '#282a36',
-        '--t-dot': '#50fa7b'
+        '--t-dot': '#bd93f9'
       },
       iceberg_light: {
         '--t-bg': '#e8e9ec',
@@ -1300,7 +1340,6 @@
 
       try {
         await window.PrepifyTeacherDB.moveStudentToClass(studentId, newClassId);
-        // Refresh workspace so Class Results analytics reflect the moved student
         const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
         if (liveData) {
           state.classes = liveData.classes;
@@ -1344,15 +1383,40 @@
       }
     };
 
-    // --- Assigned Tests Management ---
+// --- Assigned Tests Management ---
     function formatAssignmentDetails(asgn) {
       const rawIds = Array.isArray(asgn.question_ids) ? asgn.question_ids : [];
-      const cleanIds = rawIds.filter(id => id !== 'ARCHIVED');
-      const adaptiveMarker = cleanIds.find(id => typeof id === 'string' && id.startsWith('ADAPTIVE'));
-      const isAdaptive = asgn.test_type === 'full_adaptive_simulation' || Boolean(adaptiveMarker);
+      const cleanIds = rawIds.filter(
+        id =>
+          typeof id === 'string' &&
+          id !== 'ARCHIVED' &&
+          !id.startsWith('META:') &&
+          !id.startsWith('ADAPTIVE:')
+      );
+      const adaptiveMarker = rawIds.find(id => typeof id === 'string' && id.startsWith('ADAPTIVE:'));
+      const metaTag = rawIds.find(id => typeof id === 'string' && id.startsWith('META:'));
+
+      let parsedTime = asgn.time_limit_minutes ? parseInt(asgn.time_limit_minutes, 10) : null;
+      let parsedType = asgn.test_type || 'diagnostic_test';
+      let gradeLabel = asgn.target_grade || '';
+
+      if (metaTag) {
+        metaTag.split(':').slice(1).forEach(pair => {
+          const [k, v] = pair.split('=');
+          if (k === 'time' && !parsedTime) {
+            const num = parseInt(v, 10);
+            if (num > 0) parsedTime = num;
+          } else if (k === 'type' && v) {
+            parsedType = v;
+          } else if (k === 'grade' && v && !gradeLabel) {
+            gradeLabel = v;
+          }
+        });
+      }
+
+      const isAdaptive = parsedType === 'full_adaptive_simulation' || Boolean(adaptiveMarker);
 
       let questionSummary = `${cleanIds.length} question(s)`;
-      let gradeLabel = asgn.target_grade || '';
       if (isAdaptive) {
         let count = 20;
         if (adaptiveMarker) {
@@ -1386,20 +1450,49 @@
         gradeLabel,
         recipientLabel,
         dateStr,
-        timeLimit: asgn.time_limit_minutes ? `${asgn.time_limit_minutes} min` : 'Untimed'
+        timeLimit: parsedTime ? `${parsedTime} min` : 'Untimed'
       };
     }
+
+    function getAssignmentStudentBreakdown(asgn) {
+      if (Array.isArray(asgn.targetStudents)) {
+        return {
+          targetStudents: asgn.targetStudents,
+          completedStudents: asgn.completedStudents || [],
+          unfinishedStudents: asgn.unfinishedStudents || []
+        };
+      }
+      let targetStudents = [];
+      if (Array.isArray(asgn.student_ids) && asgn.student_ids.length > 0) {
+        const idSet = new Set(asgn.student_ids);
+        targetStudents = state.students.filter(s => idSet.has(s.id));
+      } else if (asgn.class_id) {
+        targetStudents = state.students.filter(s => s.classId === asgn.class_id);
+      }
+      return {
+        targetStudents,
+        completedStudents: [],
+        unfinishedStudents: targetStudents
+      };
+    }
+
+    window.toggleAssignmentUnfinished = function(assignmentId) {
+      state.expandedAssignmentId = state.expandedAssignmentId === assignmentId ? null : assignmentId;
+      renderAssignedHistoryPanel();
+    };
 
     function renderAssignedHistoryPanel() {
       const activeListEl = document.getElementById('currentlyAssignedList');
       const prevListEl = document.getElementById('previouslyAssignedList');
 
       const activeAssignments = state.assignments.filter(a => {
+        if (typeof a.isArchived === 'boolean') return !a.isArchived;
         const ids = Array.isArray(a.question_ids) ? a.question_ids : [];
         return !ids.includes('ARCHIVED');
       });
 
       const previousAssignments = state.assignments.filter(a => {
+        if (typeof a.isArchived === 'boolean') return a.isArchived;
         const ids = Array.isArray(a.question_ids) ? a.question_ids : [];
         return ids.includes('ARCHIVED');
       });
@@ -1412,32 +1505,68 @@
       } else {
         activeListEl.innerHTML = activeAssignments.map(a => {
           const info = formatAssignmentDetails(a);
+          const { targetStudents, completedStudents, unfinishedStudents } = getAssignmentStudentBreakdown(a);
+          const isExpanded = state.expandedAssignmentId === a.id;
+
+          const unfinishedDrawerHTML = isExpanded
+            ? `
+              <div class="unfinished-students-drawer">
+                <strong style="font-size:0.85rem;">
+                  Students Who Have Not Finished (${unfinishedStudents.length}${targetStudents.length > 0 ? ' of ' + targetStudents.length : ''}):
+                </strong>
+                ${
+                  targetStudents.length === 0
+                    ? `<p class="item-meta" style="margin-top:0.3rem;">No students are currently enrolled in this test's target class.</p>`
+                    : unfinishedStudents.length === 0
+                      ? `<p class="item-meta" style="margin-top:0.3rem;">All assigned students have completed this test.</p>`
+                      : `<div class="unfinished-student-pill-list">
+                          ${unfinishedStudents.map(st => `
+                            <span class="unfinished-student-chip">
+                              <strong>${st.name}</strong>
+                              <span class="item-meta">(@${st.username})</span>
+                            </span>
+                          `).join('')}
+                        </div>`
+                }
+              </div>
+            `
+            : '';
+
           return `
-            <div class="test-mgmt-item">
-              <div>
-                <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; margin-bottom:0.35rem;">
-                  <span class="badge">${info.questionSummary}</span>
-                  ${info.gradeLabel ? `<span class="tag">${info.gradeLabel}</span>` : ''}
-                  <span class="tag">${info.timeLimit}</span>
+            <div class="test-mgmt-item assigned-test-card" style="display:block;" onclick="toggleAssignmentUnfinished('${a.id}')">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.85rem;">
+                <div>
+                  <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center; margin-bottom:0.35rem;">
+                    <span class="badge">${info.questionSummary}</span>
+                    ${info.gradeLabel ? `<span class="tag">${info.gradeLabel}</span>` : ''}
+                    <span class="tag">${info.timeLimit}</span>
+                    <span class="tag">${completedStudents.length}/${targetStudents.length} completed</span>
+                  </div>
+                  <strong>${a.title}</strong>
+                  <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • Assigned ' + info.dateStr : ''}</p>
+                  <p class="item-meta" style="margin-top:0.2rem; font-size:0.78rem;">
+                    ${isExpanded ? '▲ Click card to hide unfinished students' : '▼ Click card to see students who have not finished'}
+                  </p>
                 </div>
-                <strong>${a.title}</strong>
-                <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • Assigned ' + info.dateStr : ''}</p>
+                <div class="test-mgmt-actions">
+                  <button type="button" class="btn btn-danger-outline btn-sm" onclick="event.stopPropagation(); handleArchiveAssignment('${a.id}')">
+                    Delete
+                  </button>
+                </div>
               </div>
-              <div class="test-mgmt-actions">
-                <button type="button" class="btn btn-danger-outline btn-sm" onclick="handleArchiveAssignment('${a.id}')">
-                  Delete
-                </button>
-              </div>
+              ${unfinishedDrawerHTML}
             </div>
           `;
         }).join('');
       }
 
       if (previousAssignments.length === 0) {
-        prevListEl.innerHTML = `<p class="item-meta">No previously assigned tests yet.</p>`;
+        prevListEl.innerHTML = `<p class="item-meta">No previously assigned tests yet. Tests automatically move here once all assigned students finish them.</p>`;
       } else {
         prevListEl.innerHTML = previousAssignments.map(a => {
           const info = formatAssignmentDetails(a);
+          const { targetStudents, completedStudents } = getAssignmentStudentBreakdown(a);
+
           return `
             <div class="test-mgmt-item">
               <div>
@@ -1445,9 +1574,10 @@
                   <span class="tag">${info.questionSummary}</span>
                   ${info.gradeLabel ? `<span class="tag">${info.gradeLabel}</span>` : ''}
                   <span class="tag">${info.timeLimit}</span>
+                  ${targetStudents.length > 0 ? `<span class="tag">${completedStudents.length}/${targetStudents.length} completed</span>` : ''}
                 </div>
                 <strong>${a.title}</strong>
-                <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • ' + info.dateStr : ''}</p>
+                <p class="item-meta">${info.recipientLabel}${info.dateStr ? ' • Assigned ' + info.dateStr : ''}</p>
               </div>
               <div class="test-mgmt-actions">
                 <button type="button" class="btn btn-primary btn-sm" onclick="handleReassignAssignment('${a.id}')">
@@ -1471,6 +1601,10 @@
       try {
         const updatedIds = await window.PrepifyTeacherDB.archiveAssignment(assignmentId);
         asgn.question_ids = updatedIds;
+        asgn.isArchived = true;
+        if (state.expandedAssignmentId === assignmentId) {
+          state.expandedAssignmentId = null;
+        }
         renderAssignedHistoryPanel();
       } catch (err) {
         alert('Could not archive test: ' + err.message);
@@ -1484,6 +1618,9 @@
       try {
         const updatedIds = await window.PrepifyTeacherDB.reassignAssignment(assignmentId);
         asgn.question_ids = updatedIds;
+        asgn.isArchived = false;
+        asgn.completedStudents = [];
+        asgn.unfinishedStudents = [...(asgn.targetStudents || [])];
         asgn.created_at = new Date().toISOString();
         renderAssignedHistoryPanel();
       } catch (err) {
@@ -1752,7 +1889,7 @@
       btn.textContent = 'Assigning...';
 
       try {
-        const created = await window.PrepifyTeacherDB.createTestAssignment({
+        await window.PrepifyTeacherDB.createTestAssignment({
           title,
           testType,
           timeLimitMinutes: timeLimitRaw ? parseInt(timeLimitRaw, 10) : null,
@@ -1764,15 +1901,10 @@
           adaptiveQuestionCount
         });
 
-        if (created) {
-          state.assignments.unshift(created);
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData?.assignments) {
+          state.assignments = liveData.assignments;
           renderAssignedHistoryPanel();
-        } else {
-          const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
-          if (liveData?.assignments) {
-            state.assignments = liveData.assignments;
-            renderAssignedHistoryPanel();
-          }
         }
 
         const msg = document.getElementById('assignTestSuccessMsg');
@@ -2489,6 +2621,35 @@
       }
     });
 
+    window.handleDeleteClass = async function(classId) {
+      const cls = state.classes.find(c => c.id === classId);
+      if (!cls) return;
+
+      const enrolledCount = state.students.filter(s => s.classId === classId).length;
+      const warningText = enrolledCount > 0
+        ? `Delete "${cls.name}" and permanently delete all ${enrolledCount} enrolled student account(s) in this class? This cannot be undone.`
+        : `Delete "${cls.name}"? This cannot be undone.`;
+
+      if (!confirm(warningText)) return;
+
+      try {
+        await window.PrepifyTeacherDB.deleteClassAndStudents(classId);
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData) {
+          state.classes = liveData.classes;
+          state.students = liveData.students;
+          state.questionBank = liveData.questions;
+          state.assignments = liveData.assignments || [];
+        } else {
+          state.classes = state.classes.filter(c => c.id !== classId);
+          state.students = state.students.filter(s => s.classId !== classId);
+        }
+        renderAll();
+      } catch (err) {
+        alert('Error deleting class: ' + err.message);
+      }
+    };
+
     document.getElementById('createStudentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('studentDisplayName').value.trim();
@@ -2543,15 +2704,23 @@
       document.getElementById('bundleClassSelect').innerHTML = classOptionsHTML;
 
       document.getElementById('classesList').innerHTML = state.classes.length > 0
-        ? state.classes.map(c => `
-            <div class="list-item-card">
-              <div>
-                <strong>${c.name}</strong>
-                <p class="item-meta">${c.schedule || 'Flexible Schedule'}</p>
+        ? state.classes.map(c => {
+            const count = state.students.filter(s => s.classId === c.id).length;
+            return `
+              <div class="list-item-card">
+                <div>
+                  <strong>${c.name}</strong>
+                  <p class="item-meta">${c.schedule || 'Flexible Schedule'} • ${count} student${count === 1 ? '' : 's'}</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-shrink:0;">
+                  <span class="code-pill">${c.joinCode}</span>
+                  <button type="button" class="btn btn-danger-outline btn-sm" onclick="handleDeleteClass('${c.id}')">
+                    Delete
+                  </button>
+                </div>
               </div>
-              <span class="code-pill">${c.joinCode}</span>
-            </div>
-          `).join('')
+            `;
+          }).join('')
         : `<p class="item-meta">No classes created yet. Create your first class on the left.</p>`;
 
       document.getElementById('studentsRosterList').innerHTML = state.students.length > 0

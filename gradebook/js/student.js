@@ -7,17 +7,64 @@
     return client;
   }
 
-  function normalizeArray(val) {
-    if (Array.isArray(val)) return val;
-    if (typeof val === 'string') {
-      try {
-        const parsed = JSON.parse(val);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (_) {
-        if (val.trim()) return [val.trim()];
-      }
+  const TEST_TYPE_LABELS = {
+    diagnostic_test: 'Diagnostic Test',
+    topic_test: 'Topic Test',
+    ela_test: 'ELA Test',
+    math_test: 'Math Test',
+    full_adaptive_simulation: 'Full Adaptive Simulation'
+  };
+
+  function parseAssignmentMetadata(asgn) {
+    const rawIds = Array.isArray(asgn.question_ids) ? asgn.question_ids : [];
+    const metaTag = rawIds.find(id => typeof id === 'string' && id.startsWith('META:'));
+    const adaptiveMarker = rawIds.find(id => typeof id === 'string' && id.startsWith('ADAPTIVE:'));
+    const isArchived = rawIds.includes('ARCHIVED');
+
+    let timeLimitMinutes = asgn.time_limit_minutes ? parseInt(asgn.time_limit_minutes, 10) : null;
+    let testType = asgn.test_type || 'diagnostic_test';
+    let targetGrade = asgn.target_grade || 'Both';
+
+    if (metaTag) {
+      metaTag.split(':').slice(1).forEach(pair => {
+        const [k, v] = pair.split('=');
+        if (k === 'time' && !timeLimitMinutes) {
+          const parsed = parseInt(v, 10);
+          if (parsed > 0) timeLimitMinutes = parsed;
+        } else if (k === 'type' && v) {
+          testType = v;
+        } else if (k === 'grade' && v) {
+          targetGrade = v;
+        }
+      });
     }
-    return [];
+
+    let isAdaptive = testType === 'full_adaptive_simulation' || Boolean(adaptiveMarker);
+    let adaptiveCount = 20;
+    if (adaptiveMarker) {
+      const parts = adaptiveMarker.split(':');
+      if (parts[1]) adaptiveCount = parseInt(parts[1], 10) || 20;
+      if (parts[2]) targetGrade = parts[2];
+    }
+
+    const questionIds = rawIds.filter(
+      id =>
+        typeof id === 'string' &&
+        id !== 'ARCHIVED' &&
+        !id.startsWith('META:') &&
+        !id.startsWith('ADAPTIVE:')
+    );
+
+    return {
+      isArchived,
+      isAdaptive,
+      adaptiveCount,
+      timeLimitMinutes,
+      testType,
+      testTypeLabel: TEST_TYPE_LABELS[testType] || 'Assigned Test',
+      targetGrade,
+      questionIds
+    };
   }
 
   async function initStudentSession() {
@@ -25,156 +72,203 @@
     if (!session) return null;
 
     const sb = getClient();
-    const { data: freshStudent } = await sb
+    const { data: studentRow } = await sb
       .from('students')
-      .select('id, name, username, grade, class_id')
+      .select('id, name, username, class_id, grade, classes(id, name, join_code)')
       .eq('id', session.id)
       .single();
 
-    if (freshStudent) {
-      const updated = {
-        ...session,
-        name: freshStudent.name,
-        username: freshStudent.username,
-        grade: freshStudent.grade || 'Grade 8',
-        classId: freshStudent.class_id
-      };
-      localStorage.setItem('prepify_student_session', JSON.stringify(updated));
-      return updated;
-    }
+    if (!studentRow) return session;
 
-    return session;
+    return {
+      ...session,
+      name: studentRow.name,
+      username: studentRow.username,
+      classId: studentRow.class_id,
+      className: studentRow.classes?.name || 'Unassigned',
+      joinCode: studentRow.classes?.join_code || '',
+      grade: studentRow.grade || 'Grade 8'
+    };
   }
 
   async function loadStudentWorkspace(studentSession) {
     const sb = getClient();
 
-    let classInfo = null;
-    if (studentSession.classId) {
-      const { data: cls } = await sb
-        .from('classes')
-        .select('id, name, schedule, join_code')
-        .eq('id', studentSession.classId)
-        .single();
-      classInfo = cls || null;
-    }
-
-    const { data: allAssignRows, error: assignErr } = await sb
-      .from('assignments')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (assignErr) throw assignErr;
-
-    const assignments = (allAssignRows || []).filter(a => {
-      const rawIds = normalizeArray(a.question_ids);
-      if (rawIds.includes('ARCHIVED')) return false;
-
-      const targetStudents = normalizeArray(a.student_ids);
-      const matchesClass = studentSession.classId && a.class_id === studentSession.classId;
-      const matchesStudent = targetStudents.includes(studentSession.id);
-      return matchesClass || matchesStudent;
-    });
-
-    const { data: questionRows, error: qErr } = await sb
-      .from('questions')
-      .select('*')
-      .eq('status', 'Published');
+    const [
+      { data: questionRows, error: qErr },
+      { data: attemptRows, error: attErr },
+      { data: assignmentRows, error: assignErr }
+    ] = await Promise.all([
+      sb.from('questions').select('*').eq('status', 'Published').order('created_at', { ascending: false }),
+      sb.from('student_attempts').select('*, questions(topic, subject, prompt)').eq('student_id', studentSession.id).order('created_at', { ascending: false }),
+      sb.from('assignments').select('*').order('created_at', { ascending: false })
+    ]);
 
     if (qErr) throw qErr;
-
-    const questionsById = {};
-    const allPublishedQuestions = (questionRows || []).map(q => {
-      const gradesArr = normalizeArray(q.grades);
-      const formatted = {
-        id: q.id,
-        subject: q.subject,
-        grades: gradesArr.length > 0 ? gradesArr : ['Grade 8', 'Grade 9'],
-        type: q.type,
-        topic: q.topic,
-        subtopic: q.subtopic || '',
-        difficulty: String(q.difficulty || '525'),
-        prompt: q.prompt,
-        config: q.config || {},
-        explanation: q.explanation || ''
-      };
-      questionsById[q.id] = formatted;
-      return formatted;
-    });
-
-    const { data: attemptRows, error: attErr } = await sb
-      .from('student_attempts')
-      .select('*, assignments(title), questions(topic, subject, prompt)')
-      .eq('student_id', studentSession.id)
-      .order('created_at', { ascending: false });
-
     if (attErr) throw attErr;
+    if (assignErr) throw assignErr;
+
+    const questions = (questionRows || []).map(q => ({
+      id: q.id,
+      subject: q.subject,
+      grades: Array.isArray(q.grades) ? q.grades : ['Grade 8'],
+      type: q.type,
+      topic: q.topic,
+      subtopic: q.subtopic || '',
+      difficulty: String(q.difficulty || '525'),
+      status: q.status,
+      prompt: q.prompt,
+      config: q.config || {},
+      explanation: q.explanation || ''
+    }));
+
+    const questionById = new Map(questions.map(q => [q.id, q]));
     const attempts = attemptRows || [];
 
-    const hydratedAssignments = assignments.map(a => {
-      const rawIds = normalizeArray(a.question_ids);
-      const adaptiveMarker = rawIds.find(id => typeof id === 'string' && id.startsWith('ADAPTIVE'));
-      const titleLooksAdaptive = typeof a.title === 'string' && a.title.toLowerCase().includes('adaptive');
+    const totalAnswered = attempts.length;
+    const correctCount = attempts.filter(a => a.is_correct).length;
+    const avgAccuracy = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : null;
 
-      const isAdaptive =
-        a.test_type === 'full_adaptive_simulation' ||
-        Boolean(adaptiveMarker) ||
-        (rawIds.length === 0 && titleLooksAdaptive);
+    const elaAttempts = attempts.filter(a => a.questions?.subject === 'ELA');
+    const mathAttempts = attempts.filter(a => a.questions?.subject === 'Math');
+    const elaAccuracy = elaAttempts.length > 0
+      ? Math.round((elaAttempts.filter(a => a.is_correct).length / elaAttempts.length) * 100)
+      : null;
+    const mathAccuracy = mathAttempts.length > 0
+      ? Math.round((mathAttempts.filter(a => a.is_correct).length / mathAttempts.length) * 100)
+      : null;
 
-      let adaptiveCount = 20;
-      let targetGrade = a.target_grade || 'Both';
-      if (adaptiveMarker) {
-        const parts = adaptiveMarker.split(':');
-        if (parts[1]) adaptiveCount = parseInt(parts[1], 10) || 20;
-        if (parts[2]) targetGrade = parts[2];
+    const topicMap = {};
+    attempts.forEach(a => {
+      const topicName = a.questions?.topic || 'General';
+      const subjectName = a.questions?.subject || '';
+      const key = `${topicName}__${subjectName}`;
+      if (!topicMap[key]) {
+        topicMap[key] = {
+          topic: topicName,
+          subject: subjectName,
+          total: 0,
+          correct: 0
+        };
       }
+      topicMap[key].total += 1;
+      if (a.is_correct) topicMap[key].correct += 1;
+    });
 
-      const qList = isAdaptive
-        ? []
-        : rawIds.map(qid => questionsById[qid]).filter(Boolean);
+    const topicAccuracy = Object.values(topicMap).map(item => ({
+      topic: item.topic,
+      subject: item.subject,
+      total: item.total,
+      correct: item.correct,
+      accuracy: Math.round((item.correct / item.total) * 100)
+    }));
 
-      const expectedLen = isAdaptive ? adaptiveCount : qList.length;
-      const aAttempts = attempts.filter(att => att.assignment_id === a.id);
-      const completed = expectedLen > 0 && aAttempts.length >= expectedLen;
-      const correctCount = aAttempts.filter(att => att.is_correct).length;
+    // Group student's attempts by assignment_id
+    const attemptsByAssignment = {};
+    attempts.forEach(a => {
+      if (!a.assignment_id) return;
+      if (!attemptsByAssignment[a.assignment_id]) {
+        attemptsByAssignment[a.assignment_id] = [];
+      }
+      attemptsByAssignment[a.assignment_id].push(a);
+    });
 
-      return {
-        id: a.id,
-        title: a.title,
-        testType: isAdaptive ? 'full_adaptive_simulation' : (a.test_type || 'topic_test'),
-        isAdaptive,
-        adaptiveCount,
-        timeLimitMinutes: a.time_limit_minutes || null,
-        targetGrade,
-        createdAt: a.created_at,
-        questions: qList,
-        completed,
-        scoreText: aAttempts.length > 0
-          ? `${Math.round((correctCount / aAttempts.length) * 100)}% (${correctCount}/${aAttempts.length})`
-          : null
+    // All assignments targeting this student or their class (that still exist in DB)
+    const studentScopedAssignments = (assignmentRows || []).filter(asgn => {
+      const matchesClass = asgn.class_id && studentSession.classId && asgn.class_id === studentSession.classId;
+      const matchesStudent = Array.isArray(asgn.student_ids) && asgn.student_ids.includes(studentSession.id);
+      return Boolean(matchesClass || matchesStudent);
+    });
+
+    const activeAssignments = [];
+    const completedAssignments = [];
+
+    studentScopedAssignments.forEach(asgn => {
+      const meta = parseAssignmentMetadata(asgn);
+      const asgnAttempts = attemptsByAssignment[asgn.id] || [];
+
+      // Collect topic names from assigned questions or attempted questions
+      const topicSet = new Set();
+      meta.questionIds.forEach(qid => {
+        const q = questionById.get(qid);
+        if (q?.topic) topicSet.add(q.topic);
+      });
+      asgnAttempts.forEach(a => {
+        if (a.questions?.topic) topicSet.add(a.questions.topic);
+      });
+
+      const enriched = {
+        ...asgn,
+        meta,
+        topics: Array.from(topicSet)
       };
+
+      if (asgnAttempts.length > 0) {
+        const plannedTotal = meta.isAdaptive
+          ? Math.max(asgnAttempts.length, meta.adaptiveCount)
+          : Math.max(asgnAttempts.length, meta.questionIds.length);
+        const rightCount = asgnAttempts.filter(a => a.is_correct).length;
+        const scorePercent = Math.round((rightCount / Math.max(1, plannedTotal)) * 100);
+        const latestAttemptDate = asgnAttempts[0]?.created_at
+          ? new Date(asgnAttempts[0].created_at).toLocaleDateString()
+          : '';
+
+        completedAssignments.push({
+          ...enriched,
+          correctCount: rightCount,
+          totalQuestions: plannedTotal,
+          scorePercent,
+          completedDate: latestAttemptDate
+        });
+      } else if (!meta.isArchived) {
+        activeAssignments.push(enriched);
+      }
     });
 
     return {
-      classInfo,
-      assignments: hydratedAssignments,
-      publishedQuestions: allPublishedQuestions,
-      attempts
+      questions,
+      attempts,
+      assignments: activeAssignments,
+      completedAssignments,
+      stats: {
+        totalAnswered,
+        correctCount,
+        avgAccuracy,
+        elaAccuracy,
+        mathAccuracy,
+        topicAccuracy
+      }
     };
+  }
+
+  async function recordAttempt({ studentId, questionId, assignmentId = null, isCorrect }) {
+    const sb = getClient();
+    const { data, error } = await sb
+      .from('student_attempts')
+      .insert([{
+        student_id: studentId,
+        question_id: questionId,
+        assignment_id: assignmentId,
+        is_correct: Boolean(isCorrect)
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 
   async function joinClassByCode(studentId, joinCode) {
     const sb = getClient();
-    const cleanCode = joinCode.trim().toUpperCase();
-
-    const { data: cls, error: findErr } = await sb
+    const cleaned = String(joinCode || '').trim().toUpperCase();
+    const { data: cls, error: clsErr } = await sb
       .from('classes')
-      .select('id, name, schedule, join_code')
-      .eq('join_code', cleanCode)
+      .select('id, name, join_code')
+      .eq('join_code', cleaned)
       .single();
 
-    if (findErr || !cls) {
-      throw new Error('Class join code not found. Double-check the code with your instructor.');
+    if (clsErr || !cls) {
+      throw new Error('Class join code not found.');
     }
 
     const { error: updErr } = await sb
@@ -183,35 +277,13 @@
       .eq('id', studentId);
 
     if (updErr) throw updErr;
-
-    const current = window.PrepifyAuth.getCurrentStudent();
-    if (current) {
-      current.classId = cls.id;
-      localStorage.setItem('prepify_student_session', JSON.stringify(current));
-    }
-
     return cls;
-  }
-
-  async function recordAttempts(studentId, assignmentId, resultsList) {
-    const sb = getClient();
-    const rows = resultsList.map(r => ({
-      student_id: studentId,
-      assignment_id: assignmentId || null,
-      question_id: r.questionId,
-      is_correct: Boolean(r.isCorrect),
-      score_summary: r.scoreSummary || (r.isCorrect ? 'Correct' : 'Incorrect')
-    }));
-
-    const { error } = await sb.from('student_attempts').insert(rows);
-    if (error) throw error;
-    return true;
   }
 
   window.PrepifyStudentDB = {
     initStudentSession,
     loadStudentWorkspace,
-    joinClassByCode,
-    recordAttempts
+    recordAttempt,
+    joinClassByCode
   };
 })();
