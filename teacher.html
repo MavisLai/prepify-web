@@ -162,7 +162,7 @@
     }
     .roster-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
       gap: 1.25rem;
       align-items: start;
     }
@@ -177,10 +177,17 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.65rem;
       padding: 0.65rem 0.8rem;
       border: 1px solid var(--t-border, #e2e0d8);
       border-radius: 8px;
       background: var(--t-sub-alt, #faf9f6);
+    }
+    .roster-student-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -905,6 +912,32 @@
   </div>
 
   <!-- =========================================================
+       MOVE STUDENT TO ANOTHER CLASS MODAL
+  ========================================================= -->
+  <div id="moveStudentModal" class="qb-modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="card qb-modal-card" style="max-width: 440px;">
+      <div class="qb-modal-header">
+        <div>
+          <span class="section-tag">Roster Management</span>
+          <h3 id="moveModalStudentTitle">Move Student</h3>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" id="closeMoveStudentModalBtn">✕ Close</button>
+      </div>
+      <form id="moveStudentForm" style="margin-top: 0.75rem;">
+        <input type="hidden" id="moveStudentIdInput" value="" />
+        <div class="form-group">
+          <label for="moveStudentTargetClassSelect">Destination Class</label>
+          <select id="moveStudentTargetClassSelect" required></select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+          <button type="button" class="btn btn-outline" id="cancelMoveStudentBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="confirmMoveStudentBtn">Move Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
        QUESTION PREVIEW MODAL
   ========================================================= -->
   <div id="qbPreviewModal" class="qb-modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -935,7 +968,7 @@
       },
       rosterPanel: {
         title: 'Roster',
-        subtitle: 'View every created class and the students enrolled in each section.'
+        subtitle: 'View every created class, move students between classes, or remove student accounts.'
       },
       passcodesPanel: {
         title: 'Student Passcodes',
@@ -1146,7 +1179,27 @@
       switchTab('createQuestionPanel');
     });
 
-    // --- Roster Tab Renderer ---
+    // --- Roster Tab Renderer & Student Actions ---
+    function buildRosterStudentRowHTML(s) {
+      return `
+        <div class="roster-student-row">
+          <div style="min-width: 0;">
+            <strong>${s.name}</strong>
+            <span class="username-tag">@${s.username}</span>
+            <p class="item-meta" style="margin:0.15rem 0 0;">${s.grade || 'Grade 8'}</p>
+          </div>
+          <div class="roster-student-actions">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openMoveStudentModal('${s.id}')">
+              Move
+            </button>
+            <button type="button" class="btn btn-danger-outline btn-sm" onclick="handleDeleteStudentAccount('${s.id}')">
+              Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderRosterTab() {
       const grid = document.getElementById('rosterClassesGrid');
       if (!grid) return;
@@ -1166,15 +1219,7 @@
       const classCardsHTML = state.classes.map(c => {
         const enrolled = state.students.filter(s => s.classId === c.id);
         const studentsHTML = enrolled.length > 0
-          ? enrolled.map(s => `
-              <div class="roster-student-row">
-                <div>
-                  <strong>${s.name}</strong>
-                  <span class="username-tag">@${s.username}</span>
-                </div>
-                <span class="tag">${s.grade || 'Grade 8'}</span>
-              </div>
-            `).join('')
+          ? enrolled.map(buildRosterStudentRowHTML).join('')
           : `<p class="item-meta">No students enrolled in this class yet.</p>`;
 
         return `
@@ -1207,15 +1252,7 @@
               <span class="tag">${unassignedStudents.length} student${unassignedStudents.length === 1 ? '' : 's'}</span>
             </div>
             <div class="stack-list">
-              ${unassignedStudents.map(s => `
-                <div class="roster-student-row">
-                  <div>
-                    <strong>${s.name}</strong>
-                    <span class="username-tag">@${s.username}</span>
-                  </div>
-                  <span class="tag">${s.grade || 'Grade 8'}</span>
-                </div>
-              `).join('')}
+              ${unassignedStudents.map(buildRosterStudentRowHTML).join('')}
             </div>
           </div>
         `
@@ -1223,6 +1260,89 @@
 
       grid.innerHTML = classCardsHTML + unassignedCardHTML;
     }
+
+    const moveStudentModal = document.getElementById('moveStudentModal');
+    const moveStudentTargetSelect = document.getElementById('moveStudentTargetClassSelect');
+
+    window.openMoveStudentModal = function(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('moveStudentIdInput').value = student.id;
+      document.getElementById('moveModalStudentTitle').textContent = `Move ${student.name}`;
+
+      const options = state.classes.map(c =>
+        `<option value="${c.id}" ${c.id === student.classId ? 'selected' : ''}>${c.name} (${c.joinCode})</option>`
+      );
+      options.push(`<option value="" ${!student.classId ? 'selected' : ''}>Unassigned (No Class)</option>`);
+      moveStudentTargetSelect.innerHTML = options.join('');
+
+      moveStudentModal.classList.remove('hidden');
+    };
+
+    function closeMoveStudentModal() {
+      moveStudentModal.classList.add('hidden');
+    }
+
+    document.getElementById('closeMoveStudentModalBtn').addEventListener('click', closeMoveStudentModal);
+    document.getElementById('cancelMoveStudentBtn').addEventListener('click', closeMoveStudentModal);
+
+    document.getElementById('moveStudentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('moveStudentIdInput').value;
+      const newClassId = moveStudentTargetSelect.value || null;
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      const btn = document.getElementById('confirmMoveStudentBtn');
+      btn.disabled = true;
+      btn.textContent = 'Moving...';
+
+      try {
+        await window.PrepifyTeacherDB.moveStudentToClass(studentId, newClassId);
+        // Refresh workspace so Class Results analytics reflect the moved student
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData) {
+          state.classes = liveData.classes;
+          state.students = liveData.students;
+          state.questionBank = liveData.questions;
+          state.assignments = liveData.assignments || [];
+        } else {
+          student.classId = newClassId;
+        }
+        closeMoveStudentModal();
+        renderAll();
+      } catch (err) {
+        alert('Could not move student: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Move Student';
+      }
+    });
+
+    window.handleDeleteStudentAccount = async function(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+      if (!confirm(`Permanently delete ${student.name}'s account (@${student.username}) and all their test results? This cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        await window.PrepifyTeacherDB.deleteStudentAccount(studentId);
+        const liveData = await window.PrepifyTeacherDB.loadTeacherWorkspace();
+        if (liveData) {
+          state.classes = liveData.classes;
+          state.students = liveData.students;
+          state.questionBank = liveData.questions;
+          state.assignments = liveData.assignments || [];
+        } else {
+          state.students = state.students.filter(s => s.id !== studentId);
+        }
+        renderAll();
+      } catch (err) {
+        alert('Could not delete student account: ' + err.message);
+      }
+    };
 
     // --- Assigned Tests Management ---
     function formatAssignmentDetails(asgn) {

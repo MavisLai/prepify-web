@@ -286,6 +286,25 @@
     return true;
   }
 
+  async function moveStudentToClass(studentId, newClassId) {
+    const sb = getClient();
+    const { error } = await sb
+      .from('students')
+      .update({ class_id: newClassId || null })
+      .eq('id', studentId);
+
+    if (error) throw error;
+    return true;
+  }
+
+  async function deleteStudentAccount(studentId) {
+    const sb = getClient();
+    await sb.from('student_attempts').delete().eq('student_id', studentId);
+    const { error } = await sb.from('students').delete().eq('id', studentId);
+    if (error) throw error;
+    return true;
+  }
+
   async function upsertQuestion(item) {
     const sb = getClient();
     const payload = {
@@ -442,6 +461,8 @@
     createClass,
     createStudent,
     resetStudentPasscode,
+    moveStudentToClass,
+    deleteStudentAccount,
     upsertQuestion,
     deleteQuestion,
     createAssignment,
