@@ -35,6 +35,9 @@
       <button type="button" class="studio-tab" data-target="passcodesPanel">
         <span class="nav-dot"></span> Student Passcodes
       </button>
+      <button type="button" class="studio-tab" data-target="studentResultsPanel">
+        <span class="nav-dot"></span> Student Results
+      </button>
 
       <span class="sidebar-group-label">CONTENT</span>
       <button type="button" class="studio-tab" data-target="questionBankPanel">
@@ -138,6 +141,73 @@
             <h3>Enrolled Students</h3>
             <p class="card-subtitle">Reset a passcode anytime if a student forgets theirs.</p>
             <div id="studentsRosterList" class="stack-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL: STUDENT RESULTS & ANALYTICS
+      ========================================================= -->
+      <section id="studentResultsPanel" class="studio-panel hidden">
+        <!-- Top Student Selector -->
+        <div class="card" style="margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin-bottom: 0; max-width: 420px;">
+            <label for="resultsStudentSelect">Select Student</label>
+            <select id="resultsStudentSelect"></select>
+          </div>
+        </div>
+
+        <!-- 4 Summary Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="card">
+            <span class="item-meta">Tests Completed</span>
+            <h2 id="resTestsCompleted" style="margin-top: 0.35rem;">0</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">ELA Score</span>
+            <h2 id="resElaScore" style="margin-top: 0.35rem;">—</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Math Score</span>
+            <h2 id="resMathScore" style="margin-top: 0.35rem;">—</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Average Accuracy</span>
+            <h2 id="resAvgAccuracy" style="margin-top: 0.35rem;">—</h2>
+          </div>
+        </div>
+
+        <!-- Two-Column Breakdown: Accuracy by Topic & Recently Missed Questions -->
+        <div class="studio-grid" style="margin-bottom: 1.25rem;">
+          <div class="card">
+            <h3>Accuracy by Topic</h3>
+            <p class="card-subtitle">Sorted from highest accuracy to lowest.</p>
+            <div id="resTopicAccuracyList" class="stack-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Recently Missed Questions</h3>
+            <p class="card-subtitle">Latest items answered incorrectly.</p>
+            <div id="resMissedQuestionsList" class="stack-list"></div>
+          </div>
+        </div>
+
+        <!-- Completed Tests History Table -->
+        <div class="card qb-table-card">
+          <div style="padding: 1.25rem 1.25rem 0.75rem;">
+            <h3>Completed Tests</h3>
+          </div>
+          <div class="qb-table-wrapper">
+            <table class="qb-table">
+              <thead>
+                <tr>
+                  <th>TEST NAME</th>
+                  <th>SCORE</th>
+                  <th>DATE</th>
+                </tr>
+              </thead>
+              <tbody id="resTestHistoryBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -451,6 +521,10 @@
         title: 'Student Passcodes',
         subtitle: 'Generate email-free student logins and reset passcodes anytime.'
       },
+      studentResultsPanel: {
+        title: 'Student Results',
+        subtitle: 'View individual student test scores, topic accuracy, and missed questions.'
+      },
       questionBankPanel: {
         title: 'Question Bank',
         subtitle: 'Every question in the platform, searchable and filterable.'
@@ -521,9 +595,82 @@
         { id: 'c2', name: 'Grade 9 Honors Algebra', schedule: 'Wed 5:00 PM', joinCode: 'ALG9-815' }
       ],
       students: [
-        { id: 's1', name: 'Alex M.', username: 'alex_m', classId: 'c1' },
-        { id: 's2', name: 'Jordan P.', username: 'jordan_p', classId: 'c1' },
-        { id: 's3', name: 'Priya S.', username: 'priya_s', classId: 'c2' }
+        {
+          id: 's1',
+          name: 'Alex M.',
+          username: 'alex_m',
+          grade: 'Grade 8',
+          classId: 'c1',
+          results: {
+            elaScore: 310,
+            mathScore: 345,
+            avgAccuracy: 82,
+            topicAccuracy: [
+              { topic: 'Ratios & Proportions', accuracy: 92 },
+              { topic: 'Equations & Expressions', accuracy: 86 },
+              { topic: 'Reading Comprehension', accuracy: 80 },
+              { topic: 'Number Systems', accuracy: 74 },
+              { topic: 'Revising/Editing', accuracy: 68 }
+            ],
+            missedQuestions: [
+              { id: '2sk15n', topic: 'Revising/Editing', subject: 'ELA', prompt: 'Match each transitional phrase to the logical relationship it signals.', date: 'Nov 25, 2026' },
+              { id: '7qo2zs', topic: 'Number Systems', subject: 'Math', prompt: 'Select ALL numbers below that are irrational.', date: 'Nov 22, 2026' }
+            ],
+            tests: [
+              { title: 'Full Adaptive Practice Sim #2', score: '655 (84%)', date: 'Nov 25, 2026' },
+              { title: 'Grade 8 Ratios & Proportions Check', score: '92%', date: 'Nov 22, 2026' },
+              { title: 'Diagnostic Warmup Set', score: '78%', date: 'Nov 18, 2026' }
+            ]
+          }
+        },
+        {
+          id: 's2',
+          name: 'Jordan P.',
+          username: 'jordan_p',
+          grade: 'Grade 8',
+          classId: 'c1',
+          results: {
+            elaScore: 335,
+            mathScore: 295,
+            avgAccuracy: 79,
+            topicAccuracy: [
+              { topic: "Author's Purpose", accuracy: 95 },
+              { topic: 'Textual Evidence', accuracy: 88 },
+              { topic: 'Ratios & Proportions', accuracy: 75 },
+              { topic: 'Geometry', accuracy: 62 }
+            ],
+            missedQuestions: [
+              { id: 'epzgjv', topic: 'Equations & Expressions', subject: 'Math', prompt: 'If 3(x + 4) = 27, what is the value of x?', date: 'Nov 24, 2026' }
+            ],
+            tests: [
+              { title: 'Full Adaptive Practice Sim #1', score: '630 (80%)', date: 'Nov 24, 2026' },
+              { title: 'Diagnostic Warmup Set', score: '78%', date: 'Nov 19, 2026' }
+            ]
+          }
+        },
+        {
+          id: 's3',
+          name: 'Priya S.',
+          username: 'priya_s',
+          grade: 'Grade 9',
+          classId: 'c2',
+          results: {
+            elaScore: 360,
+            mathScore: 375,
+            avgAccuracy: 91,
+            topicAccuracy: [
+              { topic: 'Linear Functions', accuracy: 96 },
+              { topic: 'Equations & Expressions', accuracy: 94 },
+              { topic: 'Reading Comprehension', accuracy: 90 },
+              { topic: 'Systems of Equations', accuracy: 85 }
+            ],
+            missedQuestions: [],
+            tests: [
+              { title: 'Grade 9 Honors Benchmark #1', score: '735 (92%)', date: 'Nov 26, 2026' },
+              { title: 'Linear Functions Mastery Check', score: '90%', date: 'Nov 20, 2026' }
+            ]
+          }
+        }
       ],
       questionBank: [
         {
@@ -727,7 +874,6 @@
         document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
       }
 
-      // Show "+ Create Question" button in upper-right on Question Bank tab
       topbarCreateQBtn.classList.toggle('hidden', targetId !== 'questionBankPanel');
     }
 
@@ -736,6 +882,84 @@
       resetQuestionForm();
       switchTab('createQuestionPanel');
     });
+
+    // --- Student Results Tab ---
+    const resultsStudentSelect = document.getElementById('resultsStudentSelect');
+
+    function populateResultsStudentDropdown() {
+      const currentVal = resultsStudentSelect.value;
+      resultsStudentSelect.innerHTML = state.students
+        .map(s => `<option value="${s.id}">${s.name} — ${s.grade || 'Grade 8'}</option>`)
+        .join('');
+
+      if (currentVal && state.students.some(s => s.id === currentVal)) {
+        resultsStudentSelect.value = currentVal;
+      }
+    }
+
+    function renderStudentResults() {
+      const student = state.students.find(s => s.id === resultsStudentSelect.value) || state.students[0];
+      if (!student) return;
+
+      const res = student.results || {
+        elaScore: null,
+        mathScore: null,
+        avgAccuracy: null,
+        topicAccuracy: [],
+        missedQuestions: [],
+        tests: []
+      };
+
+      document.getElementById('resTestsCompleted').textContent = res.tests.length;
+      document.getElementById('resElaScore').textContent = res.elaScore !== null ? res.elaScore : '—';
+      document.getElementById('resMathScore').textContent = res.mathScore !== null ? res.mathScore : '—';
+      document.getElementById('resAvgAccuracy').textContent = res.avgAccuracy !== null ? `${res.avgAccuracy}%` : '—';
+
+      const sortedTopics = [...res.topicAccuracy].sort((a, b) => b.accuracy - a.accuracy);
+      const topicListEl = document.getElementById('resTopicAccuracyList');
+      if (sortedTopics.length === 0) {
+        topicListEl.innerHTML = `<p class="item-meta">No topic data recorded yet.</p>`;
+      } else {
+        topicListEl.innerHTML = sortedTopics.map(t => `
+          <div class="list-item-card">
+            <strong>${t.topic}</strong>
+            <span class="qb-pill ${t.accuracy >= 80 ? 'pill-math' : t.accuracy >= 70 ? 'pill-ela' : 'pill-diff-hard'}">
+              ${t.accuracy}%
+            </span>
+          </div>
+        `).join('');
+      }
+
+      const missedListEl = document.getElementById('resMissedQuestionsList');
+      if (res.missedQuestions.length === 0) {
+        missedListEl.innerHTML = `<p class="item-meta">No missed questions recorded.</p>`;
+      } else {
+        missedListEl.innerHTML = res.missedQuestions.map(mq => `
+          <div class="list-item-card">
+            <div>
+              <strong>${mq.topic}</strong> <span class="tag">${mq.subject}</span>
+              <p class="item-meta">${mq.prompt}</p>
+            </div>
+            <span class="item-meta">${mq.date}</span>
+          </div>
+        `).join('');
+      }
+
+      const tbody = document.getElementById('resTestHistoryBody');
+      if (res.tests.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="item-meta">No tests completed yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = res.tests.map(t => `
+          <tr>
+            <td class="qb-topic-cell">${t.title}</td>
+            <td><strong>${t.score}</strong></td>
+            <td class="qb-num-cell">${t.date}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    resultsStudentSelect.addEventListener('change', renderStudentResults);
 
     // --- Render Question Bank Table ---
     function getGradeDisplay(grades) {
@@ -769,7 +993,6 @@
           (gradeFilter !== 'Both' && q.grades.includes(gradeFilter));
         const matchesType = typeFilter === 'all' || q.type === typeFilter;
         const matchesStatus = statusFilter === 'all' || q.status === statusFilter;
-
         return matchesSearch && matchesSubj && matchesGrade && matchesType && matchesStatus;
       });
 
@@ -787,9 +1010,6 @@
         const gradeObj = getGradeDisplay(q.grades);
         const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
         const isChecked = state.selectedQuestionIds.has(q.id);
-        const subjCls = q.subject === 'Math' ? 'pill-math' : 'pill-ela';
-        const statusCls = q.status === 'Published' ? 'pill-published' : 'pill-draft';
-        const accDisplay = q.accuracy !== null && q.accuracy !== undefined ? `${q.accuracy}%` : '—';
 
         return `
           <tr>
@@ -797,18 +1017,18 @@
               <input type="checkbox" class="qb-row-cb" data-qid="${q.id}" ${isChecked ? 'checked' : ''} />
             </td>
             <td class="qb-id-cell">${q.id}</td>
-            <td><span class="qb-pill ${subjCls}">${q.subject}</span></td>
+            <td><span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span></td>
             <td><span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span></td>
-            <td class="qb-topic-cell" title="${q.prompt}">${q.topic}</td>
+            <td class="qb-topic-cell">${q.topic}</td>
             <td><span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span></td>
             <td><span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span></td>
-            <td><span class="qb-pill ${statusCls}">${q.status}</span></td>
-            <td class="qb-num-cell">${accDisplay}</td>
+            <td><span class="qb-pill ${q.status === 'Published' ? 'pill-published' : 'pill-draft'}">${q.status}</span></td>
+            <td class="qb-num-cell">${q.accuracy !== null ? q.accuracy + '%' : '—'}</td>
             <td class="qb-num-cell">${q.uses}</td>
             <td class="col-actions">
               <div class="qb-action-group">
                 <button type="button" class="qb-act-btn" onclick="editQuestion('${q.id}')">Edit</button>
-                <button type="button" class="qb-act-btn" onclick="openQuestionPreviewModal('${q.id}')">Preview</button>
+                <button type="button" class="qb-act-btn" onclick="previewQuestionModal('${q.id}')">Preview</button>
                 <button type="button" class="qb-act-btn qb-act-del" onclick="deleteQuestion('${q.id}')">Delete</button>
               </div>
             </td>
@@ -818,14 +1038,11 @@
 
       document.querySelectorAll('.qb-row-cb').forEach(cb => {
         cb.addEventListener('change', () => {
-          const qid = cb.dataset.qid;
-          if (cb.checked) state.selectedQuestionIds.add(qid);
-          else state.selectedQuestionIds.delete(qid);
+          if (cb.checked) state.selectedQuestionIds.add(cb.dataset.qid);
+          else state.selectedQuestionIds.delete(cb.dataset.qid);
           updateBulkAssignBar();
         });
       });
-
-      updateBulkAssignBar();
     }
 
     function updateBulkAssignBar() {
@@ -834,185 +1051,80 @@
       document.getElementById('bulkAssignBar').classList.toggle('hidden', count === 0);
     }
 
-    ['qbSearchInput', 'qbSubjectFilter', 'qbGradeFilter', 'qbTypeFilter', 'qbStatusFilter'].forEach(id => {
-      document.getElementById(id).addEventListener('input', renderQuestionBankTable);
-      document.getElementById(id).addEventListener('change', renderQuestionBankTable);
-    });
-
     document.getElementById('qbSelectAllCb').addEventListener('change', (e) => {
+      const checked = e.target.checked;
       document.querySelectorAll('.qb-row-cb').forEach(cb => {
-        cb.checked = e.target.checked;
-        if (e.target.checked) state.selectedQuestionIds.add(cb.dataset.qid);
+        cb.checked = checked;
+        if (checked) state.selectedQuestionIds.add(cb.dataset.qid);
         else state.selectedQuestionIds.delete(cb.dataset.qid);
       });
       updateBulkAssignBar();
     });
 
-    // --- Edit, Preview Modal & Delete Actions ---
-    window.deleteQuestion = function(qid) {
-      const q = state.questionBank.find(item => item.id === qid);
-      if (!q) return;
-      if (!confirm(`Delete question "${q.id}" (${q.topic})?`)) return;
+    ['qbSearchInput', 'qbSubjectFilter', 'qbGradeFilter', 'qbTypeFilter', 'qbStatusFilter'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderQuestionBankTable);
+      document.getElementById(id).addEventListener('change', renderQuestionBankTable);
+    });
 
-      state.questionBank = state.questionBank.filter(item => item.id !== qid);
+    document.getElementById('assignBundleForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = document.getElementById('bundleTitleInput').value.trim();
+      const clsId = document.getElementById('bundleClassSelect').value;
+      const cls = state.classes.find(c => c.id === clsId);
+      if (!title || !cls) return;
+      alert(`Assigned "${title}" (${state.selectedQuestionIds.size} questions) to ${cls.name}.`);
+      state.selectedQuestionIds.clear();
+      document.getElementById('qbSelectAllCb').checked = false;
+      updateBulkAssignBar();
+      e.target.reset();
+    });
+
+    // --- Row Actions: Edit, Preview Modal, Delete ---
+    window.deleteQuestion = function(qid) {
+      if (!confirm(`Delete question ${qid}?`)) return;
+      state.questionBank = state.questionBank.filter(q => q.id !== qid);
       state.selectedQuestionIds.delete(qid);
+      updateBulkAssignBar();
       renderAll();
     };
 
     window.editQuestion = function(qid) {
       const q = state.questionBank.find(item => item.id === qid);
       if (!q) return;
-
-      switchTab('createQuestionPanel');
-      document.getElementById('topbarTitle').textContent = `Edit Question (${q.id})`;
       document.getElementById('editingQuestionId').value = q.id;
-
-      qSubjectEl.value = q.subject;
-      populateTopics();
-      qTopicEl.value = q.topic;
+      document.getElementById('qSubject').value = q.subject;
+      populateTopicsForSubject();
+      document.getElementById('qTopic').value = q.topic;
       document.getElementById('qSubtopic').value = q.subtopic || '';
       document.getElementById('qDifficulty').value = q.difficulty;
+      document.getElementById('qType').value = q.type;
+      document.getElementById('qPrompt').value = q.prompt;
+      document.getElementById('qExplanation').value = q.explanation;
 
       document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => {
         cb.checked = q.grades.includes(cb.value);
       });
 
-      qTypeEl.value = q.type;
-      renderAnswerConfigurator();
-
-      document.getElementById('qPrompt').value = q.prompt;
-      document.getElementById('qExplanation').value = q.explanation;
-
-      if (q.type === 'multiple_choice' && q.config.options) {
-        document.querySelectorAll('.mc-opt-input').forEach((inp, i) => (inp.value = q.config.options[i] || ''));
-        const radio = document.querySelector(`input[name="mcCorrect"][value="${q.config.correctIndex}"]`);
-        if (radio) radio.checked = true;
-      } else if (q.type === 'multiple_response' && q.config.options) {
-        document.querySelectorAll('.mr-opt-input').forEach((inp, i) => (inp.value = q.config.options[i] || ''));
-        document.querySelectorAll('.mr-correct-cb').forEach((cb, i) => {
-          cb.checked = (q.config.correctIndices || []).includes(i);
-        });
-      } else if (q.type === 'fill_in_blank') {
-        document.getElementById('fibAnswers').value = q.config.acceptedAnswers || '';
-        document.getElementById('fibCaseSensitive').checked = !!q.config.caseSensitive;
-      }
-
-      updateLivePreview();
+      renderAnswerConfigFields();
+      renderLivePreview();
+      switchTab('createQuestionPanel');
     };
 
-    function buildQuestionPreviewHTML(q, showAnswer) {
-      const displayPrompt = q.prompt || 'Your question prompt will appear here as you type...';
-      if (q.type === 'multiple_choice') {
-        const letters = ['A', 'B', 'C', 'D'];
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <div class="preview-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="preview-opt-item ${showAnswer && idx === q.config.correctIndex ? 'opt-is-correct' : ''}">
-                <input type="radio" name="prev_${q.id || 'live'}" />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-      }
-      if (q.type === 'multiple_response') {
-        const letters = ['A', 'B', 'C', 'D'];
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <p class="item-meta" style="margin-bottom:0.5rem;"><em>Select all that apply:</em></p>
-          <div class="preview-options">
-            ${q.config.options.map((opt, idx) => `
-              <label class="preview-opt-item ${showAnswer && q.config.correctIndices.includes(idx) ? 'opt-is-correct' : ''}">
-                <input type="checkbox" />
-                <span><strong>${letters[idx]}.</strong> ${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-      }
-      if (q.type === 'fill_in_blank') {
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <div class="form-group" style="max-width:340px; margin-top:0.75rem;">
-            <input type="text" placeholder="Student types answer here..." />
-            ${showAnswer ? `<p class="feedback-success" style="margin-top:0.4rem; font-size:0.85rem;">Accepted Answer(s): <strong>${q.config.acceptedAnswers || 'None set'}</strong></p>` : ''}
-          </div>
-        `;
-      }
-      if (q.type === 'drag_and_drop') {
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <div class="dnd-preview-wrap">
-            <div class="dnd-chips">
-              ${q.config.items.map(item => `<span class="dnd-chip">⠿ ${item}</span>`).join('')}
-            </div>
-            <div class="dnd-zones">
-              ${q.config.targets.map((zone, i) => `
-                <div class="dnd-zone">
-                  <span>${zone}</span>
-                  <div class="dnd-slot">${showAnswer ? `✓ ${q.config.items[i]}` : 'Drop item here'}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-      if (q.type === 'hotspot') {
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <div class="hotspot-preview-box" id="hotspotClickArea">
-            ${q.config.imageUrl
-              ? `<img src="${q.config.imageUrl}" alt="Hotspot diagram" />`
-              : `<div class="hotspot-placeholder">Coordinate Grid / Diagram Area</div>`
-            }
-            <div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;"><span>🎯</span></div>
-          </div>
-        `;
-      }
-      if (q.type === 'inline_choice') {
-        const renderedSentence = displayPrompt
-          .replace('[blank1]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank1.choices.map(c => `<option ${showAnswer && c === q.config.blank1.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
-          .replace('[blank2]', `<select class="inline-select"><option>-- Select --</option>${q.config.blank2.choices.map(c => `<option ${showAnswer && c === q.config.blank2.correct ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
-        return `<p class="preview-prompt-text" style="line-height:2.1;">${renderedSentence}</p>`;
-      }
-      if (q.type === 'table_grid') {
-        return `
-          <p class="preview-prompt-text">${displayPrompt}</p>
-          <table class="preview-grid-table">
-            <thead><tr><th>Statement</th><th>${q.config.columns[0]}</th><th>${q.config.columns[1]}</th></tr></thead>
-            <tbody>
-              ${q.config.rows.map((row, rIdx) => `
-                <tr>
-                  <td>${row.statement}</td>
-                  <td style="text-align:center;"><input type="radio" name="p_grid_${rIdx}" ${showAnswer && row.correctCol === 0 ? 'checked' : ''} /></td>
-                  <td style="text-align:center;"><input type="radio" name="p_grid_${rIdx}" ${showAnswer && row.correctCol === 1 ? 'checked' : ''} /></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        `;
-      }
-      return `<p class="preview-prompt-text">${displayPrompt}</p>`;
-    }
-
-    window.openQuestionPreviewModal = function(qid) {
+    window.previewQuestionModal = function(qid) {
       const q = state.questionBank.find(item => item.id === qid);
       if (!q) return;
-
-      const gradeObj = getGradeDisplay(q.grades);
-      const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
-
-      document.getElementById('modalQIdLabel').textContent = `Question ID: ${q.id} • ${q.status}`;
+      document.getElementById('modalQIdLabel').textContent = `Question ID: ${q.id}`;
       document.getElementById('modalQTopicLabel').textContent = q.topic;
       document.getElementById('modalQMeta').innerHTML = `
-        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
-        <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
-        <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
-        <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
+        <span class="badge">${q.subject}</span>
+        <span class="tag">${q.grades.join(' & ')}</span>
+        <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
       `;
-      document.getElementById('modalQBody').innerHTML = buildQuestionPreviewHTML(q, true);
-      document.getElementById('modalQExplanation').innerHTML = `<strong>Answer Explanation:</strong><p>${q.explanation}</p>`;
+      document.getElementById('modalQBody').innerHTML = buildQuestionPreviewHTML(q);
+      document.getElementById('modalQExplanation').innerHTML = `
+        <strong>Answer Explanation:</strong>
+        <p>${q.explanation}</p>
+      `;
       document.getElementById('qbPreviewModal').classList.remove('hidden');
     };
 
@@ -1020,320 +1132,8 @@
       document.getElementById('qbPreviewModal').classList.add('hidden');
     });
 
-    // --- Question Authoring Builder ---
-    const qSubjectEl = document.getElementById('qSubject');
-    const qTopicEl = document.getElementById('qTopic');
-    const qTypeEl = document.getElementById('qType');
-
-    function populateTopics() {
-      const topics = SUBJECT_TOPICS[qSubjectEl.value] || [];
-      qTopicEl.innerHTML = topics.map(t => `<option value="${t}">${t}</option>`).join('');
-      updateLivePreview();
-    }
-
-    qSubjectEl.addEventListener('change', populateTopics);
-
-    function renderAnswerConfigurator() {
-      const type = qTypeEl.value;
-      const box = document.getElementById('dynamicAnswerConfig');
-      const hint = document.getElementById('promptHelperHint');
-      hint.textContent = '';
-
-      if (type === 'multiple_choice') {
-        box.innerHTML = `
-          <label class="config-section-title">Answer Choices (Select the single correct option)</label>
-          <div class="options-grid">
-            ${['A', 'B', 'C', 'D'].map((letter, idx) => `
-              <div class="choice-input-row">
-                <input type="radio" name="mcCorrect" value="${idx}" ${idx === 0 ? 'checked' : ''} />
-                <input type="text" class="mc-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else if (type === 'multiple_response') {
-        box.innerHTML = `
-          <label class="config-section-title">Answer Choices (Check ALL correct options)</label>
-          <div class="options-grid">
-            ${['A', 'B', 'C', 'D'].map((letter, idx) => `
-              <div class="choice-input-row">
-                <input type="checkbox" class="mr-correct-cb" value="${idx}" ${idx < 2 ? 'checked' : ''} />
-                <input type="text" class="mr-opt-input" data-idx="${idx}" placeholder="Option ${letter}" required />
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else if (type === 'fill_in_blank') {
-        hint.textContent = 'Tip: Use underscores (______) in your prompt to show where the blank goes.';
-        box.innerHTML = `
-          <div class="form-row">
-            <div class="form-group" style="margin-bottom:0;">
-              <label for="fibAnswers">Accepted Correct Answer(s) <span class="optional-label">(Comma-separated)</span></label>
-              <input type="text" id="fibAnswers" placeholder="e.g., 13.5, 27/2" required />
-            </div>
-            <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
-              <label class="grade-pill" style="width:100%;">
-                <input type="checkbox" id="fibCaseSensitive" />
-                <span>Case-Sensitive Grading</span>
-              </label>
-            </div>
-          </div>
-        `;
-      } else if (type === 'drag_and_drop') {
-        box.innerHTML = `
-          <label class="config-section-title">Draggable Items & Matching Target Zones</label>
-          <div class="stack-list">
-            ${[1, 2, 3].map(n => `
-              <div class="form-row">
-                <input type="text" class="dnd-item-input" placeholder="Draggable Item ${n}" required />
-                <input type="text" class="dnd-target-input" placeholder="Matching Drop Zone ${n}" required />
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else if (type === 'hotspot') {
-        box.innerHTML = `
-          <label class="config-section-title">Hotspot Image & Target Region</label>
-          <div class="form-group">
-            <label for="hotspotImgUrl">Diagram / Coordinate Plane Image URL</label>
-            <input type="url" id="hotspotImgUrl" placeholder="https://example.com/coordinate-grid.png" />
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="margin-bottom:0;">
-              <label for="hotspotX">Target X Position (%)</label>
-              <input type="number" id="hotspotX" min="0" max="100" value="50" required />
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label for="hotspotY">Target Y Position (%)</label>
-              <input type="number" id="hotspotY" min="0" max="100" value="50" required />
-            </div>
-          </div>
-        `;
-      } else if (type === 'inline_choice') {
-        hint.textContent = 'Tip: Write [blank1] and [blank2] inside your Question Prompt.';
-        box.innerHTML = `
-          <label class="config-section-title">Inline Dropdown Options</label>
-          <div class="form-row">
-            <div class="form-group" style="margin-bottom:0;">
-              <label for="inline1Choices">[blank1] Choices</label>
-              <input type="text" id="inline1Choices" placeholder="increases, decreases" required />
-              <input type="text" id="inline1Correct" placeholder="Correct for [blank1]" style="margin-top:0.5rem;" required />
-            </div>
-            <div class="form-group" style="margin-bottom:0;">
-              <label for="inline2Choices">[blank2] Choices (Optional)</label>
-              <input type="text" id="inline2Choices" placeholder="directly, inversely" />
-              <input type="text" id="inline2Correct" placeholder="Correct for [blank2]" style="margin-top:0.5rem;" />
-            </div>
-          </div>
-        `;
-      } else if (type === 'table_grid') {
-        box.innerHTML = `
-          <label class="config-section-title">Table Grid Rows & Columns</label>
-          <div class="form-row" style="margin-bottom:0.75rem;">
-            <input type="text" id="gridCol1" value="True" placeholder="Column 1" required />
-            <input type="text" id="gridCol2" value="False" placeholder="Column 2" required />
-          </div>
-          <div class="stack-list">
-            ${[0, 1, 2].map(rIdx => `
-              <div class="grid-row-config">
-                <input type="text" class="grid-statement-input" placeholder="Statement ${rIdx + 1}" required />
-                <label><input type="radio" name="gridRow_${rIdx}" value="0" checked /> Col 1</label>
-                <label><input type="radio" name="gridRow_${rIdx}" value="1" /> Col 2</label>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
-
-      box.querySelectorAll('input, select').forEach(el => {
-        el.addEventListener('input', updateLivePreview);
-        el.addEventListener('change', updateLivePreview);
-      });
-
-      updateLivePreview();
-    }
-
-    qTypeEl.addEventListener('change', renderAnswerConfigurator);
-
-    function getCurrentQuestionData() {
-      const subject = qSubjectEl.value;
-      const grades = Array.from(document.querySelectorAll('input[name="gradeLevel"]:checked')).map(cb => cb.value);
-      const type = qTypeEl.value;
-      const topic = qTopicEl.value;
-      const subtopic = document.getElementById('qSubtopic').value.trim();
-      const difficulty = document.getElementById('qDifficulty').value;
-      const prompt = document.getElementById('qPrompt').value.trim();
-      const explanation = document.getElementById('qExplanation').value.trim();
-
-      let config = {};
-      if (type === 'multiple_choice') {
-        const options = Array.from(document.querySelectorAll('.mc-opt-input')).map(i => i.value.trim() || i.placeholder);
-        const checked = document.querySelector('input[name="mcCorrect"]:checked');
-        config = { options, correctIndex: checked ? parseInt(checked.value, 10) : 0 };
-      } else if (type === 'multiple_response') {
-        const options = Array.from(document.querySelectorAll('.mr-opt-input')).map(i => i.value.trim() || i.placeholder);
-        const correctIndices = Array.from(document.querySelectorAll('.mr-correct-cb:checked')).map(cb => parseInt(cb.value, 10));
-        config = { options, correctIndices };
-      } else if (type === 'fill_in_blank') {
-        config = {
-          acceptedAnswers: (document.getElementById('fibAnswers')?.value || '').trim(),
-          caseSensitive: document.getElementById('fibCaseSensitive')?.checked || false
-        };
-      } else if (type === 'drag_and_drop') {
-        const items = Array.from(document.querySelectorAll('.dnd-item-input')).map((el, i) => el.value.trim() || `Item ${i + 1}`);
-        const targets = Array.from(document.querySelectorAll('.dnd-target-input')).map((el, i) => el.value.trim() || `Zone ${i + 1}`);
-        config = { items, targets };
-      } else if (type === 'hotspot') {
-        config = {
-          imageUrl: document.getElementById('hotspotImgUrl')?.value.trim() || '',
-          x: parseInt(document.getElementById('hotspotX')?.value || '50', 10),
-          y: parseInt(document.getElementById('hotspotY')?.value || '50', 10)
-        };
-      } else if (type === 'inline_choice') {
-        const c1 = (document.getElementById('inline1Choices')?.value || 'Option 1, Option 2').split(',').map(s => s.trim()).filter(Boolean);
-        const c2 = (document.getElementById('inline2Choices')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
-        config = {
-          blank1: { choices: c1, correct: document.getElementById('inline1Correct')?.value.trim() || c1[0] || '' },
-          blank2: { choices: c2, correct: document.getElementById('inline2Correct')?.value.trim() || c2[0] || '' }
-        };
-      } else if (type === 'table_grid') {
-        const col1 = document.getElementById('gridCol1')?.value.trim() || 'True';
-        const col2 = document.getElementById('gridCol2')?.value.trim() || 'False';
-        const rows = Array.from(document.querySelectorAll('.grid-statement-input')).map((el, idx) => {
-          const sel = document.querySelector(`input[name="gridRow_${idx}"]:checked`);
-          return {
-            statement: el.value.trim() || `Statement ${idx + 1}`,
-            correctCol: sel ? parseInt(sel.value, 10) : 0
-          };
-        });
-        config = { columns: [col1, col2], rows };
-      }
-
-      return { subject, grades, type, topic, subtopic, difficulty, prompt, config, explanation };
-    }
-
-    function updateLivePreview() {
-      const q = getCurrentQuestionData();
-      const gradeObj = getGradeDisplay(q.grades);
-      const diffObj = DIFFICULTY_SHORT[q.difficulty] || { label: q.difficulty, tier: 'medium' };
-
-      document.getElementById('previewMetaBar').innerHTML = `
-        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
-        <span class="qb-pill ${gradeObj.cls}">${gradeObj.text}</span>
-        <span class="tag">${q.topic}${q.subtopic ? ' • ' + q.subtopic : ''}</span>
-        <span class="qb-type-pill">${QUESTION_TYPE_LABELS[q.type]}</span>
-        <span class="qb-pill pill-diff-${diffObj.tier}">${diffObj.label}</span>
-      `;
-
-      document.getElementById('livePreviewCanvas').innerHTML = buildQuestionPreviewHTML(q, state.showPreviewExplanation);
-      document.getElementById('previewExplanationText').textContent = q.explanation || 'Your step-by-step explanation will appear here.';
-      document.getElementById('previewExplanationBox').classList.toggle('hidden', !state.showPreviewExplanation);
-    }
-
-    ['qTopic', 'qSubtopic', 'qDifficulty', 'qPrompt', 'qExplanation'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateLivePreview);
-      document.getElementById(id).addEventListener('change', updateLivePreview);
-    });
-    document.querySelectorAll('input[name="gradeLevel"]').forEach(cb => cb.addEventListener('change', updateLivePreview));
-
-    document.getElementById('togglePreviewAnswerBtn').addEventListener('click', (e) => {
-      state.showPreviewExplanation = !state.showPreviewExplanation;
-      e.target.textContent = state.showPreviewExplanation ? 'Hide Post-Answer Explanation' : 'Show Post-Answer Explanation';
-      updateLivePreview();
-    });
-
-    function saveQuestionWithStatus(status) {
-      const form = document.getElementById('createQuestionForm');
-      if (!form.reportValidity()) return;
-
-      const qData = getCurrentQuestionData();
-      if (qData.grades.length === 0) {
-        alert('Please select at least one grade level (Grade 8, Grade 9, or both).');
-        return;
-      }
-
-      const editingId = document.getElementById('editingQuestionId').value;
-      if (editingId) {
-        const idx = state.questionBank.findIndex(item => item.id === editingId);
-        if (idx !== -1) {
-          state.questionBank[idx] = { ...state.questionBank[idx], ...qData, status };
-        }
-      } else {
-        state.questionBank.unshift({
-          id: generateShortId(),
-          ...qData,
-          status,
-          accuracy: null,
-          uses: 0
-        });
-      }
-
-      resetQuestionForm();
-      renderAll();
-      switchTab('questionBankPanel');
-    }
-
-    function resetQuestionForm() {
-      document.getElementById('createQuestionForm').reset();
-      document.getElementById('editingQuestionId').value = '';
-      populateTopics();
-      renderAnswerConfigurator();
-    }
-
-    document.getElementById('createQuestionForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      saveQuestionWithStatus('Published');
-    });
-
-    document.getElementById('saveDraftBtn').addEventListener('click', () => saveQuestionWithStatus('Draft'));
-    document.getElementById('resetQuestionBuilderBtn').addEventListener('click', resetQuestionForm);
-
-    // --- Classes, Students & Bulk Assign ---
-    function generateCode(prefix) {
-      return `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
-    }
-
-    function generatePasscode() {
-      const words = ['TIGER', 'EAGLE', 'SOLAR', 'ORBIT', 'CEDAR', 'SPARK', 'ATLAS'];
-      return `${words[Math.floor(Math.random() * words.length)]}-${Math.floor(100 + Math.random() * 900)}`;
-    }
-
-    function renderAll() {
-      const classOptionsHTML = state.classes
-        .map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`)
-        .join('');
-      document.getElementById('studentClassSelect').innerHTML = classOptionsHTML;
-      document.getElementById('bundleClassSelect').innerHTML = classOptionsHTML;
-
-      document.getElementById('classesList').innerHTML = state.classes.map(c => {
-        const count = state.students.filter(s => s.classId === c.id).length;
-        return `
-          <div class="list-item-card">
-            <div>
-              <strong>${c.name}</strong>
-              <p class="item-meta">${c.schedule || 'Flexible schedule'} • ${count} student(s)</p>
-            </div>
-            <span class="code-pill">Join Code: ${c.joinCode}</span>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('studentsRosterList').innerHTML = state.students.map(s => {
-        const cls = state.classes.find(c => c.id === s.classId);
-        return `
-          <div class="list-item-card">
-            <div>
-              <strong>${s.name}</strong> <span class="username-tag">@${s.username}</span>
-              <p class="item-meta">${cls ? cls.name : 'Unassigned'}</p>
-            </div>
-            <button type="button" class="btn btn-outline btn-sm" onclick="resetStudentPasscode('${s.name}', '${s.username}')">
-              Reset Passcode
-            </button>
-          </div>
-        `;
-      }).join('');
-
-      const BANK_HEALTH_SECTIONS = [
+    // --- Question Bank Health ---
+    const BANK_HEALTH_SECTIONS = [
       { title: 'Grade 8 Math', grade: 'Grade 8', subject: 'Math', required: 50 },
       { title: 'Grade 8 ELA',  grade: 'Grade 8', subject: 'ELA',  required: 50 },
       { title: 'Grade 9 Math', grade: 'Grade 9', subject: 'Math', required: 50 },
@@ -1345,17 +1145,14 @@
       if (!container) return;
 
       container.innerHTML = BANK_HEALTH_SECTIONS.map(sec => {
-        // Questions matching this grade & subject (includes items tagged "Both")
         const matchingAll = state.questionBank.filter(
           q => q.subject === sec.subject && q.grades.includes(sec.grade)
         );
         const publishedOnly = matchingAll.filter(q => q.status === 'Published');
-
         const availableCount = matchingAll.length;
         const eligibleCount = publishedOnly.length;
         const pct = Math.min(100, Math.round((eligibleCount / sec.required) * 100));
 
-        // Status badge & bar color based on progress toward full adaptive sim
         let badgeText = 'Insufficient';
         let statusTier = 'insufficient';
         if (eligibleCount >= sec.required) {
@@ -1383,7 +1180,6 @@
               <h3>${sec.title}</h3>
               <span class="bh-status-badge bh-${statusTier}">${badgeText}</span>
             </div>
-
             <p class="bh-summary-line">
               Required for full sim: <strong>${sec.required}</strong>
               <span class="bh-dot">·</span>
@@ -1391,28 +1187,272 @@
               <span class="bh-dot">·</span>
               Eligible (published): <strong>${eligibleCount}</strong>
             </p>
-
-            <div class="bh-progress-track" role="progressbar" aria-valuenow="${eligibleCount}" aria-valuemin="0" aria-valuemax="${sec.required}">
+            <div class="bh-progress-track">
               <div class="bh-progress-fill bh-fill-${statusTier}" style="width: ${pct}%;"></div>
             </div>
-
-            <div class="bh-topic-list">
-              ${topicRowsHTML}
-            </div>
+            <div class="bh-topic-list">${topicRowsHTML}</div>
           </div>
         `;
       }).join('');
     }
-      renderBankHealth();
-      renderQuestionBankTable();
+
+    // --- Question Builder & Live Preview ---
+    const qSubjectEl = document.getElementById('qSubject');
+    const qTopicEl = document.getElementById('qTopic');
+    const qTypeEl = document.getElementById('qType');
+    const dynamicConfigEl = document.getElementById('dynamicAnswerConfig');
+
+    function populateTopicsForSubject() {
+      const topics = SUBJECT_TOPICS[qSubjectEl.value] || [];
+      qTopicEl.innerHTML = topics.map(t => `<option value="${t}">${t}</option>`).join('');
     }
 
+    function renderAnswerConfigFields() {
+      const type = qTypeEl.value;
+      const hintEl = document.getElementById('promptHelperHint');
+      hintEl.textContent = type === 'inline_choice'
+        ? 'Use [blank1] and [blank2] in your prompt where dropdown menus should appear.'
+        : '';
+
+      if (type === 'multiple_choice' || type === 'multiple_response') {
+        const inputType = type === 'multiple_choice' ? 'radio' : 'checkbox';
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Answer Choices (Select Correct Option${type === 'multiple_response' ? 's' : ''})</span>
+          <div class="options-grid">
+            ${['A', 'B', 'C', 'D'].map((ltr, idx) => `
+              <div class="choice-input-row">
+                <input type="${inputType}" name="correctChoice" value="${idx}" ${idx === 0 ? 'checked' : ''} />
+                <input type="text" id="optText_${idx}" placeholder="Choice ${ltr}" value="Option ${ltr}" required />
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (type === 'fill_in_blank') {
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Accepted Answer(s)</span>
+          <input type="text" id="fibAcceptedInput" placeholder="e.g., 42, 42.0 (comma-separated)" required style="width:100%; padding:0.6rem;" />
+        `;
+      } else if (type === 'drag_and_drop') {
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Draggable Pairs (Item → Matching Target)</span>
+          <div class="stack-list">
+            ${[0, 1, 2].map(i => `
+              <div class="form-row">
+                <input type="text" id="dndItem_${i}" value="Item ${i + 1}" required />
+                <input type="text" id="dndTarget_${i}" value="Target ${i + 1}" required />
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (type === 'hotspot') {
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Hotspot Target Coordinates (%)</span>
+          <div class="form-row">
+            <input type="number" id="hsXInput" value="50" min="0" max="100" placeholder="X %" />
+            <input type="number" id="hsYInput" value="50" min="0" max="100" placeholder="Y %" />
+          </div>
+        `;
+      } else if (type === 'inline_choice') {
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Dropdown Options for [blank1] & [blank2]</span>
+          <div class="form-row">
+            <input type="text" id="inlineChoices1" value="correct1, distractorA, distractorB" placeholder="[blank1] choices (first = correct)" />
+            <input type="text" id="inlineChoices2" value="correct2, distractorC, distractorD" placeholder="[blank2] choices (first = correct)" />
+          </div>
+        `;
+      } else if (type === 'table_grid') {
+        dynamicConfigEl.innerHTML = `
+          <span class="config-section-title">Table Grid Statements (True / False)</span>
+          <div class="stack-list">
+            ${[0, 1].map(r => `
+              <div class="grid-row-config">
+                <input type="text" id="gridStmt_${r}" value="Statement ${r + 1}" />
+                <label><input type="radio" name="gridCorrect_${r}" value="0" checked /> True</label>
+                <label><input type="radio" name="gridCorrect_${r}" value="1" /> False</label>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      renderLivePreview();
+    }
+
+    function collectBuilderQuestion(status) {
+      const grades = Array.from(document.querySelectorAll('input[name="gradeLevel"]:checked')).map(cb => cb.value);
+      if (grades.length === 0) grades.push('Grade 8');
+
+      const type = qTypeEl.value;
+      let config = {};
+
+      if (type === 'multiple_choice') {
+        const options = [0, 1, 2, 3].map(i => document.getElementById(`optText_${i}`)?.value.trim() || `Option ${i + 1}`);
+        const checked = document.querySelector('input[name="correctChoice"]:checked');
+        config = { options, correctIndex: checked ? parseInt(checked.value, 10) : 0 };
+      } else if (type === 'multiple_response') {
+        const options = [0, 1, 2, 3].map(i => document.getElementById(`optText_${i}`)?.value.trim() || `Option ${i + 1}`);
+        const correctIndices = Array.from(document.querySelectorAll('input[name="correctChoice"]:checked')).map(cb => parseInt(cb.value, 10));
+        config = { options, correctIndices };
+      } else if (type === 'fill_in_blank') {
+        config = { acceptedAnswers: document.getElementById('fibAcceptedInput')?.value.trim() || '', caseSensitive: false };
+      } else if (type === 'drag_and_drop') {
+        config = {
+          items: [0, 1, 2].map(i => document.getElementById(`dndItem_${i}`)?.value.trim() || `Item ${i + 1}`),
+          targets: [0, 1, 2].map(i => document.getElementById(`dndTarget_${i}`)?.value.trim() || `Target ${i + 1}`)
+        };
+      } else if (type === 'hotspot') {
+        config = {
+          imageUrl: '',
+          x: parseInt(document.getElementById('hsXInput')?.value || '50', 10),
+          y: parseInt(document.getElementById('hsYInput')?.value || '50', 10)
+        };
+      } else if (type === 'inline_choice') {
+        const c1 = (document.getElementById('inlineChoices1')?.value || 'correct1, option2').split(',').map(s => s.trim());
+        const c2 = (document.getElementById('inlineChoices2')?.value || 'correct2, option2').split(',').map(s => s.trim());
+        config = {
+          blank1: { choices: c1, correct: c1[0] },
+          blank2: { choices: c2, correct: c2[0] }
+        };
+      } else if (type === 'table_grid') {
+        config = {
+          columns: ['True', 'False'],
+          rows: [0, 1].map(r => ({
+            statement: document.getElementById(`gridStmt_${r}`)?.value.trim() || `Statement ${r + 1}`,
+            correctCol: parseInt(document.querySelector(`input[name="gridCorrect_${r}"]:checked`)?.value || '0', 10)
+          }))
+        };
+      }
+
+      const existingId = document.getElementById('editingQuestionId').value;
+      return {
+        id: existingId || generateShortId(),
+        subject: qSubjectEl.value,
+        grades,
+        type,
+        topic: qTopicEl.value,
+        subtopic: document.getElementById('qSubtopic').value.trim(),
+        difficulty: document.getElementById('qDifficulty').value,
+        status,
+        accuracy: null,
+        uses: 0,
+        prompt: document.getElementById('qPrompt').value.trim() || 'Sample question prompt...',
+        config,
+        explanation: document.getElementById('qExplanation').value.trim() || 'Explanation text.'
+      };
+    }
+
+    function buildQuestionPreviewHTML(q) {
+      if (q.type === 'multiple_choice' || q.type === 'multiple_response') {
+        return `
+          <p class="preview-prompt-text">${q.prompt}</p>
+          <div class="preview-options">
+            ${q.config.options.map((opt, idx) => {
+              const isRight = q.type === 'multiple_choice'
+                ? idx === q.config.correctIndex
+                : (q.config.correctIndices || []).includes(idx);
+              return `<div class="preview-opt-item ${isRight ? 'opt-is-correct' : ''}">${opt}</div>`;
+            }).join('')}
+          </div>
+        `;
+      }
+      if (q.type === 'fill_in_blank') {
+        return `
+          <p class="preview-prompt-text">${q.prompt}</p>
+          <input type="text" disabled placeholder="Student types answer here (Accepted: ${q.config.acceptedAnswers})" style="width:100%; padding:0.65rem;" />
+        `;
+      }
+      if (q.type === 'drag_and_drop') {
+        return `
+          <p class="preview-prompt-text">${q.prompt}</p>
+          <div class="dnd-preview-wrap">
+            <div class="dnd-chips">${q.config.items.map(it => `<div class="dnd-chip">${it}</div>`).join('')}</div>
+            <div class="dnd-zones">${q.config.targets.map(tg => `<div class="dnd-zone"><strong>${tg}</strong><span class="dnd-slot">Drop zone</span></div>`).join('')}</div>
+          </div>
+        `;
+      }
+      if (q.type === 'hotspot') {
+        return `
+          <p class="preview-prompt-text">${q.prompt}</p>
+          <div class="hotspot-preview-box">
+            <div class="hotspot-placeholder">Interactive Diagram Canvas</div>
+            <div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;">🎯</div>
+          </div>
+        `;
+      }
+      if (q.type === 'inline_choice') {
+        const htmlPrompt = q.prompt
+          .replace('[blank1]', `<select class="inline-select">${q.config.blank1.choices.map(c => `<option>${c}</option>`).join('')}</select>`)
+          .replace('[blank2]', `<select class="inline-select">${q.config.blank2.choices.map(c => `<option>${c}</option>`).join('')}</select>`);
+        return `<p class="preview-prompt-text">${htmlPrompt}</p>`;
+      }
+      return `
+        <p class="preview-prompt-text">${q.prompt}</p>
+        <table class="preview-grid-table">
+          <thead><tr><th>Statement</th><th>True</th><th>False</th></tr></thead>
+          <tbody>
+            ${q.config.rows.map(r => `<tr><td>${r.statement}</td><td>○</td><td>○</td></tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderLivePreview() {
+      const draftItem = collectBuilderQuestion('Draft');
+      document.getElementById('previewMetaBar').innerHTML = `
+        <span class="badge">${draftItem.subject}</span>
+        <span class="tag">${draftItem.grades.join(' & ')}</span>
+        <span class="tag">${draftItem.topic}</span>
+        <span class="tag">${QUESTION_TYPE_LABELS[draftItem.type]}</span>
+      `;
+      document.getElementById('livePreviewCanvas').innerHTML = buildQuestionPreviewHTML(draftItem);
+      document.getElementById('previewExplanationText').textContent = draftItem.explanation;
+    }
+
+    function saveBuilderQuestion(status) {
+      const item = collectBuilderQuestion(status);
+      const idx = state.questionBank.findIndex(q => q.id === item.id);
+      if (idx >= 0) {
+        item.accuracy = state.questionBank[idx].accuracy;
+        item.uses = state.questionBank[idx].uses;
+        state.questionBank[idx] = item;
+      } else {
+        state.questionBank.unshift(item);
+      }
+      resetQuestionForm();
+      renderAll();
+      switchTab('questionBankPanel');
+    }
+
+    function resetQuestionForm() {
+      document.getElementById('createQuestionForm').reset();
+      document.getElementById('editingQuestionId').value = '';
+      populateTopicsForSubject();
+      renderAnswerConfigFields();
+    }
+
+    qSubjectEl.addEventListener('change', () => { populateTopicsForSubject(); renderLivePreview(); });
+    qTypeEl.addEventListener('change', renderAnswerConfigFields);
+    document.getElementById('createQuestionForm').addEventListener('input', renderLivePreview);
+    document.getElementById('resetQuestionBuilderBtn').addEventListener('click', resetQuestionForm);
+    document.getElementById('saveDraftBtn').addEventListener('click', () => saveBuilderQuestion('Draft'));
+    document.getElementById('createQuestionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveBuilderQuestion('Published');
+    });
+
+    document.getElementById('togglePreviewAnswerBtn').addEventListener('click', (e) => {
+      state.showPreviewExplanation = !state.showPreviewExplanation;
+      document.getElementById('previewExplanationBox').classList.toggle('hidden', !state.showPreviewExplanation);
+      e.target.textContent = state.showPreviewExplanation ? 'Hide Post-Answer Explanation' : 'Show Post-Answer Explanation';
+    });
+
+    // --- Classes & Student Passcodes ---
     document.getElementById('createClassForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('classNameInput').value.trim();
       const schedule = document.getElementById('classScheduleInput').value.trim();
-      const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'CLS';
-      state.classes.push({ id: 'c' + Date.now(), name, schedule, joinCode: generateCode(prefix) });
+      if (!name) return;
+      const code = name.slice(0, 4).toUpperCase().replace(/[^A-Z]/g, 'CLS') + '-' + Math.floor(100 + Math.random() * 900);
+      state.classes.push({ id: 'c_' + Date.now(), name, schedule, joinCode: code });
       e.target.reset();
       renderAll();
     });
@@ -1420,11 +1460,27 @@
     document.getElementById('createStudentForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('studentDisplayName').value.trim();
-      const username = document.getElementById('studentUsernameInput').value.trim().toLowerCase().replace(/\s+/g, '_');
+      const username = document.getElementById('studentUsernameInput').value.trim();
       const classId = document.getElementById('studentClassSelect').value;
-      const passcode = generatePasscode();
+      if (!name || !username) return;
+      const passcode = Math.random().toString(36).slice(-6).toUpperCase();
 
-      state.students.push({ id: 's' + Date.now(), name, username, classId });
+      state.students.push({
+        id: 's_' + Date.now(),
+        name,
+        username,
+        grade: 'Grade 8',
+        classId,
+        results: {
+          elaScore: null,
+          mathScore: null,
+          avgAccuracy: null,
+          topicAccuracy: [],
+          missedQuestions: [],
+          tests: []
+        }
+      });
+
       document.getElementById('revealName').textContent = name;
       document.getElementById('revealUsername').textContent = username;
       document.getElementById('revealPasscode').textContent = passcode;
@@ -1433,41 +1489,53 @@
       renderAll();
     });
 
-    window.resetStudentPasscode = function(name, username) {
-      document.getElementById('revealName').textContent = name + ' (Reset)';
-      document.getElementById('revealUsername').textContent = username;
-      document.getElementById('revealPasscode').textContent = generatePasscode();
-      document.getElementById('credentialRevealBox').classList.remove('hidden');
-    };
-
     document.getElementById('copyCredsBtn').addEventListener('click', () => {
-      const u = document.getElementById('revealUsername').textContent;
-      const p = document.getElementById('revealPasscode').textContent;
-      navigator.clipboard.writeText(`Prepify Login — Username: ${u} | Passcode: ${p}`);
-      document.getElementById('copyCredsBtn').textContent = 'Copied!';
-      setTimeout(() => (document.getElementById('copyCredsBtn').textContent = 'Copy Login Info'), 2000);
+      const txt = `Student: ${document.getElementById('revealName').textContent} | Username: ${document.getElementById('revealUsername').textContent} | Passcode: ${document.getElementById('revealPasscode').textContent}`;
+      navigator.clipboard?.writeText(txt);
+      alert('Login credentials copied!');
     });
 
-    document.getElementById('assignBundleForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (state.selectedQuestionIds.size === 0) return;
+    function renderClassesAndRoster() {
+      const classOptionsHTML = state.classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      document.getElementById('studentClassSelect').innerHTML = classOptionsHTML;
+      document.getElementById('bundleClassSelect').innerHTML = classOptionsHTML;
 
-      // Increment "Uses" counter for each selected question
-      state.questionBank.forEach(q => {
-        if (state.selectedQuestionIds.has(q.id)) q.uses += 1;
-      });
+      document.getElementById('classesList').innerHTML = state.classes.map(c => `
+        <div class="list-item-card">
+          <div>
+            <strong>${c.name}</strong>
+            <p class="item-meta">${c.schedule || 'Flexible Schedule'}</p>
+          </div>
+          <span class="code-pill">${c.joinCode}</span>
+        </div>
+      `).join('');
 
-      const title = document.getElementById('bundleTitleInput').value.trim();
-      alert(`Published "${title}" with ${state.selectedQuestionIds.size} question(s)!`);
-      state.selectedQuestionIds.clear();
-      document.getElementById('qbSelectAllCb').checked = false;
-      e.target.reset();
-      renderAll();
-    });
+      document.getElementById('studentsRosterList').innerHTML = state.students.map(s => {
+        const cls = state.classes.find(c => c.id === s.classId);
+        return `
+          <div class="list-item-card">
+            <div>
+              <strong>${s.name}</strong> <span class="username-tag">@${s.username}</span>
+              <p class="item-meta">${cls ? cls.name : 'Unassigned'} • ${s.grade || 'Grade 8'}</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="alert('New passcode for ${s.name}: ' + Math.random().toString(36).slice(-6).toUpperCase())">Reset Passcode</button>
+          </div>
+        `;
+      }).join('');
+    }
 
+    function renderAll() {
+      renderClassesAndRoster();
+      populateResultsStudentDropdown();
+      renderStudentResults();
+      renderQuestionBankTable();
+      renderBankHealth();
+    }
+
+    // Boot
     loadSettings();
-    populateTopics();
-    renderAnswerConfigurator();
+    populateTopicsForSubject();
+    renderAnswerConfigFields();
     renderAll();
   </script>
 </body>

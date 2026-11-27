@@ -5,438 +5,927 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Student Portal | Prepify Tutoring</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style-student.css" />
 </head>
-<body class="bg-light">
+<body class="app-shell">
 
-  <!-- Shared Navigation Bar -->
-  <header class="navbar">
-    <div class="container nav-content">
-      <a href="index.html" class="logo">Apex<span>Prep</span> <small class="role-badge">Student</small></a>
-      <nav class="nav-links">
-        <span class="user-greeting" id="studentGreeting">Welcome, Alex M.</span>
-        <a href="login.html" class="btn btn-outline" id="logoutBtn">Log Out</a>
-      </nav>
+  <!-- Full-Height Edge-to-Edge Left Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html" class="sidebar-logo">
+        <span class="brand-diamond">◆</span>
+        <div>
+          <strong>Prepify</strong>
+          <small>Tutoring & Practice Platform</small>
+        </div>
+      </a>
     </div>
-  </header>
 
-  <main class="container dashboard-container">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
+    <div class="sidebar-profile">
+      <strong id="studentGreeting">Alex M.</strong>
+      <span id="studentClassBadge">Grade 8 Math Foundations</span>
+      <a href="login.html" class="sidebar-switch-btn" id="logoutBtn">Switch Account / Log Out</a>
+    </div>
+
+    <nav class="sidebar-nav" role="tablist" aria-orientation="vertical">
+      <span class="sidebar-group-label">STUDY</span>
+      <button type="button" class="studio-tab active" data-target="assignedTestsPanel">
+        <span class="nav-dot"></span> Assigned Tests
+      </button>
+      <button type="button" class="studio-tab" data-target="practiceBankPanel">
+        <span class="nav-dot"></span> Practice Bank
+      </button>
+      <button type="button" class="studio-tab" data-target="progressPanel">
+        <span class="nav-dot"></span> My Progress
+      </button>
+
+      <span class="sidebar-group-label">PREFERENCES</span>
+      <button type="button" class="studio-tab" data-target="studentSettingsPanel">
+        <span class="nav-dot"></span> Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p>Prepify Student Workspace • Adaptive & teacher-assigned practice.</p>
+    </div>
+  </aside>
+
+  <!-- Right Main Content Column -->
+  <div class="app-main">
+    <header class="app-topbar">
       <div>
-        <h1>Student Dashboard</h1>
-        <p>Join your tutor's class, complete assigned diagnostics, and review your scores.</p>
+        <h1 id="topbarTitle">Assigned Tests</h1>
+        <p id="topbarSubtitle">Complete tests and practice sets assigned by your instructor.</p>
       </div>
-      <div class="dashboard-stats">
-        <div class="mini-stat">
-          <strong id="enrolledClassCount">1</strong>
-          <span>Classes</span>
-        </div>
-        <div class="mini-stat">
-          <strong id="pendingTestCount">2</strong>
-          <span>To Do</span>
-        </div>
-        <div class="mini-stat">
-          <strong id="avgScoreStat">—</strong>
-          <span>Avg Score</span>
-        </div>
+      <div class="topbar-right">
+        <button type="button" class="btn btn-outline hidden" id="exitRunnerBtn">← Back to List</button>
       </div>
-    </div>
+    </header>
 
-    <!-- =========================================================
-         VIEW 1: MAIN STUDENT DASHBOARD (Join Class + Assignments)
-    ========================================================= -->
-    <div id="dashboardView">
-      <div class="studio-grid">
-        <!-- Left Column: Join a Class & Enrolled Classes -->
-        <div class="stack-list">
+    <main class="app-body">
+      <!-- =========================================================
+           PANEL 1: ASSIGNED TESTS
+      ========================================================= -->
+      <section id="assignedTestsPanel" class="studio-panel">
+        <div id="assignedTestsGrid" class="tests-grid">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 2: PRACTICE BANK (SELF-STUDY DRILLS)
+      ========================================================= -->
+      <section id="practiceBankPanel" class="studio-panel hidden">
+        <div class="card filter-card">
+          <div class="practice-filter-row">
+            <select id="pracSubjectFilter" aria-label="Filter by Subject">
+              <option value="all">All Subjects</option>
+              <option value="Math">Math</option>
+              <option value="ELA">ELA</option>
+            </select>
+            <select id="pracTopicFilter" aria-label="Filter by Topic">
+              <option value="all">All Topics</option>
+            </select>
+            <select id="pracTypeFilter" aria-label="Filter by Question Type">
+              <option value="all">All Question Types</option>
+              <option value="multiple_choice">Multiple Choice</option>
+              <option value="multiple_response">Multiple Response</option>
+              <option value="fill_in_blank">Fill in the Blank</option>
+              <option value="drag_and_drop">Drag and Drop</option>
+              <option value="hotspot">Hotspot</option>
+              <option value="inline_choice">Inline Choice</option>
+              <option value="table_grid">Table Grid</option>
+            </select>
+            <button type="button" class="btn btn-gold" id="startFilteredDrillBtn">Practice Filtered Set</button>
+          </div>
+        </div>
+
+        <div id="practiceQuestionsList" class="stack-list">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 3: INTERACTIVE QUESTION & TEST RUNNER
+      ========================================================= -->
+      <section id="testRunnerPanel" class="studio-panel hidden">
+        <div class="card runner-card">
+          <div class="runner-header">
+            <div class="runner-meta" id="runnerMetaPills"></div>
+            <span class="runner-counter" id="runnerCounter">Question 1 of 4</span>
+          </div>
+
+          <div class="runner-progress-track">
+            <div class="runner-progress-fill" id="runnerProgressFill" style="width: 25%;"></div>
+          </div>
+
+          <div id="runnerQuestionBody" class="runner-body">
+            <!-- Interactive question rendered here -->
+          </div>
+
+          <div id="runnerFeedbackBox" class="feedback-banner hidden"></div>
+
+          <div class="runner-footer">
+            <button type="button" class="btn btn-outline" id="runnerPrevBtn">Previous</button>
+            <div class="runner-footer-right">
+              <button type="button" class="btn btn-gold" id="runnerSubmitBtn">Check Answer</button>
+              <button type="button" class="btn btn-primary hidden" id="runnerNextBtn">Next Question →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Completion Summary -->
+        <div id="runnerSummaryCard" class="card summary-card hidden">
+          <span class="section-tag">Session Complete</span>
+          <h2 id="summaryScoreHeading">You scored 4 / 4 (100%)</h2>
+          <p class="card-subtitle" id="summarySubtext">Great work! Your progress has been recorded.</p>
+          <div id="summaryBreakdownList" class="stack-list" style="margin: 1.25rem 0;"></div>
+          <button type="button" class="btn btn-primary" id="summaryDoneBtn">Return to Assigned Tests</button>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 4: MY PROGRESS
+      ========================================================= -->
+      <section id="progressPanel" class="studio-panel hidden">
+        <div class="progress-stats-grid">
+          <div class="card stat-box">
+            <span class="stat-label">Questions Answered</span>
+            <strong id="statTotalAnswered">0</strong>
+          </div>
+          <div class="card stat-box">
+            <span class="stat-label">Overall Accuracy</span>
+            <strong id="statAccuracy">—</strong>
+          </div>
+          <div class="card stat-box">
+            <span class="stat-label">Tests Completed</span>
+            <strong id="statTestsDone">0</strong>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3>Recent Attempt History</h3>
+          <p class="card-subtitle">Review questions you answered and revisit explanations.</p>
+          <div id="historyList" class="stack-list" style="margin-top: 1rem;"></div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL 5: SETTINGS
+      ========================================================= -->
+      <section id="studentSettingsPanel" class="studio-panel hidden">
+        <div class="studio-grid">
           <div class="card">
-            <h3>Join a Class</h3>
-            <p class="card-subtitle">Enter the class code provided by your tutor to unlock assignments.</p>
-            <form id="joinClassForm" class="join-form">
-              <input
-                type="text"
-                id="joinCodeInput"
-                placeholder="e.g., CALC-815"
-                maxlength="12"
-                required
-              />
-              <button type="submit" class="btn btn-primary">Join</button>
+            <h3>Student Profile</h3>
+            <p class="card-subtitle">Join a new class using a join code provided by your instructor.</p>
+            <form id="joinClassForm">
+              <div class="form-group">
+                <label for="joinCodeInput">Class Join Code</label>
+                <input type="text" id="joinCodeInput" placeholder="e.g., MATH-492" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Join Class</button>
+              <p id="joinClassMsg" class="settings-saved-msg hidden">✓ Joined class successfully.</p>
             </form>
-            <p id="joinFeedback" class="join-feedback hidden"></p>
           </div>
 
           <div class="card">
-            <h3>Your Enrolled Classes</h3>
-            <div id="enrolledClassesList" class="stack-list">
-              <!-- Populated dynamically -->
+            <h3>Theme</h3>
+            <p class="card-subtitle">Choose a color palette for your Student Workspace.</p>
+            <div class="mt-theme-grid" role="radiogroup" aria-label="Workspace Theme">
+              <button type="button" class="mt-theme-card active" data-theme-value="default">
+                <span class="mt-theme-name">Prepify Classic</span>
+                <span class="mt-swatches">
+                  <i style="background:#f7f6f2;"></i>
+                  <i style="background:#16213e;"></i>
+                  <i style="background:#d4a359;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="dracula">
+                <span class="mt-theme-name">dracula</span>
+                <span class="mt-swatches">
+                  <i style="background:#282a36;"></i>
+                  <i style="background:#bd93f9;"></i>
+                  <i style="background:#50fa7b;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="iceberg_light">
+                <span class="mt-theme-name">iceberg light</span>
+                <span class="mt-swatches">
+                  <i style="background:#e8e9ec;"></i>
+                  <i style="background:#2d539e;"></i>
+                  <i style="background:#33374c;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="github">
+                <span class="mt-theme-name">github</span>
+                <span class="mt-swatches">
+                  <i style="background:#ffffff; border:1px solid #d0d7de;"></i>
+                  <i style="background:#0969da;"></i>
+                  <i style="background:#1f2328;"></i>
+                </span>
+              </button>
             </div>
           </div>
         </div>
+      </section>
+    </main>
+  </div>
 
-        <!-- Right Column: Assigned Tests & Completed Grades -->
-        <div class="stack-list">
-          <div class="card">
-            <h3>Assigned Tests & Practice Sets</h3>
-            <p class="card-subtitle">Click "Start Test" when you are ready to begin.</p>
-            <div id="assignedTestsList" class="stack-list">
-              <!-- Populated dynamically -->
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>Completed & Graded</h3>
-            <p class="card-subtitle">Your auto-graded results and answer breakdowns.</p>
-            <div id="completedTestsList" class="stack-list">
-              <!-- Populated dynamically -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- =========================================================
-         VIEW 2: ACTIVE TEST-TAKING & SCORE REVIEW INTERFACE
-    ========================================================= -->
-    <div id="quizView" class="hidden">
-      <div class="card quiz-container">
-        <div class="quiz-header">
-          <div>
-            <span class="badge" id="quizClassBadge">SAT Math Prep</span>
-            <h2 id="quizTitle">Algebra Foundations Quiz 1</h2>
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" id="backToDashBtn">← Back to Dashboard</button>
-        </div>
-
-        <!-- Score Banner (Shown after submitting or when reviewing a past test) -->
-        <div id="scoreResultBanner" class="score-banner hidden">
-          <div>
-            <span class="score-label">Your Score</span>
-            <h2 id="finalScoreText">4 / 5 (80%)</h2>
-          </div>
-          <p id="scoreFeedbackText">Great work! Review any missed questions highlighted below.</p>
-        </div>
-
-        <form id="quizForm">
-          <div id="quizQuestionsContainer" class="stack-list">
-            <!-- Questions rendered dynamically -->
-          </div>
-
-          <div class="quiz-footer" id="quizSubmitBar">
-            <button type="submit" class="btn btn-primary full-width">Submit Test & Grade Now</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </main>
-
-  <!-- Student Portal Logic (Local Preview State — ready to connect to js/student.js + Supabase) -->
   <script>
-    // --- Sample Data (Matches teacher.html structure) ---
-    const availableClasses = [
-      { id: 'c1', name: 'SAT Math Prep - Fall', teacher: 'Sarah M.', joinCode: 'SAT-492' },
-      { id: 'c2', name: 'AP Calculus AB', teacher: 'Sarah M.', joinCode: 'CALC-815' },
-      { id: 'c3', name: 'Honors Chemistry', teacher: 'David L.', joinCode: 'CHEM-304' }
+    const PANEL_HEADERS = {
+      assignedTestsPanel: {
+        title: 'Assigned Tests',
+        subtitle: 'Complete tests and practice sets assigned by your instructor.'
+      },
+      practiceBankPanel: {
+        title: 'Practice Bank',
+        subtitle: 'Filter by subject, topic, or question format for self-paced practice.'
+      },
+      testRunnerPanel: {
+        title: 'Practice Session',
+        subtitle: 'Answer each question and check your work for immediate feedback.'
+      },
+      progressPanel: {
+        title: 'My Progress',
+        subtitle: 'Track your accuracy and review past questions.'
+      },
+      studentSettingsPanel: {
+        title: 'Settings',
+        subtitle: 'Join a class with a code or customize your workspace theme.'
+      }
+    };
+
+    const QUESTION_TYPE_LABELS = {
+      multiple_choice: 'Multiple Choice',
+      multiple_response: 'Multiple Response',
+      fill_in_blank: 'Fill in the Blank',
+      drag_and_drop: 'Drag and Drop',
+      hotspot: 'Hotspot',
+      inline_choice: 'Inline Choice',
+      table_grid: 'Table Grid'
+    };
+
+    // Sample Question Bank covering all 7 question formats
+    const DEFAULT_QUESTIONS = [
+      {
+        id: 'epzgjv',
+        subject: 'Math',
+        grades: ['Grade 8', 'Grade 9'],
+        type: 'multiple_choice',
+        topic: 'Equations & Expressions',
+        difficulty: '420',
+        prompt: 'If 3(x + 4) = 27, what is the value of x?',
+        config: { options: ['3', '5', '9', '15'], correctIndex: 1 },
+        explanation: 'Divide both sides by 3 to get x + 4 = 9, then subtract 4 to get x = 5.'
+      },
+      {
+        id: '7qo2zs',
+        subject: 'Math',
+        grades: ['Grade 8'],
+        type: 'multiple_response',
+        topic: 'Number Systems',
+        difficulty: '525',
+        prompt: 'Select ALL numbers below that are irrational.',
+        config: { options: ['√16', '√20', 'π / 2', '0.375'], correctIndices: [1, 2] },
+        explanation: '√20 cannot be simplified to a ratio of integers, and π/2 is a non-zero rational multiple of π.'
+      },
+      {
+        id: 'j6jm1p',
+        subject: 'Math',
+        grades: ['Grade 8', 'Grade 9'],
+        type: 'fill_in_blank',
+        topic: 'Ratios & Proportions',
+        difficulty: '420',
+        prompt: 'A recipe uses 3 cups of flour for every 2 cups of sugar. How many cups of flour are needed for 9 cups of sugar?',
+        config: { acceptedAnswers: '13.5, 27/2', caseSensitive: false },
+        explanation: 'Set up the proportion 3/2 = x/9. Cross-multiply to get 2x = 27, so x = 13.5 cups.'
+      },
+      {
+        id: '2sk15n',
+        subject: 'ELA',
+        grades: ['Grade 8', 'Grade 9'],
+        type: 'drag_and_drop',
+        topic: 'Revising/Editing',
+        difficulty: '525',
+        prompt: 'Match each transitional phrase to the logical relationship it signals.',
+        config: {
+          items: ['Conversely,', 'Consequently,', 'Furthermore,'],
+          targets: ['Contrast', 'Cause & Effect', 'Addition']
+        },
+        explanation: 'Conversely introduces a contrast, Consequently shows a result, and Furthermore adds supporting information.'
+      },
+      {
+        id: 'ic901a',
+        subject: 'ELA',
+        grades: ['Grade 8', 'Grade 9'],
+        type: 'inline_choice',
+        topic: 'Vocabulary in Context',
+        difficulty: '525',
+        prompt: 'Because the witness gave a [blank1] account of the evening, the investigators felt [blank2] in their timeline.',
+        config: {
+          blank1: { choices: ['lucid', 'contradictory', 'vague'], correct: 'lucid' },
+          blank2: { choices: ['confident', 'hesitant', 'confused'], correct: 'confident' }
+        },
+        explanation: 'A "lucid" (clear and easy to understand) account logically leads investigators to feel "confident" in the timeline.'
+      },
+      {
+        id: 'tg402b',
+        subject: 'Math',
+        grades: ['Grade 8', 'Grade 9'],
+        type: 'table_grid',
+        topic: 'Linear Functions',
+        difficulty: '525',
+        prompt: 'Determine whether each statement about the line y = -2x + 6 is True or False.',
+        config: {
+          columns: ['True', 'False'],
+          rows: [
+            { statement: 'The y-intercept is at (0, 6).', correctCol: 0 },
+            { statement: 'The slope of the line is 2.', correctCol: 1 },
+            { statement: 'The point (3, 0) lies on the line.', correctCol: 0 }
+          ]
+        },
+        explanation: 'In y = mx + b, b = 6 gives (0, 6); slope m = -2 (not 2); substituting x = 3 gives y = -2(3) + 6 = 0.'
+      },
+      {
+        id: 'hs503c',
+        subject: 'Math',
+        grades: ['Grade 8'],
+        type: 'hotspot',
+        topic: 'Geometry',
+        difficulty: '420',
+        prompt: 'Click directly on the center point (50%, 50%) of the diagram region below.',
+        config: { imageUrl: '', x: 50, y: 50 },
+        explanation: 'The center point is located halfway across (50%) and halfway down (50%).'
+      }
     ];
 
-    const state = {
-      enrolledClassIds: ['c1'],
-      assignments: [
-        {
-          id: 't1',
-          classId: 'c1',
-          title: 'Linear Equations & Inequalities Warmup',
-          questions: [
-            {
-              prompt: 'If 3x - 7 = 14, what is the value of 2x + 1?',
-              options: ['7', '14', '15', '21'],
-              correctIndex: 2
-            },
-            {
-              prompt: 'Which line is perpendicular to y = 2x + 5?',
-              options: ['y = 2x - 3', 'y = -2x + 5', 'y = (1/2)x + 1', 'y = -(1/2)x + 4'],
-              correctIndex: 3
-            },
-            {
-              prompt: 'If 4(x + 2) = 24, what is x?',
-              options: ['4', '5', '6', '8'],
-              correctIndex: 0
-            }
-          ]
-        },
-        {
-          id: 't2',
-          classId: 'c1',
-          title: 'Quadratic Functions Diagnostic',
-          questions: [
-            {
-              prompt: 'What are the x-intercepts of f(x) = (x - 3)(x + 5)?',
-              options: ['x = -3 and x = 5', 'x = 3 and x = -5', 'x = 3 and x = 5', 'x = -3 and x = -5'],
-              correctIndex: 1
-            },
-            {
-              prompt: 'What is the vertex of the parabola y = (x - 2)^2 + 6?',
-              options: ['(-2, 6)', '(2, -6)', '(2, 6)', '(-2, -6)'],
-              correctIndex: 2
-            }
-          ]
-        },
-        {
-          id: 't3',
-          classId: 'c2',
-          title: 'Limits & Continuity Check',
-          questions: [
-            {
-              prompt: 'What is the limit of (x^2 - 9) / (x - 3) as x approaches 3?',
-              options: ['0', '3', '6', 'Undefined'],
-              correctIndex: 2
-            }
-          ]
-        }
-      ],
-      submissions: [] // { assignmentId, answers: [0, 2, ...], score, total, percentage }
+    const DEFAULT_ASSIGNMENTS = [
+      {
+        id: 'a1',
+        title: 'Grade 8/9 Mixed Format Diagnostic',
+        className: 'Grade 8 Math Foundations',
+        dueNote: 'Recommended Practice',
+        questionIds: ['epzgjv', '7qo2zs', 'j6jm1p', '2sk15n', 'ic901a', 'tg402b', 'hs503c']
+      },
+      {
+        id: 'a2',
+        title: 'Ratios & Linear Equations Check',
+        className: 'Grade 8 Math Foundations',
+        dueNote: 'Assigned by Instructor',
+        questionIds: ['epzgjv', 'j6jm1p', 'tg402b']
+      }
+    ];
+
+    // Student Session State
+    const studentState = {
+      questions: DEFAULT_QUESTIONS,
+      assignments: DEFAULT_ASSIGNMENTS,
+      completedAssignmentIds: new Set(),
+      history: [],
+      runner: {
+        activeTitle: '',
+        assignmentId: null,
+        queue: [],
+        currentIndex: 0,
+        answers: {},
+        graded: {},
+        selectedDndChip: null,
+        hotspotClick: null
+      }
     };
 
-    let activeAssignment = null;
-
-    // --- Render Dashboard ---
-    function renderDashboard() {
-      const enrolledClasses = availableClasses.filter(c => state.enrolledClassIds.includes(c.id));
-      const unlockedAssignments = state.assignments.filter(a => state.enrolledClassIds.includes(a.classId));
-      const completedIds = state.submissions.map(s => s.assignmentId);
-      const pendingAssignments = unlockedAssignments.filter(a => !completedIds.includes(a.id));
-
-      // Top stats
-      document.getElementById('enrolledClassCount').textContent = enrolledClasses.length;
-      document.getElementById('pendingTestCount').textContent = pendingAssignments.length;
-
-      if (state.submissions.length > 0) {
-        const avg = Math.round(
-          state.submissions.reduce((sum, s) => sum + s.percentage, 0) / state.submissions.length
-        );
-        document.getElementById('avgScoreStat').textContent = `${avg}%`;
+    // --- Theme Engine ---
+    const THEME_PALETTES = {
+      default: null,
+      dracula: {
+        '--t-bg': '#282a36',
+        '--t-surface': '#21222c',
+        '--t-sub-alt': '#343746',
+        '--t-sidebar': '#191a21',
+        '--t-sidebar-active': '#44475a',
+        '--t-border': '#44475a',
+        '--t-text': '#f8f8f2',
+        '--t-sub': '#6272a4',
+        '--t-accent': '#bd93f9',
+        '--t-accent-text': '#282a36',
+        '--t-dot': '#50fa7b'
+      },
+      iceberg_light: {
+        '--t-bg': '#e8e9ec',
+        '--t-surface': '#f4f5f7',
+        '--t-sub-alt': '#dcdfe7',
+        '--t-sidebar': '#d2d6e0',
+        '--t-sidebar-active': '#c2c8d6',
+        '--t-border': '#c6cbd7',
+        '--t-text': '#33374c',
+        '--t-sub': '#6b7089',
+        '--t-accent': '#2d539e',
+        '--t-accent-text': '#ffffff',
+        '--t-dot': '#2d539e'
+      },
+      github: {
+        '--t-bg': '#f6f8fa',
+        '--t-surface': '#ffffff',
+        '--t-sub-alt': '#f6f8fa',
+        '--t-sidebar': '#24292f',
+        '--t-sidebar-active': '#32383f',
+        '--t-border': '#d0d7de',
+        '--t-text': '#1f2328',
+        '--t-sub': '#656d76',
+        '--t-accent': '#0969da',
+        '--t-accent-text': '#ffffff',
+        '--t-dot': '#2da44e'
       }
+    };
 
-      // Enrolled classes list
-      document.getElementById('enrolledClassesList').innerHTML = enrolledClasses.map(c => `
-        <div class="list-item-card">
-          <div>
-            <strong>${c.name}</strong>
-            <p class="item-meta">Instructor: ${c.teacher}</p>
-          </div>
-          <span class="code-pill">${c.joinCode}</span>
-        </div>
-      `).join('');
+    const themeCards = document.querySelectorAll('.mt-theme-card');
 
-      // Pending assignments list
-      const assignedList = document.getElementById('assignedTestsList');
-      if (pendingAssignments.length === 0) {
-        assignedList.innerHTML = `<p class="empty-state">All caught up! No pending tests right now.</p>`;
+    function applyTheme(themeName) {
+      const palette = THEME_PALETTES[themeName];
+      if (!palette) {
+        document.body.removeAttribute('data-theme');
+        Object.keys(THEME_PALETTES.dracula).forEach(prop => document.body.style.removeProperty(prop));
       } else {
-        assignedList.innerHTML = pendingAssignments.map(a => {
-          const cls = availableClasses.find(c => c.id === a.classId);
-          return `
-            <div class="list-item-card">
-              <div>
-                <strong>${a.title}</strong>
-                <p class="item-meta">${cls ? cls.name : ''} • ${a.questions.length} questions</p>
-              </div>
-              <button type="button" class="btn btn-primary btn-sm" onclick="startTest('${a.id}')">
-                Start Test
-              </button>
-            </div>
-          `;
-        }).join('');
+        document.body.setAttribute('data-theme', themeName);
+        Object.entries(palette).forEach(([prop, val]) => document.body.style.setProperty(prop, val));
       }
-
-      // Completed assignments list
-      const completedList = document.getElementById('completedTestsList');
-      if (state.submissions.length === 0) {
-        completedList.innerHTML = `<p class="empty-state">No completed tests yet. Finish an assigned test to see your score.</p>`;
-      } else {
-        completedList.innerHTML = state.submissions.map(sub => {
-          const assignment = state.assignments.find(a => a.id === sub.assignmentId);
-          return `
-            <div class="list-item-card">
-              <div>
-                <strong>${assignment.title}</strong>
-                <p class="item-meta">Score: <strong>${sub.score}/${sub.total} (${sub.percentage}%)</strong></p>
-              </div>
-              <button type="button" class="btn btn-outline btn-sm" onclick="reviewTest('${sub.assignmentId}')">
-                Review
-              </button>
-            </div>
-          `;
-        }).join('');
-      }
+      themeCards.forEach(card => card.classList.toggle('active', card.dataset.themeValue === themeName));
+      localStorage.setItem('prepify_student_theme', themeName);
     }
 
-    // --- Join Class Handler ---
-    document.getElementById('joinClassForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = document.getElementById('joinCodeInput');
-      const feedback = document.getElementById('joinFeedback');
-      const code = input.value.trim().toUpperCase();
+    themeCards.forEach(card => card.addEventListener('click', () => applyTheme(card.dataset.themeValue)));
 
-      const matchedClass = availableClasses.find(c => c.joinCode === code);
+    // --- Tab Navigation ---
+    const tabs = document.querySelectorAll('.studio-tab');
+    const panels = document.querySelectorAll('.studio-panel');
+    const exitRunnerBtn = document.getElementById('exitRunnerBtn');
 
-      feedback.classList.remove('hidden', 'feedback-error', 'feedback-success');
+    function switchTab(targetId) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.target === targetId));
+      panels.forEach(p => p.classList.toggle('hidden', p.id !== targetId));
 
-      if (!matchedClass) {
-        feedback.textContent = `No class found with code "${code}". Try CALC-815 or CHEM-304.`;
-        feedback.classList.add('feedback-error');
-        return;
+      if (PANEL_HEADERS[targetId]) {
+        document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
+        document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
       }
 
-      if (state.enrolledClassIds.includes(matchedClass.id)) {
-        feedback.textContent = `You are already enrolled in ${matchedClass.name}.`;
-        feedback.classList.add('feedback-error');
-        return;
-      }
+      exitRunnerBtn.classList.toggle('hidden', targetId !== 'testRunnerPanel');
+    }
 
-      state.enrolledClassIds.push(matchedClass.id);
-      feedback.textContent = `Joined ${matchedClass.name}! New assignments unlocked.`;
-      feedback.classList.add('feedback-success');
-      input.value = '';
-      renderDashboard();
-    });
+    tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.target)));
+    exitRunnerBtn.addEventListener('click', () => switchTab('assignedTestsPanel'));
 
-    // --- Open Quiz View (Take Mode or Review Mode) ---
-    window.startTest = function(assignmentId) {
-      const assignment = state.assignments.find(a => a.id === assignmentId);
-      if (!assignment) return;
-      activeAssignment = assignment;
-
-      const cls = availableClasses.find(c => c.id === assignment.classId);
-      document.getElementById('quizClassBadge').textContent = cls ? cls.name : 'Assignment';
-      document.getElementById('quizTitle').textContent = assignment.title;
-
-      // Reset banner & show submit button
-      document.getElementById('scoreResultBanner').classList.add('hidden');
-      document.getElementById('quizSubmitBar').classList.remove('hidden');
-
-      const letters = ['A', 'B', 'C', 'D'];
-      document.getElementById('quizQuestionsContainer').innerHTML = assignment.questions.map((q, qIdx) => `
-        <div class="quiz-question-card">
-          <p class="quiz-q-prompt"><strong>Question ${qIdx + 1}:</strong> ${q.prompt}</p>
-          <div class="quiz-options-list">
-            ${q.options.map((opt, oIdx) => `
-              <label class="quiz-option-label">
-                <input type="radio" name="q_${qIdx}" value="${oIdx}" required />
-                <span><strong>${letters[oIdx]}.</strong>${opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('dashboardView').classList.add('hidden');
-      document.getElementById('quizView').classList.remove('hidden');
-      window.scrollTo(0, 0);
-    };
-
-    window.reviewTest = function(assignmentId) {
-      const assignment = state.assignments.find(a => a.id === assignmentId);
-      const submission = state.submissions.find(s => s.assignmentId === assignmentId);
-      if (!assignment || !submission) return;
-
-      const cls = availableClasses.find(c => c.id === assignment.classId);
-      document.getElementById('quizClassBadge').textContent = cls ? cls.name : 'Reviewed';
-      document.getElementById('quizTitle').textContent = assignment.title;
-
-      // Show score banner & hide submit button
-      const banner = document.getElementById('scoreResultBanner');
-      banner.classList.remove('hidden');
-      document.getElementById('finalScoreText').textContent = `${submission.score} / ${submission.total} (${submission.percentage}%)`;
-      document.getElementById('scoreFeedbackText').textContent =
-        submission.percentage >= 80
-          ? 'Strong mastery! Review your answers below.'
-          : 'Good effort! Check the green highlights below to see the correct solutions.';
-      document.getElementById('quizSubmitBar').classList.add('hidden');
-
-      const letters = ['A', 'B', 'C', 'D'];
-      document.getElementById('quizQuestionsContainer').innerHTML = assignment.questions.map((q, qIdx) => {
-        const studentChoice = submission.answers[qIdx];
-        const isRight = studentChoice === q.correctIndex;
-
+    // --- Render Assigned Tests ---
+    function renderAssignedTests() {
+      const grid = document.getElementById('assignedTestsGrid');
+      grid.innerHTML = studentState.assignments.map(asgn => {
+        const isDone = studentState.completedAssignmentIds.has(asgn.id);
         return `
-          <div class="quiz-question-card ${isRight ? 'card-correct' : 'card-incorrect'}">
-            <div class="q-top">
-              <p class="quiz-q-prompt"><strong>Question ${qIdx + 1}:</strong> ${q.prompt}</p>
-              <span class="result-pill ${isRight ? 'pill-pass' : 'pill-fail'}">
-                ${isRight ? 'Correct' : 'Missed'}
-              </span>
+          <div class="card test-card">
+            <div class="test-card-top">
+              <span class="badge">${asgn.className}</span>
+              <span class="status-pill ${isDone ? 'is-done' : 'is-open'}">${isDone ? 'Completed' : asgn.dueNote}</span>
             </div>
-            <div class="quiz-options-list">
-              ${q.options.map((opt, oIdx) => {
-                let statusClass = '';
-                let marker = '';
-                if (oIdx === q.correctIndex) {
-                  statusClass = 'opt-is-correct';
-                  marker = ' ✓ (Correct Answer)';
-                } else if (oIdx === studentChoice && !isRight) {
-                  statusClass = 'opt-is-wrong';
-                  marker = ' ✗ (Your Answer)';
-                }
-                return `
-                  <div class="quiz-option-review ${statusClass}">
-                    <strong>${letters[oIdx]}.</strong> ${opt}${marker}
-                  </div>
-                `;
-              }).join('')}
-            </div>
+            <h3>${asgn.title}</h3>
+            <p class="item-meta">${asgn.questionIds.length} question(s) • Interactive Auto-Graded</p>
+            <button type="button" class="btn ${isDone ? 'btn-outline' : 'btn-primary'} full-width" style="margin-top:1rem;" onclick="startAssignment('${asgn.id}')">
+              ${isDone ? 'Retake Practice Set' : 'Start Assignment →'}
+            </button>
           </div>
         `;
       }).join('');
+    }
 
-      document.getElementById('dashboardView').classList.add('hidden');
-      document.getElementById('quizView').classList.remove('hidden');
-      window.scrollTo(0, 0);
+    // --- Render Practice Bank ---
+    function populatePracticeTopics() {
+      const subj = document.getElementById('pracSubjectFilter').value;
+      const topics = [...new Set(
+        studentState.questions
+          .filter(q => subj === 'all' || q.subject === subj)
+          .map(q => q.topic)
+      )];
+      document.getElementById('pracTopicFilter').innerHTML =
+        `<option value="all">All Topics</option>` +
+        topics.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    function getFilteredPracticeQuestions() {
+      const subj = document.getElementById('pracSubjectFilter').value;
+      const topic = document.getElementById('pracTopicFilter').value;
+      const type = document.getElementById('pracTypeFilter').value;
+
+      return studentState.questions.filter(q =>
+        (subj === 'all' || q.subject === subj) &&
+        (topic === 'all' || q.topic === topic) &&
+        (type === 'all' || q.type === type)
+      );
+    }
+
+    function renderPracticeBank() {
+      const list = document.getElementById('practiceQuestionsList');
+      const filtered = getFilteredPracticeQuestions();
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div class="card"><p class="item-meta">No practice questions match those filters.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(q => `
+        <div class="list-item-card">
+          <div>
+            <div style="display:flex; gap:0.45rem; align-items:center; margin-bottom:0.35rem;">
+              <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+              <span class="tag">${q.topic}</span>
+              <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
+            </div>
+            <strong>${q.prompt}</strong>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="startSingleQuestion('${q.id}')">Practice →</button>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('pracSubjectFilter').addEventListener('change', () => {
+      populatePracticeTopics();
+      renderPracticeBank();
+    });
+    document.getElementById('pracTopicFilter').addEventListener('change', renderPracticeBank);
+    document.getElementById('pracTypeFilter').addEventListener('change', renderPracticeBank);
+
+    document.getElementById('startFilteredDrillBtn').addEventListener('click', () => {
+      const qs = getFilteredPracticeQuestions();
+      if (qs.length === 0) return;
+      launchRunner('Custom Topic Drill', null, qs);
+    });
+
+    window.startAssignment = function(asgnId) {
+      const asgn = studentState.assignments.find(a => a.id === asgnId);
+      if (!asgn) return;
+      const qs = asgn.questionIds
+        .map(id => studentState.questions.find(q => q.id === id))
+        .filter(Boolean);
+      launchRunner(asgn.title, asgn.id, qs);
     };
 
-    // --- Auto-Grade Submission ---
-    document.getElementById('quizForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!activeAssignment) return;
+    window.startSingleQuestion = function(qid) {
+      const q = studentState.questions.find(item => item.id === qid);
+      if (!q) return;
+      launchRunner(`Single Practice: ${q.topic}`, null, [q]);
+    };
 
-      const answers = [];
-      let score = 0;
-
-      activeAssignment.questions.forEach((q, qIdx) => {
-        const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
-        const chosenIndex = selected ? parseInt(selected.value, 10) : -1;
-        answers.push(chosenIndex);
-        if (chosenIndex === q.correctIndex) {
-          score++;
-        }
-      });
-
-      const total = activeAssignment.questions.length;
-      const percentage = Math.round((score / total) * 100);
-
-      const submissionRecord = {
-        assignmentId: activeAssignment.id,
-        answers,
-        score,
-        total,
-        percentage
+    // --- Interactive 7-Format Question Runner ---
+    function launchRunner(title, assignmentId, questions) {
+      studentState.runner = {
+        activeTitle: title,
+        assignmentId,
+        queue: questions,
+        currentIndex: 0,
+        answers: {},
+        graded: {},
+        selectedDndChip: null,
+        hotspotClick: null
       };
 
-      // Ready for Supabase 'submissions' table insert
-      console.log('Ready to insert into Supabase submissions table:', submissionRecord);
+      document.getElementById('runnerSummaryCard').classList.add('hidden');
+      document.querySelector('.runner-card').classList.remove('hidden');
+      switchTab('testRunnerPanel');
+      document.getElementById('topbarTitle').textContent = title;
+      renderRunnerQuestion();
+    }
 
-      state.submissions.push(submissionRecord);
-      renderDashboard();
-      reviewTest(activeAssignment.id);
+    function renderRunnerQuestion() {
+      const r = studentState.runner;
+      const q = r.queue[r.currentIndex];
+      const total = r.queue.length;
+      const isGraded = r.graded[q.id] !== undefined;
+
+      document.getElementById('runnerCounter').textContent = `Question ${r.currentIndex + 1} of ${total}`;
+      document.getElementById('runnerProgressFill').style.width = `${Math.round(((r.currentIndex + 1) / total) * 100)}%`;
+
+      document.getElementById('runnerMetaPills').innerHTML = `
+        <span class="qb-pill ${q.subject === 'Math' ? 'pill-math' : 'pill-ela'}">${q.subject}</span>
+        <span class="tag">${q.topic}</span>
+        <span class="tag">${QUESTION_TYPE_LABELS[q.type]}</span>
+      `;
+
+      const body = document.getElementById('runnerQuestionBody');
+      const savedAns = r.answers[q.id];
+
+      if (q.type === 'multiple_choice') {
+        const letters = ['A', 'B', 'C', 'D'];
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <div class="runner-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="runner-opt ${savedAns === idx ? 'is-selected' : ''} ${isGraded && idx === q.config.correctIndex ? 'is-correct' : ''} ${isGraded && savedAns === idx && idx !== q.config.correctIndex ? 'is-wrong' : ''}">
+                <input type="radio" name="ans_mc" value="${idx}" ${savedAns === idx ? 'checked' : ''} ${isGraded ? 'disabled' : ''} />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      } else if (q.type === 'multiple_response') {
+        const letters = ['A', 'B', 'C', 'D'];
+        const selSet = new Set(savedAns || []);
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <p class="item-meta" style="margin-bottom:0.65rem;"><em>Select all that apply:</em></p>
+          <div class="runner-options">
+            ${q.config.options.map((opt, idx) => `
+              <label class="runner-opt ${selSet.has(idx) ? 'is-selected' : ''} ${isGraded && q.config.correctIndices.includes(idx) ? 'is-correct' : ''}">
+                <input type="checkbox" class="ans-mr-cb" value="${idx}" ${selSet.has(idx) ? 'checked' : ''} ${isGraded ? 'disabled' : ''} />
+                <span><strong>${letters[idx]}.</strong> ${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      } else if (q.type === 'fill_in_blank') {
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <div class="form-group" style="max-width:340px;">
+            <input type="text" id="ansFibInput" value="${savedAns || ''}" placeholder="Type your answer..." ${isGraded ? 'disabled' : ''} />
+          </div>
+        `;
+      } else if (q.type === 'drag_and_drop') {
+        const mapping = savedAns || {};
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <p class="item-meta" style="margin-bottom:0.75rem;">Click an item on the left, then click its matching target box on the right.</p>
+          <div class="dnd-runner-grid">
+            <div class="dnd-bank">
+              ${q.config.items.map(item => `
+                <button type="button" class="dnd-chip-btn ${r.selectedDndChip === item ? 'is-active' : ''}" data-item="${item}" ${isGraded ? 'disabled' : ''}>
+                  ${item}
+                </button>
+              `).join('')}
+            </div>
+            <div class="dnd-targets">
+              ${q.config.targets.map((target, idx) => `
+                <div class="dnd-target-box" data-target-idx="${idx}">
+                  <strong>${target}</strong>
+                  <span class="dnd-placed">${mapping[idx] || 'Click to place selected item'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        if (!isGraded) {
+          body.querySelectorAll('.dnd-chip-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              r.selectedDndChip = btn.dataset.item;
+              renderRunnerQuestion();
+            });
+          });
+          body.querySelectorAll('.dnd-target-box').forEach(box => {
+            box.addEventListener('click', () => {
+              if (!r.selectedDndChip) return;
+              const current = r.answers[q.id] || {};
+              current[box.dataset.targetIdx] = r.selectedDndChip;
+              r.answers[q.id] = current;
+              r.selectedDndChip = null;
+              renderRunnerQuestion();
+            });
+          });
+        }
+      } else if (q.type === 'hotspot') {
+        const pt = savedAns || null;
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <div class="hotspot-runner-box" id="studentHotspotBox">
+            ${q.config.imageUrl
+              ? `<img src="${q.config.imageUrl}" alt="Interactive diagram" />`
+              : `<div class="hotspot-placeholder">Click anywhere inside this coordinate area to place your answer marker</div>`
+            }
+            ${pt ? `<div class="hotspot-pin" style="left:${pt.x}%; top:${pt.y}%;">📍</div>` : ''}
+            ${isGraded ? `<div class="hotspot-pin" style="left:${q.config.x}%; top:${q.config.y}%;">🎯</div>` : ''}
+          </div>
+        `;
+        if (!isGraded) {
+          document.getElementById('studentHotspotBox').addEventListener('click', (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+            r.answers[q.id] = { x, y };
+            renderRunnerQuestion();
+          });
+        }
+      } else if (q.type === 'inline_choice') {
+        const ansObj = savedAns || {};
+        const sentence = q.prompt
+          .replace('[blank1]', `<select id="ansInline1" class="inline-select" ${isGraded ? 'disabled' : ''}><option value="">-- Select --</option>${q.config.blank1.choices.map(c => `<option value="${c}" ${ansObj.b1 === c ? 'selected' : ''}>${c}</option>`).join('')}</select>`)
+          .replace('[blank2]', `<select id="ansInline2" class="inline-select" ${isGraded ? 'disabled' : ''}><option value="">-- Select --</option>${q.config.blank2.choices.map(c => `<option value="${c}" ${ansObj.b2 === c ? 'selected' : ''}>${c}</option>`).join('')}</select>`);
+        body.innerHTML = `<p class="runner-prompt" style="line-height:2.1;">${sentence}</p>`;
+      } else if (q.type === 'table_grid') {
+        const rowAns = savedAns || {};
+        body.innerHTML = `
+          <p class="runner-prompt">${q.prompt}</p>
+          <table class="runner-grid-table">
+            <thead>
+              <tr>
+                <th>Statement</th>
+                <th>${q.config.columns[0]}</th>
+                <th>${q.config.columns[1]}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${q.config.rows.map((row, rIdx) => `
+                <tr>
+                  <td>${row.statement}</td>
+                  <td style="text-align:center;"><input type="radio" name="grid_ans_${rIdx}" value="0" ${rowAns[rIdx] === 0 ? 'checked' : ''} ${isGraded ? 'disabled' : ''} /></td>
+                  <td style="text-align:center;"><input type="radio" name="grid_ans_${rIdx}" value="1" ${rowAns[rIdx] === 1 ? 'checked' : ''} ${isGraded ? 'disabled' : ''} /></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      // Feedback & Buttons state
+      const fbBox = document.getElementById('runnerFeedbackBox');
+      if (isGraded) {
+        const correct = r.graded[q.id];
+        fbBox.className = `feedback-banner ${correct ? 'fb-correct' : 'fb-incorrect'}`;
+        fbBox.innerHTML = `
+          <strong>${correct ? '✓ Correct!' : '✕ Not Quite'}</strong>
+          <p>${q.explanation}</p>
+        `;
+        fbBox.classList.remove('hidden');
+      } else {
+        fbBox.classList.add('hidden');
+      }
+
+      document.getElementById('runnerPrevBtn').disabled = r.currentIndex === 0;
+      document.getElementById('runnerSubmitBtn').classList.toggle('hidden', isGraded);
+      const nextBtn = document.getElementById('runnerNextBtn');
+      nextBtn.classList.toggle('hidden', !isGraded);
+      nextBtn.textContent = r.currentIndex === total - 1 ? 'Finish & View Results' : 'Next Question →';
+    }
+
+    function captureAndGradeCurrent() {
+      const r = studentState.runner;
+      const q = r.queue[r.currentIndex];
+      let isCorrect = false;
+
+      if (q.type === 'multiple_choice') {
+        const sel = document.querySelector('input[name="ans_mc"]:checked');
+        if (!sel) { alert('Please select an answer choice.'); return; }
+        const val = parseInt(sel.value, 10);
+        r.answers[q.id] = val;
+        isCorrect = val === q.config.correctIndex;
+      } else if (q.type === 'multiple_response') {
+        const chosen = Array.from(document.querySelectorAll('.ans-mr-cb:checked')).map(cb => parseInt(cb.value, 10));
+        if (chosen.length === 0) { alert('Please select at least one option.'); return; }
+        r.answers[q.id] = chosen;
+        const expected = [...q.config.correctIndices].sort();
+        isCorrect = chosen.length === expected.length && chosen.sort().every((v, i) => v === expected[i]);
+      } else if (q.type === 'fill_in_blank') {
+        const raw = document.getElementById('ansFibInput').value.trim();
+        if (!raw) { alert('Please enter your answer.'); return; }
+        r.answers[q.id] = raw;
+        const accepted = q.config.acceptedAnswers.split(',').map(s => s.trim());
+        isCorrect = accepted.some(ans => q.config.caseSensitive ? ans === raw : ans.toLowerCase() === raw.toLowerCase());
+      } else if (q.type === 'drag_and_drop') {
+        const mapping = r.answers[q.id] || {};
+        if (Object.keys(mapping).length < q.config.targets.length) {
+          alert('Please match all items to their target boxes.');
+          return;
+        }
+        isCorrect = q.config.items.every((item, idx) => mapping[idx] === item);
+      } else if (q.type === 'hotspot') {
+        const pt = r.answers[q.id];
+        if (!pt) { alert('Click on the diagram to place your marker first.'); return; }
+        const dist = Math.hypot(pt.x - q.config.x, pt.y - q.config.y);
+        isCorrect = dist <= 12; // 12% radius tolerance
+      } else if (q.type === 'inline_choice') {
+        const b1 = document.getElementById('ansInline1')?.value || '';
+        const b2El = document.getElementById('ansInline2');
+        const b2 = b2El ? b2El.value : '';
+        if (!b1 || (b2El && !b2)) { alert('Please select an option for every blank.'); return; }
+        r.answers[q.id] = { b1, b2 };
+        isCorrect = b1 === q.config.blank1.correct && (!b2El || b2 === q.config.blank2.correct);
+      } else if (q.type === 'table_grid') {
+        const rowAns = {};
+        for (let i = 0; i < q.config.rows.length; i++) {
+          const sel = document.querySelector(`input[name="grid_ans_${i}"]:checked`);
+          if (!sel) { alert('Please select an option for every row.'); return; }
+          rowAns[i] = parseInt(sel.value, 10);
+        }
+        r.answers[q.id] = rowAns;
+        isCorrect = q.config.rows.every((row, idx) => rowAns[idx] === row.correctCol);
+      }
+
+      r.graded[q.id] = isCorrect;
+      studentState.history.unshift({
+        questionId: q.id,
+        topic: q.topic,
+        subject: q.subject,
+        prompt: q.prompt,
+        isCorrect
+      });
+
+      renderRunnerQuestion();
+      renderProgress();
+    }
+
+    document.getElementById('runnerSubmitBtn').addEventListener('click', captureAndGradeCurrent);
+
+    document.getElementById('runnerPrevBtn').addEventListener('click', () => {
+      if (studentState.runner.currentIndex > 0) {
+        studentState.runner.currentIndex -= 1;
+        renderRunnerQuestion();
+      }
     });
 
-    // --- Back to Dashboard ---
-    document.getElementById('backToDashBtn').addEventListener('click', () => {
-      document.getElementById('quizView').classList.add('hidden');
-      document.getElementById('dashboardView').classList.remove('hidden');
+    document.getElementById('runnerNextBtn').addEventListener('click', () => {
+      const r = studentState.runner;
+      if (r.currentIndex < r.queue.length - 1) {
+        r.currentIndex += 1;
+        renderRunnerQuestion();
+      } else {
+        showSessionSummary();
+      }
     });
 
-    // Initial render
-    renderDashboard();
+    function showSessionSummary() {
+      const r = studentState.runner;
+      const total = r.queue.length;
+      const correctCount = r.queue.filter(q => r.graded[q.id]).length;
+      const pct = Math.round((correctCount / total) * 100);
+
+      if (r.assignmentId) {
+        studentState.completedAssignmentIds.add(r.assignmentId);
+        renderAssignedTests();
+      }
+
+      document.querySelector('.runner-card').classList.add('hidden');
+      const sumCard = document.getElementById('runnerSummaryCard');
+      sumCard.classList.remove('hidden');
+
+      document.getElementById('summaryScoreHeading').textContent = `You scored ${correctCount} / ${total} (${pct}%)`;
+      document.getElementById('summaryBreakdownList').innerHTML = r.queue.map((q, idx) => `
+        <div class="list-item-card">
+          <div>
+            <strong>Q${idx + 1}: ${q.topic}</strong>
+            <p class="item-meta">${q.prompt}</p>
+          </div>
+          <span class="qb-pill ${r.graded[q.id] ? 'pill-math' : 'pill-hard'}">
+            ${r.graded[q.id] ? 'Correct' : 'Missed'}
+          </span>
+        </div>
+      `).join('');
+
+      renderProgress();
+    }
+
+    document.getElementById('summaryDoneBtn').addEventListener('click', () => switchTab('assignedTestsPanel'));
+
+    // --- Progress & Settings ---
+    function renderProgress() {
+      const total = studentState.history.length;
+      const correct = studentState.history.filter(h => h.isCorrect).length;
+      document.getElementById('statTotalAnswered').textContent = total;
+      document.getElementById('statAccuracy').textContent = total > 0 ? `${Math.round((correct / total) * 100)}%` : '—';
+      document.getElementById('statTestsDone').textContent = studentState.completedAssignmentIds.size;
+
+      const list = document.getElementById('historyList');
+      if (total === 0) {
+        list.innerHTML = `<p class="item-meta">No questions attempted yet. Start an assignment or practice drill!</p>`;
+        return;
+      }
+
+      list.innerHTML = studentState.history.slice(0, 15).map(item => `
+        <div class="list-item-card">
+          <div>
+            <strong>${item.topic}</strong> <span class="tag">${item.subject}</span>
+            <p class="item-meta">${item.prompt}</p>
+          </div>
+          <span class="qb-pill ${item.isCorrect ? 'pill-math' : 'pill-hard'}">
+            ${item.isCorrect ? 'Correct' : 'Incorrect'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('joinClassForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+      if (!code) return;
+      document.getElementById('studentClassBadge').textContent = `Class: ${code}`;
+      const msg = document.getElementById('joinClassMsg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2500);
+      e.target.reset();
+    });
+
+    // Initialize Student Portal
+    applyTheme(localStorage.getItem('prepify_student_theme') || 'default');
+    populatePracticeTopics();
+    renderAssignedTests();
+    renderPracticeBank();
+    renderProgress();
   </script>
 </body>
 </html>
