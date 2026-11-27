@@ -2,7 +2,7 @@
 body.app-shell {
   display: flex;
   min-height: 100vh;
-  background-color: #f7f6f2; /* Warm off-white canvas like your reference */
+  background-color: #f7f6f2;
   margin: 0;
 }
 
@@ -10,7 +10,7 @@ body.app-shell {
 .app-sidebar {
   width: 245px;
   min-width: 245px;
-  background-color: #16213e; /* Deep Navy */
+  background-color: #16213e;
   color: #cbd5e1;
   display: flex;
   flex-direction: column;
@@ -35,7 +35,7 @@ body.app-shell {
 }
 
 .brand-diamond {
-  color: #d4a359; /* Warm Gold Diamond */
+  color: #d4a359;
   font-size: 1.1rem;
   line-height: 1;
 }
@@ -148,7 +148,7 @@ body.app-shell {
 }
 
 .studio-tab.active .nav-dot {
-  background-color: #d4a359; /* Active Gold Indicator Dot */
+  background-color: #d4a359;
 }
 
 .sidebar-footer {
@@ -522,6 +522,230 @@ body.app-shell {
   font-size: 0.94rem;
 }
 
+/* =========================================================
+   MONKEYTYPE-STYLE THEME SWATCH GRID
+========================================================= */
+.settings-saved-msg {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.mt-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.mt-theme-card {
+  appearance: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background-color: var(--bg-light);
+  color: var(--dark);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mt-theme-card:hover {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+}
+
+.mt-theme-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.mt-swatches {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mt-swatches i {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+}
+
+/* =========================================================
+   THEME PALETTE DEFINITIONS (Dracula, Iceberg Light, GitHub)
+========================================================= */
+
+/* 1. DRACULA */
+body.app-shell[data-theme="dracula"] {
+  --t-bg: #282a36;
+  --t-surface: #21222c;
+  --t-sub-alt: #343746;
+  --t-sidebar: #191a21;
+  --t-sidebar-active: #44475a;
+  --t-border: #44475a;
+  --t-text: #f8f8f2;
+  --t-sub: #6272a4;
+  --t-accent: #bd93f9;
+  --t-accent-text: #282a36;
+  --t-dot: #50fa7b;
+}
+
+/* 2. ICEBERG LIGHT */
+body.app-shell[data-theme="iceberg_light"] {
+  --t-bg: #e8e9ec;
+  --t-surface: #f4f5f7;
+  --t-sub-alt: #dcdfe7;
+  --t-sidebar: #d2d6e0;
+  --t-sidebar-active: #c2c8d6;
+  --t-border: #c6cbd7;
+  --t-text: #33374c;
+  --t-sub: #6b7089;
+  --t-accent: #2d539e;
+  --t-accent-text: #ffffff;
+  --t-dot: #2d539e;
+}
+
+/* 3. GITHUB (LIGHT) */
+body.app-shell[data-theme="github"] {
+  --t-bg: #f6f8fa;
+  --t-surface: #ffffff;
+  --t-sub-alt: #f6f8fa;
+  --t-sidebar: #24292f;
+  --t-sidebar-active: #32383f;
+  --t-border: #d0d7de;
+  --t-text: #1f2328;
+  --t-sub: #656d76;
+  --t-accent: #0969da;
+  --t-accent-text: #ffffff;
+  --t-dot: #2da44e;
+}
+
+/* =========================================================
+   UNIVERSAL APPLICATION OF CUSTOM THEME TOKENS
+========================================================= */
+body.app-shell[data-theme] {
+  background-color: var(--t-bg);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .app-sidebar {
+  background-color: var(--t-sidebar);
+  border-right-color: var(--t-border);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme="iceberg_light"] .sidebar-logo,
+body.app-shell[data-theme="iceberg_light"] .sidebar-profile strong,
+body.app-shell[data-theme="iceberg_light"] .studio-tab {
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme="iceberg_light"] .sidebar-switch-btn {
+  border-color: var(--t-border);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .studio-tab.active {
+  background-color: var(--t-sidebar-active);
+}
+
+body.app-shell[data-theme] .studio-tab.active .nav-dot,
+body.app-shell[data-theme] .brand-diamond {
+  background-color: var(--t-dot);
+  color: var(--t-dot);
+}
+
+body.app-shell[data-theme] .app-topbar {
+  background-color: var(--t-surface);
+  border-bottom-color: var(--t-border);
+}
+
+body.app-shell[data-theme] .app-topbar h1,
+body.app-shell[data-theme] .card h3,
+body.app-shell[data-theme] .card h4,
+body.app-shell[data-theme] .form-group label,
+body.app-shell[data-theme] .config-section-title,
+body.app-shell[data-theme] .preview-prompt-text {
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .app-topbar p,
+body.app-shell[data-theme] .card-subtitle,
+body.app-shell[data-theme] .item-meta,
+body.app-shell[data-theme] .mini-stat span,
+body.app-shell[data-theme] .field-hint {
+  color: var(--t-sub);
+}
+
+body.app-shell[data-theme] .card,
+body.app-shell[data-theme] .mini-stat {
+  background-color: var(--t-surface);
+  border-color: var(--t-border);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .mini-stat strong {
+  color: var(--t-accent);
+}
+
+body.app-shell[data-theme] .list-item-card,
+body.app-shell[data-theme] .answer-config-box,
+body.app-shell[data-theme] .preview-canvas,
+body.app-shell[data-theme] .grade-pill,
+body.app-shell[data-theme] .preview-opt-item,
+body.app-shell[data-theme] .dnd-zone,
+body.app-shell[data-theme] .hotspot-preview-box,
+body.app-shell[data-theme] .mt-theme-card {
+  background-color: var(--t-sub-alt);
+  border-color: var(--t-border);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .mt-theme-card.active {
+  border-color: var(--t-accent);
+  box-shadow: 0 0 0 2px var(--t-accent);
+}
+
+body.app-shell[data-theme] input[type="text"],
+body.app-shell[data-theme] input[type="number"],
+body.app-shell[data-theme] input[type="url"],
+body.app-shell[data-theme] select,
+body.app-shell[data-theme] textarea {
+  background-color: var(--t-bg);
+  border-color: var(--t-border);
+  color: var(--t-text);
+}
+
+body.app-shell[data-theme] .btn-primary,
+body.app-shell[data-theme] .btn-navy {
+  background-color: var(--t-accent);
+  color: var(--t-accent-text);
+}
+
+body.app-shell[data-theme] .btn-outline {
+  border-color: var(--t-accent);
+  color: var(--t-accent);
+}
+
+body.app-shell[data-theme] .btn-outline:hover {
+  background-color: var(--t-sub-alt);
+}
+
+body.app-shell[data-theme] .code-pill,
+body.app-shell[data-theme] .badge,
+body.app-shell[data-theme] .tag {
+  background-color: var(--t-sub-alt);
+  border-color: var(--t-accent);
+  color: var(--t-accent);
+}
+
 @media (max-width: 950px) {
   body.app-shell {
     flex-direction: column;
@@ -550,7 +774,8 @@ body.app-shell {
   .builder-two-col,
   .dnd-preview-wrap,
   .form-row,
-  .options-grid {
+  .options-grid,
+  .mt-theme-grid {
     grid-template-columns: 1fr;
   }
 }

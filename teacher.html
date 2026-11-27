@@ -11,7 +11,6 @@
 
   <!-- Full-Height Edge-to-Edge Left Sidebar -->
   <aside class="app-sidebar">
-    <!-- Brand Header -->
     <div class="sidebar-brand">
       <a href="index.html" class="sidebar-logo">
         <span class="brand-diamond">◆</span>
@@ -22,14 +21,12 @@
       </a>
     </div>
 
-    <!-- Instructor Profile & Log Out -->
     <div class="sidebar-profile">
       <strong id="teacherGreeting">Instructor</strong>
       <span>Teacher Studio</span>
       <a href="login.html" class="sidebar-switch-btn" id="logoutBtn">Switch Account / Log Out</a>
     </div>
 
-    <!-- Sidebar Navigation Links -->
     <nav class="sidebar-nav" role="tablist" aria-orientation="vertical">
       <span class="sidebar-group-label">MANAGEMENT</span>
       <button type="button" class="studio-tab active" data-target="classesPanel">
@@ -46,9 +43,13 @@
       <button type="button" class="studio-tab" data-target="questionBankPanel">
         <span class="nav-dot"></span> Question Bank & Assign
       </button>
+
+      <span class="sidebar-group-label">PREFERENCES</span>
+      <button type="button" class="studio-tab" data-target="settingsPanel">
+        <span class="nav-dot"></span> Settings
+      </button>
     </nav>
 
-    <!-- Sidebar Footer -->
     <div class="sidebar-footer">
       <p>Prepify Learning Portal • Custom diagnostic & test authoring studio.</p>
     </div>
@@ -56,7 +57,6 @@
 
   <!-- Right Main Content Column -->
   <div class="app-main">
-    <!-- Top White Header Bar -->
     <header class="app-topbar">
       <div>
         <h1 id="topbarTitle">Classes & Roster</h1>
@@ -78,11 +78,8 @@
       </div>
     </header>
 
-    <!-- Workspace Content Body -->
     <main class="app-body">
-      <!-- =========================================================
-           PANEL 1: CLASSES & ROSTER
-      ========================================================= -->
+      <!-- PANEL 1: CLASSES & ROSTER -->
       <section id="classesPanel" class="studio-panel">
         <div class="studio-grid">
           <div class="card">
@@ -109,9 +106,7 @@
         </div>
       </section>
 
-      <!-- =========================================================
-           PANEL 2: GENERATE STUDENT PASSCODES
-      ========================================================= -->
+      <!-- PANEL 2: GENERATE STUDENT PASSCODES -->
       <section id="passcodesPanel" class="studio-panel hidden">
         <div class="studio-grid">
           <div class="card">
@@ -150,13 +145,10 @@
         </div>
       </section>
 
-      <!-- =========================================================
-           PANEL 3: CREATE QUESTION (TWO-COLUMN BUILDER + LIVE PREVIEW)
-      ========================================================= -->
+      <!-- PANEL 3: CREATE QUESTION -->
       <section id="createQuestionPanel" class="studio-panel hidden">
         <form id="createQuestionForm">
           <div class="builder-two-col">
-            <!-- Left Card: Metadata & Difficulty -->
             <div class="card">
               <div class="form-group">
                 <label for="qSubject">Subject</label>
@@ -221,7 +213,6 @@
               </div>
             </div>
 
-            <!-- Right Card: Prompt, Answer Choices & Explanation -->
             <div class="card">
               <div class="form-group">
                 <label for="qPrompt">Question Prompt</label>
@@ -234,7 +225,6 @@
                 <small id="promptHelperHint" class="field-hint"></small>
               </div>
 
-              <!-- Dynamic Answer Configuration Area -->
               <div id="dynamicAnswerConfig" class="answer-config-box"></div>
 
               <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 0;">
@@ -250,7 +240,7 @@
           </div>
         </form>
 
-        <!-- LIVE STUDENT PREVIEW PANEL UNDERNEATH -->
+        <!-- LIVE STUDENT PREVIEW -->
         <div class="card live-preview-card">
           <div class="preview-header">
             <div>
@@ -272,9 +262,7 @@
         </div>
       </section>
 
-      <!-- =========================================================
-           PANEL 4: QUESTION BANK & ASSIGN TO CLASS
-      ========================================================= -->
+      <!-- PANEL 4: QUESTION BANK & ASSIGN -->
       <section id="questionBankPanel" class="studio-panel hidden">
         <div class="studio-grid">
           <div class="card">
@@ -307,11 +295,76 @@
           </div>
         </div>
       </section>
+
+      <!-- PANEL 5: SETTINGS -->
+      <section id="settingsPanel" class="studio-panel hidden">
+        <div class="studio-grid">
+          <div class="card">
+            <h3>Instructor Profile</h3>
+            <p class="card-subtitle">Update how your name appears in the sidebar and to enrolled students.</p>
+            <form id="instructorSettingsForm">
+              <div class="form-group">
+                <label for="instructorNameInput">Instructor Display Name</label>
+                <input
+                  type="text"
+                  id="instructorNameInput"
+                  placeholder="e.g., Ms. Alvarez"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">Save Instructor Name</button>
+              <p id="settingsSavedMsg" class="settings-saved-msg hidden">✓ Instructor name updated.</p>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Theme</h3>
+            <p class="card-subtitle">Choose a color palette for your Teacher Studio workspace.</p>
+
+            <div class="mt-theme-grid" role="radiogroup" aria-label="Workspace Theme">
+              <button type="button" class="mt-theme-card active" data-theme-value="default">
+                <span class="mt-theme-name">Prepify Classic</span>
+                <span class="mt-swatches">
+                  <i style="background:#f7f6f2;"></i>
+                  <i style="background:#16213e;"></i>
+                  <i style="background:#d4a359;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="dracula">
+                <span class="mt-theme-name">dracula</span>
+                <span class="mt-swatches">
+                  <i style="background:#282a36;"></i>
+                  <i style="background:#bd93f9;"></i>
+                  <i style="background:#50fa7b;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="iceberg_light">
+                <span class="mt-theme-name">iceberg light</span>
+                <span class="mt-swatches">
+                  <i style="background:#e8e9ec;"></i>
+                  <i style="background:#2d539e;"></i>
+                  <i style="background:#33374c;"></i>
+                </span>
+              </button>
+
+              <button type="button" class="mt-theme-card" data-theme-value="github">
+                <span class="mt-theme-name">github</span>
+                <span class="mt-swatches">
+                  <i style="background:#ffffff; border:1px solid #d0d7de;"></i>
+                  <i style="background:#0969da;"></i>
+                  <i style="background:#1f2328;"></i>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
   <script>
-    // --- Page Header Metadata per Tab ---
     const PANEL_HEADERS = {
       classesPanel: {
         title: 'Classes & Roster',
@@ -328,10 +381,13 @@
       questionBankPanel: {
         title: 'Question Bank & Assign',
         subtitle: 'Bundle authored questions into tests and publish them to your classes.'
+      },
+      settingsPanel: {
+        title: 'Settings',
+        subtitle: 'Manage your instructor display name and workspace appearance.'
       }
     };
 
-    // --- Subject -> Topics Map ---
     const SUBJECT_TOPICS = {
       'Math': [
         'Ratios and Proportions',
@@ -380,7 +436,6 @@
       '800': 'Very Hard (800)'
     };
 
-    // --- Workspace State ---
     const state = {
       classes: [
         { id: 'c1', name: 'Grade 8 Math Foundations', schedule: 'Tue/Thu 4:30 PM', joinCode: 'MATH-492' },
@@ -423,6 +478,102 @@
       showPreviewExplanation: false
     };
 
+    // --- Settings ---
+    const teacherGreetingEl = document.getElementById('teacherGreeting');
+    const instructorNameInput = document.getElementById('instructorNameInput');
+    const themeCards = document.querySelectorAll('.mt-theme-card');
+
+const THEME_PALETTES = {
+      default: null,
+      dracula: {
+        '--t-bg': '#282a36',
+        '--t-surface': '#21222c',
+        '--t-sub-alt': '#343746',
+        '--t-sidebar': '#191a21',
+        '--t-sidebar-active': '#44475a',
+        '--t-border': '#44475a',
+        '--t-text': '#f8f8f2',
+        '--t-sub': '#6272a4',
+        '--t-accent': '#bd93f9',
+        '--t-accent-text': '#282a36',
+        '--t-dot': '#50fa7b'
+      },
+      iceberg_light: {
+        '--t-bg': '#e8e9ec',
+        '--t-surface': '#f4f5f7',
+        '--t-sub-alt': '#dcdfe7',
+        '--t-sidebar': '#d2d6e0',
+        '--t-sidebar-active': '#c2c8d6',
+        '--t-border': '#c6cbd7',
+        '--t-text': '#33374c',
+        '--t-sub': '#6b7089',
+        '--t-accent': '#2d539e',
+        '--t-accent-text': '#ffffff',
+        '--t-dot': '#2d539e'
+      },
+      github: {
+        '--t-bg': '#f6f8fa',
+        '--t-surface': '#ffffff',
+        '--t-sub-alt': '#f6f8fa',
+        '--t-sidebar': '#24292f',
+        '--t-sidebar-active': '#32383f',
+        '--t-border': '#d0d7de',
+        '--t-text': '#1f2328',
+        '--t-sub': '#656d76',
+        '--t-accent': '#0969da',
+        '--t-accent-text': '#ffffff',
+        '--t-dot': '#2da44e'
+      }
+    };
+
+    function applyTheme(themeName) {
+      const palette = THEME_PALETTES[themeName];
+
+      if (!palette) {
+        document.body.removeAttribute('data-theme');
+        Object.keys(THEME_PALETTES.dracula).forEach(prop => {
+          document.body.style.removeProperty(prop);
+        });
+      } else {
+        document.body.setAttribute('data-theme', themeName);
+        Object.entries(palette).forEach(([prop, val]) => {
+          document.body.style.setProperty(prop, val);
+        });
+      }
+
+      themeCards.forEach(card => {
+        card.classList.toggle('active', card.dataset.themeValue === themeName);
+      });
+
+      localStorage.setItem('prepify_teacher_theme', themeName);
+    }
+
+    function loadSettings() {
+      const savedName = localStorage.getItem('prepify_instructor_name') || 'Instructor';
+      teacherGreetingEl.textContent = savedName;
+      instructorNameInput.value = savedName;
+
+      const savedTheme = localStorage.getItem('prepify_teacher_theme') || 'default';
+      applyTheme(savedTheme);
+    }
+
+    document.getElementById('instructorSettingsForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newName = instructorNameInput.value.trim();
+      if (!newName) return;
+
+      localStorage.setItem('prepify_instructor_name', newName);
+      teacherGreetingEl.textContent = newName;
+
+      const msg = document.getElementById('settingsSavedMsg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2500);
+    });
+
+    themeCards.forEach(card => {
+      card.addEventListener('click', () => applyTheme(card.dataset.themeValue));
+    });
+
     // --- Sidebar Tab Switching ---
     const tabs = document.querySelectorAll('.studio-tab');
     const panels = document.querySelectorAll('.studio-panel');
@@ -435,7 +586,6 @@
         tab.classList.add('active');
         document.getElementById(targetId).classList.remove('hidden');
 
-        // Update Topbar Title & Subtitle
         if (PANEL_HEADERS[targetId]) {
           document.getElementById('topbarTitle').textContent = PANEL_HEADERS[targetId].title;
           document.getElementById('topbarSubtitle').textContent = PANEL_HEADERS[targetId].subtitle;
@@ -443,7 +593,7 @@
       });
     });
 
-    // --- Populate Topic Dropdown on Subject Change ---
+    // --- Topic Dropdown ---
     const qSubjectEl = document.getElementById('qSubject');
     const qTopicEl = document.getElementById('qTopic');
     const qTypeEl = document.getElementById('qType');
@@ -456,7 +606,7 @@
 
     qSubjectEl.addEventListener('change', populateTopics);
 
-    // --- Render Type-Specific Answer Configurator ---
+    // --- Type-Specific Answer Configurator ---
     function renderAnswerConfigurator() {
       const type = qTypeEl.value;
       const box = document.getElementById('dynamicAnswerConfig');
@@ -580,7 +730,7 @@
 
     qTypeEl.addEventListener('change', renderAnswerConfigurator);
 
-    // --- Extract Structured Config from Current Form ---
+    // --- Extract Question Data ---
     function getCurrentQuestionData() {
       const subject = qSubjectEl.value;
       const grades = Array.from(document.querySelectorAll('input[name="gradeLevel"]:checked')).map(cb => cb.value);
@@ -963,6 +1113,7 @@
       renderAll();
     });
 
+    loadSettings();
     populateTopics();
     renderAnswerConfigurator();
     renderAll();
