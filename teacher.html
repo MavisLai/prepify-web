@@ -196,6 +196,9 @@
       <button type="button" class="studio-tab" data-target="assignedHistoryPanel">
         <span class="nav-dot"></span> Assigned Tests
       </button>
+      <button type="button" class="studio-tab" data-target="classResultsPanel">
+        <span class="nav-dot"></span> Class Results
+      </button>
       <button type="button" class="studio-tab" data-target="studentResultsPanel">
         <span class="nav-dot"></span> Student Results
       </button>
@@ -484,6 +487,51 @@
               Removed from student view. Reassign any test back to students or permanently delete it.
             </p>
             <div id="previouslyAssignedList" class="stack-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           PANEL: CLASS RESULTS & ANALYTICS
+      ========================================================= -->
+      <section id="classResultsPanel" class="studio-panel hidden">
+        <div class="card" style="margin-bottom: 1.25rem;">
+          <div class="form-group" style="margin-bottom: 0; max-width: 420px;">
+            <label for="resultsClassSelect">Select Class</label>
+            <select id="resultsClassSelect"></select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="card">
+            <span class="item-meta">Enrolled Students</span>
+            <h2 id="clsEnrolledCount" style="margin-top: 0.35rem;">0</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Average ELA Accuracy</span>
+            <h2 id="clsElaAccuracy" style="margin-top: 0.35rem;">—</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Average Math Accuracy</span>
+            <h2 id="clsMathAccuracy" style="margin-top: 0.35rem;">—</h2>
+          </div>
+          <div class="card">
+            <span class="item-meta">Total Question Accuracy</span>
+            <h2 id="clsTotalAccuracy" style="margin-top: 0.35rem;">—</h2>
+          </div>
+        </div>
+
+        <div class="studio-grid">
+          <div class="card">
+            <h3>Highest Accuracy Topics</h3>
+            <p class="card-subtitle">Strongest topics across students in this class.</p>
+            <div id="clsHighestTopicsList" class="stack-list"></div>
+          </div>
+
+          <div class="card">
+            <h3>Lowest Accuracy Topics</h3>
+            <p class="card-subtitle">Topics where the class needs the most review.</p>
+            <div id="clsLowestTopicsList" class="stack-list"></div>
           </div>
         </div>
       </section>
@@ -865,6 +913,10 @@
         title: 'Assigned Tests',
         subtitle: 'Manage currently active tests and archive, reassign, or permanently delete past tests.'
       },
+      classResultsPanel: {
+        title: 'Class Results',
+        subtitle: 'Compare average ELA, Math, and overall accuracy along with highest and lowest performing topics by class.'
+      },
       studentResultsPanel: {
         title: 'Student Results',
         subtitle: 'View individual student test scores, topic accuracy, and missed questions.'
@@ -1058,7 +1110,7 @@
       switchTab('createQuestionPanel');
     });
 
-    // --- Assigned Tests Management (Currently Assigned & Previously Assigned) ---
+    // --- Assigned Tests Management ---
     function formatAssignmentDetails(asgn) {
       const rawIds = Array.isArray(asgn.question_ids) ? asgn.question_ids : [];
       const cleanIds = rawIds.filter(id => id !== 'ARCHIVED');
@@ -1219,7 +1271,7 @@
       }
     };
 
-    // --- Assign Test Tab Logic (Manual + Full Adaptive Simulation) ---
+    // --- Assign Test Tab Logic ---
     const modeClassBtn = document.getElementById('modeClassBtn');
     const modeStudentsBtn = document.getElementById('modeStudentsBtn');
     const assignClassTargetGroup = document.getElementById('assignClassTargetGroup');
@@ -1503,6 +1555,90 @@
         btn.textContent = 'Assign Test Now';
       }
     });
+
+    // --- Class Results Tab ---
+    const resultsClassSelect = document.getElementById('resultsClassSelect');
+
+    function populateResultsClassDropdown() {
+      if (state.classes.length === 0) {
+        resultsClassSelect.innerHTML = `<option value="">No classes created yet</option>`;
+        return;
+      }
+      const currentVal = resultsClassSelect.value;
+      resultsClassSelect.innerHTML = state.classes
+        .map(c => `<option value="${c.id}">${c.name} (${c.joinCode})</option>`)
+        .join('');
+
+      if (currentVal && state.classes.some(c => c.id === currentVal)) {
+        resultsClassSelect.value = currentVal;
+      }
+    }
+
+    function renderClassResults() {
+      const cls = state.classes.find(c => c.id === resultsClassSelect.value) || state.classes[0];
+      const highestListEl = document.getElementById('clsHighestTopicsList');
+      const lowestListEl = document.getElementById('clsLowestTopicsList');
+
+      if (!cls) {
+        document.getElementById('clsEnrolledCount').textContent = '0';
+        document.getElementById('clsElaAccuracy').textContent = '—';
+        document.getElementById('clsMathAccuracy').textContent = '—';
+        document.getElementById('clsTotalAccuracy').textContent = '—';
+        highestListEl.innerHTML = `<p class="item-meta">Create a class first to view class-level analytics.</p>`;
+        lowestListEl.innerHTML = `<p class="item-meta">No topic data available yet.</p>`;
+        return;
+      }
+
+      const enrolledCount = state.students.filter(s => s.classId === cls.id).length;
+      const res = cls.results || {
+        totalAnswered: 0,
+        elaAccuracy: null,
+        mathAccuracy: null,
+        avgAccuracy: null,
+        topicAccuracy: []
+      };
+
+      document.getElementById('clsEnrolledCount').textContent = enrolledCount;
+      document.getElementById('clsElaAccuracy').textContent = res.elaAccuracy !== null ? `${res.elaAccuracy}%` : '—';
+      document.getElementById('clsMathAccuracy').textContent = res.mathAccuracy !== null ? `${res.mathAccuracy}%` : '—';
+      document.getElementById('clsTotalAccuracy').textContent = res.avgAccuracy !== null ? `${res.avgAccuracy}%` : '—';
+
+      const topics = [...(res.topicAccuracy || [])];
+      if (topics.length === 0) {
+        highestListEl.innerHTML = `<p class="item-meta">No questions answered by students in this class yet.</p>`;
+        lowestListEl.innerHTML = `<p class="item-meta">No questions answered by students in this class yet.</p>`;
+        return;
+      }
+
+      const highestSorted = [...topics].sort((a, b) => (b.accuracy - a.accuracy) || (b.total - a.total));
+      const lowestSorted = [...topics].sort((a, b) => (a.accuracy - b.accuracy) || (b.total - a.total));
+
+      highestListEl.innerHTML = highestSorted.map(t => `
+        <div class="list-item-card">
+          <div>
+            <strong>${t.topic}</strong> ${t.subject ? `<span class="tag">${t.subject}</span>` : ''}
+            <p class="item-meta">${t.correct}/${t.total} correct across class</p>
+          </div>
+          <span class="qb-pill ${t.accuracy >= 80 ? 'pill-math' : t.accuracy >= 65 ? 'pill-ela' : 'pill-diff-hard'}">
+            ${t.accuracy}%
+          </span>
+        </div>
+      `).join('');
+
+      lowestListEl.innerHTML = lowestSorted.map(t => `
+        <div class="list-item-card">
+          <div>
+            <strong>${t.topic}</strong> ${t.subject ? `<span class="tag">${t.subject}</span>` : ''}
+            <p class="item-meta">${t.correct}/${t.total} correct across class</p>
+          </div>
+          <span class="qb-pill ${t.accuracy >= 80 ? 'pill-math' : t.accuracy >= 65 ? 'pill-ela' : 'pill-diff-hard'}">
+            ${t.accuracy}%
+          </span>
+        </div>
+      `).join('');
+    }
+
+    resultsClassSelect.addEventListener('change', renderClassResults);
 
     // --- Student Results Tab ---
     const resultsStudentSelect = document.getElementById('resultsStudentSelect');
@@ -2204,6 +2340,8 @@
       renderClassesAndRoster();
       renderAssignTestPanel();
       renderAssignedHistoryPanel();
+      populateResultsClassDropdown();
+      renderClassResults();
       populateResultsStudentDropdown();
       renderStudentResults();
       renderQuestionBankTable();

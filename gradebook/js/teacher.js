@@ -42,6 +42,57 @@
     localStorage.setItem('prepify_instructor_name', newName);
   }
 
+  function computeAggregateStats(attemptList) {
+    const totalAnswered = attemptList.length;
+    const correctCount = attemptList.filter(a => a.is_correct).length;
+    const avgAccuracy = totalAnswered > 0
+      ? Math.round((correctCount / totalAnswered) * 100)
+      : null;
+
+    const elaAttempts = attemptList.filter(a => a.questions?.subject === 'ELA');
+    const mathAttempts = attemptList.filter(a => a.questions?.subject === 'Math');
+
+    const elaAccuracy = elaAttempts.length > 0
+      ? Math.round((elaAttempts.filter(a => a.is_correct).length / elaAttempts.length) * 100)
+      : null;
+    const mathAccuracy = mathAttempts.length > 0
+      ? Math.round((mathAttempts.filter(a => a.is_correct).length / mathAttempts.length) * 100)
+      : null;
+
+    const topicMap = {};
+    attemptList.forEach(a => {
+      const topicName = a.questions?.topic || 'General';
+      const subjectName = a.questions?.subject || '';
+      const key = `${topicName}__${subjectName}`;
+      if (!topicMap[key]) {
+        topicMap[key] = {
+          topic: topicName,
+          subject: subjectName,
+          total: 0,
+          correct: 0
+        };
+      }
+      topicMap[key].total += 1;
+      if (a.is_correct) topicMap[key].correct += 1;
+    });
+
+    const topicAccuracy = Object.values(topicMap).map(item => ({
+      topic: item.topic,
+      subject: item.subject,
+      total: item.total,
+      correct: item.correct,
+      accuracy: Math.round((item.correct / item.total) * 100)
+    }));
+
+    return {
+      totalAnswered,
+      elaAccuracy,
+      mathAccuracy,
+      avgAccuracy,
+      topicAccuracy
+    };
+  }
+
   async function loadTeacherWorkspace() {
     const sb = getClient();
 
@@ -66,13 +117,24 @@
     if (assignErr) throw assignErr;
 
     const attempts = attemptRows || [];
+    const rawStudents = studentRows || [];
 
-    const classes = (classRows || []).map(c => ({
-      id: c.id,
-      name: c.name,
-      schedule: c.schedule || '',
-      joinCode: c.join_code
-    }));
+    const classes = (classRows || []).map(c => {
+      const classStudentIds = new Set(
+        rawStudents.filter(s => s.class_id === c.id).map(s => s.id)
+      );
+      const classAttempts = attempts.filter(a => classStudentIds.has(a.student_id));
+      const classStats = computeAggregateStats(classAttempts);
+
+      return {
+        id: c.id,
+        name: c.name,
+        schedule: c.schedule || '',
+        joinCode: c.join_code,
+        studentCount: classStudentIds.size,
+        results: classStats
+      };
+    });
 
     const questions = (questionRows || []).map(q => {
       const qAttempts = attempts.filter(a => a.question_id === q.id);
@@ -94,34 +156,12 @@
       };
     });
 
-    const students = (studentRows || []).map(s => {
+    const students = rawStudents.map(s => {
       const sAttempts = attempts.filter(a => a.student_id === s.id);
-      const correctAttempts = sAttempts.filter(a => a.is_correct);
-      const avgAccuracy = sAttempts.length > 0
-        ? Math.round((correctAttempts.length / sAttempts.length) * 100)
-        : null;
+      const stats = computeAggregateStats(sAttempts);
 
-      const elaAttempts = sAttempts.filter(a => a.questions?.subject === 'ELA');
-      const mathAttempts = sAttempts.filter(a => a.questions?.subject === 'Math');
-
-      const elaScore = elaAttempts.length > 0
-        ? Math.round((elaAttempts.filter(a => a.is_correct).length / elaAttempts.length) * 100) + '%'
-        : null;
-      const mathScore = mathAttempts.length > 0
-        ? Math.round((mathAttempts.filter(a => a.is_correct).length / mathAttempts.length) * 100) + '%'
-        : null;
-
-      const topicMap = {};
-      sAttempts.forEach(a => {
-        const t = a.questions?.topic || 'General';
-        if (!topicMap[t]) topicMap[t] = { total: 0, correct: 0 };
-        topicMap[t].total += 1;
-        if (a.is_correct) topicMap[t].correct += 1;
-      });
-      const topicAccuracy = Object.entries(topicMap).map(([topic, stats]) => ({
-        topic,
-        accuracy: Math.round((stats.correct / stats.total) * 100)
-      }));
+      const elaScore = stats.elaAccuracy !== null ? `${stats.elaAccuracy}%` : null;
+      const mathScore = stats.mathAccuracy !== null ? `${stats.mathAccuracy}%` : null;
 
       const missedQuestions = sAttempts
         .filter(a => !a.is_correct && a.questions)
@@ -162,8 +202,8 @@
         results: {
           elaScore,
           mathScore,
-          avgAccuracy,
-          topicAccuracy,
+          avgAccuracy: stats.avgAccuracy,
+          topicAccuracy: stats.topicAccuracy,
           missedQuestions,
           tests
         }
@@ -191,7 +231,15 @@
       id: data.id,
       name: data.name,
       schedule: data.schedule || '',
-      joinCode: data.join_code
+      joinCode: data.join_code,
+      studentCount: 0,
+      results: {
+        totalAnswered: 0,
+        elaAccuracy: null,
+        mathAccuracy: null,
+        avgAccuracy: null,
+        topicAccuracy: []
+      }
     };
   }
 
@@ -320,7 +368,6 @@
       .select()
       .single();
 
-    // Fallback if optional columns (test_type, time_limit_minutes, target_grade) aren't in DB yet
     if (error && error.message && error.message.includes('column')) {
       const fallbackPayload = {
         title,
