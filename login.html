@@ -87,12 +87,12 @@
             type="text"
             id="classJoinCode"
             name="classCode"
-            placeholder="Enter 6-digit code to join a new class"
-            maxlength="10"
+            placeholder="Enter code to join a new class"
+            maxlength="12"
           />
         </div>
 
-        <button type="submit" class="btn btn-primary full-width">
+        <button type="submit" id="studentSubmitBtn" class="btn btn-primary full-width">
           Enter Student Portal
         </button>
 
@@ -127,7 +127,7 @@
           />
         </div>
 
-        <button type="submit" class="btn btn-primary full-width">
+        <button type="submit" id="teacherSubmitBtn" class="btn btn-primary full-width">
           Sign In to Teacher Studio
         </button>
 
@@ -138,7 +138,12 @@
     </div>
   </main>
 
-  <!-- Tab Switching & Placeholder Submit Logic -->
+  <!-- Load Supabase & Auth Helpers FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="gradebook/supabase-client.js"></script>
+  <script src="gradebook/auth.js"></script>
+
+  <!-- Tab Switching & Live Supabase Auth Handlers -->
   <script>
     const studentTab = document.getElementById('studentTab');
     const teacherTab = document.getElementById('teacherTab');
@@ -146,9 +151,18 @@
     const teacherForm = document.getElementById('teacherForm');
     const authAlert = document.getElementById('authAlert');
 
-    function switchTab(role) {
-      authAlert.classList.add('hidden');
+    function showError(message) {
+      authAlert.textContent = message;
+      authAlert.classList.remove('hidden');
+    }
+
+    function clearError() {
       authAlert.textContent = '';
+      authAlert.classList.add('hidden');
+    }
+
+    function switchTab(role) {
+      clearError();
 
       if (role === 'student') {
         studentTab.classList.add('active');
@@ -172,22 +186,76 @@
     studentTab.addEventListener('click', () => switchTab('student'));
     teacherTab.addEventListener('click', () => switchTab('teacher'));
 
-    // Temporary preview handlers (will be replaced by js/auth.js + Supabase)
-    studentForm.addEventListener('submit', (e) => {
+    // Live Student Passcode Login
+    studentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearError();
+
+      const btn = document.getElementById('studentSubmitBtn');
       const username = document.getElementById('studentUsername').value.trim().toLowerCase();
-      // Synthetic email format for Supabase Auth:
-      const syntheticEmail = `${username}@students.yourdomain.com`;
-      console.log('Ready to authenticate student via synthetic email:', syntheticEmail);
-      window.location.href = 'student.html';
+      const passcode = document.getElementById('studentPasscode').value.trim();
+      const joinCode = document.getElementById('classJoinCode').value.trim().toUpperCase();
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        // Optional: look up class join code first if provided
+        let matchedClassId = null;
+        if (joinCode) {
+          const { data: cls, error: clsErr } = await window.supabaseClient
+            .from('classes')
+            .select('id')
+            .eq('join_code', joinCode)
+            .single();
+
+          if (clsErr || !cls) {
+            throw new Error('Class join code not found. Double-check the code or leave it blank.');
+          }
+          matchedClassId = cls.id;
+        }
+
+        // Verify student username + passcode (redirects to student.html on success)
+        const session = await window.PrepifyAuth.loginStudentWithPasscode(username, passcode);
+
+        // If a join code was entered, enroll the student in that class
+        if (matchedClassId && session?.id) {
+          await window.supabaseClient
+            .from('students')
+            .update({ class_id: matchedClassId })
+            .eq('id', session.id);
+
+          session.classId = matchedClassId;
+          localStorage.setItem('prepify_student_session', JSON.stringify(session));
+        }
+      } catch (err) {
+        showError(err.message || 'Unable to sign in. Please check your username and passcode.');
+        btn.disabled = false;
+        btn.textContent = 'Enter Student Portal';
+      }
     });
 
-    teacherForm.addEventListener('submit', (e) => {
+    // Live Teacher Email + Password Login
+    teacherForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearError();
+
+      const btn = document.getElementById('teacherSubmitBtn');
       const email = document.getElementById('teacherEmail').value.trim();
-      console.log('Ready to authenticate teacher:', email);
-      window.location.href = 'teacher.html';
+      const password = document.getElementById('teacherPassword').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        await window.PrepifyAuth.loginTeacher(email, password);
+      } catch (err) {
+        showError(err.message || 'Invalid instructor email or password.');
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Teacher Studio';
+      }
     });
   </script>
+
 </body>
 </html>
